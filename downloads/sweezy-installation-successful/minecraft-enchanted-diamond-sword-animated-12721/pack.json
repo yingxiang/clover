@@ -1,0 +1,58 @@
+{
+  "id": 12721,
+  "name": "Minecraft Enchanted Diamond Sword Animated",
+  "slug": "minecraft-enchanted-diamond-sword-animated",
+  "isAnimated": true,
+  "collection": {
+    "slug": "minecraft",
+    "name": "Minecraft",
+    "image": "https://sweezy-cursors.com/wp-content/uploads/minecraft-cursors-collection.jpg"
+  },
+  "cursorConfig": {
+    "id": 12721,
+    "name": "Minecraft Enchanted Diamond Sword Animated",
+    "isAnimated": true,
+    "cursor": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-64.gif",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-8.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 2,
+      "offsetY": 2,
+      "animationDirection": "normal",
+      "animationSpeed": 700,
+      "frames": [
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-1.png",
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-2.png",
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-3.png",
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-4.png",
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-5.png",
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-6.png",
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-7.png",
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-8.png"
+      ]
+    },
+    "pointer": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-pointer-64.png",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-pointer.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 4,
+      "offsetY": 2
+    },
+    "animationSpeed": 700
+  },
+  "assets": [
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-64.gif",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-8.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-1.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-2.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-3.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-4.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-5.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-6.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-cursor-7.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-pointer-64.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/minecraft-enchanted-diamond-sword-animated/minecraft-enchanted-diamond-sword-animated-pointer.png"
+  ]
+}

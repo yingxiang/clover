@@ -1,0 +1,38 @@
+{
+  "id": 87519,
+  "name": "Glitch Arrow & Hand",
+  "slug": "glitch-arrow-and-hand",
+  "isAnimated": false,
+  "collection": {
+    "slug": "mix",
+    "name": "Mix",
+    "image": "https://sweezy-cursors.com/wp-content/uploads/mix-cursors-collection.png"
+  },
+  "cursorConfig": {
+    "id": 87519,
+    "name": "Glitch Arrow & Hand",
+    "isAnimated": false,
+    "cursor": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/glitch-arrow-and-hand-cursor-64.png",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/glitch-arrow-and-hand-cursor.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 2,
+      "offsetY": 2
+    },
+    "pointer": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/glitch-arrow-and-hand-pointer-64.png",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/glitch-arrow-and-hand-pointer.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 24,
+      "offsetY": 2
+    }
+  },
+  "assets": [
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/glitch-arrow-and-hand-cursor-64.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/glitch-arrow-and-hand-cursor.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/glitch-arrow-and-hand-pointer-64.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/glitch-arrow-and-hand-pointer.png"
+  ]
+}

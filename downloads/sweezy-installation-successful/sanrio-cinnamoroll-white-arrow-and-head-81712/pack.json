@@ -1,0 +1,38 @@
+{
+  "id": 81712,
+  "name": "Sanrio Cinnamoroll White Arrow & Head",
+  "slug": "sanrio-cinnamoroll-white-arrow-and-head",
+  "isAnimated": false,
+  "collection": {
+    "slug": "cinnamoroll",
+    "name": "Cinnamoroll",
+    "image": "https://sweezy-cursors.com/wp-content/uploads/cinnamoroll-cursors-collection.jpg"
+  },
+  "cursorConfig": {
+    "id": 81712,
+    "name": "Sanrio Cinnamoroll White Arrow & Head",
+    "isAnimated": false,
+    "cursor": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/sanrio-cinnamoroll-white-arrow-and-head-cursor-64.png",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/sanrio-cinnamoroll-white-arrow-and-head-cursor.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 10,
+      "offsetY": 4
+    },
+    "pointer": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/sanrio-cinnamoroll-white-arrow-and-head-pointer-64.png",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/sanrio-cinnamoroll-white-arrow-and-head-pointer.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 6,
+      "offsetY": 6
+    }
+  },
+  "assets": [
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/sanrio-cinnamoroll-white-arrow-and-head-cursor-64.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/sanrio-cinnamoroll-white-arrow-and-head-cursor.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/sanrio-cinnamoroll-white-arrow-and-head-pointer-64.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/sanrio-cinnamoroll-white-arrow-and-head-pointer.png"
+  ]
+}

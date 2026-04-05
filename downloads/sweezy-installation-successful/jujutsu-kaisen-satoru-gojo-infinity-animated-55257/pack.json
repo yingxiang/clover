@@ -1,0 +1,46 @@
+{
+  "id": 55257,
+  "name": "Jujutsu Kaisen Satoru Gojo Infinity Animated",
+  "slug": "jujutsu-kaisen-satoru-gojo-infinity-animated",
+  "isAnimated": true,
+  "collection": {
+    "slug": "jujutsu-kaisen",
+    "name": "Jujutsu Kaisen",
+    "image": "https://sweezy-cursors.com/wp-content/uploads/jujutsu-kaisen-cursors-collection.jpg"
+  },
+  "cursorConfig": {
+    "id": 55257,
+    "name": "Jujutsu Kaisen Satoru Gojo Infinity Animated",
+    "isAnimated": true,
+    "cursor": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/jujutsu-kaisen-satoru-gojo-infinity-animated-cursor-64.gif",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/jujutsu-kaisen-satoru-gojo-infinity-animated/jujutsu-kaisen-satoru-gojo-infinity-animated-cursor-2.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 6,
+      "offsetY": 2,
+      "animationDirection": "normal",
+      "animationSpeed": 850,
+      "frames": [
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/jujutsu-kaisen-satoru-gojo-infinity-animated/jujutsu-kaisen-satoru-gojo-infinity-animated-cursor-1.png",
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/jujutsu-kaisen-satoru-gojo-infinity-animated/jujutsu-kaisen-satoru-gojo-infinity-animated-cursor-2.png"
+      ]
+    },
+    "pointer": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/jujutsu-kaisen-satoru-gojo-infinity-animated-pointer-64.png",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/jujutsu-kaisen-satoru-gojo-infinity-animated/jujutsu-kaisen-satoru-gojo-infinity-animated-pointer.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 2,
+      "offsetY": 2
+    },
+    "animationSpeed": 850
+  },
+  "assets": [
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/jujutsu-kaisen-satoru-gojo-infinity-animated-cursor-64.gif",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/jujutsu-kaisen-satoru-gojo-infinity-animated/jujutsu-kaisen-satoru-gojo-infinity-animated-cursor-2.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/jujutsu-kaisen-satoru-gojo-infinity-animated/jujutsu-kaisen-satoru-gojo-infinity-animated-cursor-1.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/jujutsu-kaisen-satoru-gojo-infinity-animated-pointer-64.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/jujutsu-kaisen-satoru-gojo-infinity-animated/jujutsu-kaisen-satoru-gojo-infinity-animated-pointer.png"
+  ]
+}

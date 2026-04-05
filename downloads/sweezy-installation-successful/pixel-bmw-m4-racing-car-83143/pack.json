@@ -1,0 +1,38 @@
+{
+  "id": 83143,
+  "name": "Pixel BMW M4 Racing Car",
+  "slug": "pixel-bmw-m4-racing-car",
+  "isAnimated": false,
+  "collection": {
+    "slug": "supercars",
+    "name": "Supercars",
+    "image": "https://sweezy-cursors.com/wp-content/uploads/supercars-cursors-collection.jpg"
+  },
+  "cursorConfig": {
+    "id": 83143,
+    "name": "Pixel BMW M4 Racing Car",
+    "isAnimated": false,
+    "cursor": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/pixel-bmw-m4-racing-car-cursor-64.png",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/pixel-bmw-m4-racing-car-cursor.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 2,
+      "offsetY": 2
+    },
+    "pointer": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/pixel-bmw-m4-racing-car-pointer-64.png",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/pixel-bmw-m4-racing-car-pointer.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 32,
+      "offsetY": 2
+    }
+  },
+  "assets": [
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/pixel-bmw-m4-racing-car-cursor-64.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/pixel-bmw-m4-racing-car-cursor.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/pixel-bmw-m4-racing-car-pointer-64.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/pixel-bmw-m4-racing-car-pointer.png"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": 17615,
+  "name": "Demon Slayer Kyojuro Rengoku Running Pixel Animated",
+  "slug": "demon-slayer-kyojuro-rengoku-running-pixel-animated",
+  "isAnimated": true,
+  "collection": {
+    "slug": "demon-slayer",
+    "name": "Demon Slayer",
+    "image": "https://sweezy-cursors.com/wp-content/uploads/demon-slayer-cursors-collection.jpeg"
+  },
+  "cursorConfig": {
+    "id": 17615,
+    "name": "Demon Slayer Kyojuro Rengoku Running Pixel Animated",
+    "isAnimated": true,
+    "cursor": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-cursor-64.gif",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-cursor-1.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 22,
+      "offsetY": 8,
+      "animationDirection": "normal",
+      "animationSpeed": 700,
+      "frames": [
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-cursor-1.png",
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-cursor-2.png",
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-cursor-3.png",
+        "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-cursor-4.png"
+      ]
+    },
+    "pointer": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-pointer-64.png",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-pointer.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 2,
+      "offsetY": 2
+    },
+    "animationSpeed": 700
+  },
+  "assets": [
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-cursor-64.gif",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-cursor-1.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-cursor-2.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-cursor-3.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-cursor-4.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-pointer-64.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/demon-slayer-kyojuro-rengoku-running-pixel-animated/demon-slayer-kyojuro-rengoku-running-animated-pixel-pointer.png"
+  ]
+}

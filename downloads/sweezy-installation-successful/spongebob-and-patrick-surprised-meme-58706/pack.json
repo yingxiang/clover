@@ -1,0 +1,38 @@
+{
+  "id": 58706,
+  "name": "SpongeBob & Patrick Surprised Meme",
+  "slug": "spongebob-and-patrick-surprised-meme",
+  "isAnimated": false,
+  "collection": {
+    "slug": "spongebob",
+    "name": "SpongeBob SquarePants",
+    "image": "https://sweezy-cursors.com/wp-content/uploads/spongebob-squarepants-cursor-collection.jpg"
+  },
+  "cursorConfig": {
+    "id": 58706,
+    "name": "SpongeBob & Patrick Surprised Meme",
+    "isAnimated": false,
+    "cursor": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/spongebob-patrick-surprised-meme-cursor-64.png",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/spongebob-patrick-surprised-meme-cursor.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 6,
+      "offsetY": 2
+    },
+    "pointer": {
+      "preview-ext-image": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/spongebob-patrick-surprised-meme-pointer-64.png",
+      "path": "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/spongebob-patrick-surprised-meme-pointer.png",
+      "width": 128,
+      "height": 128,
+      "offsetX": 22,
+      "offsetY": 2
+    }
+  },
+  "assets": [
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/spongebob-patrick-surprised-meme-cursor-64.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/spongebob-patrick-surprised-meme-cursor.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/spongebob-patrick-surprised-meme-pointer-64.png",
+    "https://sweezy-cursors.com/wp-content/uploads/cursor/auto-draft/spongebob-patrick-surprised-meme-pointer.png"
+  ]
+}
