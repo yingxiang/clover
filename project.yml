@@ -1,0 +1,52 @@
+name: Clover
+options:
+  bundleIdPrefix: com.lingchen
+  deploymentTarget:
+    macOS: "15.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    ENABLE_TESTABILITY: "YES"
+    SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+    ALWAYS_SEARCH_USER_PATHS: "NO"
+targets:
+  Clover:
+    type: application
+    platform: macOS
+    sources:
+      - path: Clover
+    settings:
+      base:
+        PRODUCT_NAME: Clover
+        SWIFT_MODULE_NAME: Clover
+        PRODUCT_BUNDLE_IDENTIFIER: com.lingchen.clover
+        INFOPLIST_FILE: Clover/Resources/Info.plist
+        DEVELOPMENT_TEAM: GBJH26W27R
+        "DEVELOPMENT_TEAM[sdk=macosx*]": GBJH26W27R
+        CODE_SIGN_STYLE: Automatic
+        "CODE_SIGN_IDENTITY[sdk=macosx*]": "Apple Development"
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+  CloverTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests
+    settings:
+      base:
+        PRODUCT_NAME: CloverTests
+        SWIFT_MODULE_NAME: CloverTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.lingchen.cloverTests
+        INFOPLIST_FILE: Tests/Info.plist
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Clover.app/Contents/MacOS/Clover"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+    dependencies:
+      - target: Clover
+schemes:
+  Clover:
+    build:
+      targets:
+        Clover: all
+    test:
+      targets:
+        - CloverTests

@@ -1,0 +1,507 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		11FFAE2FC4E2C9542E482B060B6773F3 /* FileItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0070D70052F7AD72E0D357BC6FDE03BA /* FileItem.swift */; };
+		13B1AE83407EF32F1EDDFD5AE95E47FA /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4C51849AFD6E0D4268AF70A1D2BEA65 /* MainWindowController.swift */; };
+		2B863BA5B9857B3727CE48A664249BA8 /* CloverError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A888914710CAE80BB34FF502C9D183 /* CloverError.swift */; };
+		2D93B169E6EA80D6D741EA936DCA8E57 /* LocalFileProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BFF4D7788A080F55551F7F62546A68D /* LocalFileProvider.swift */; };
+		3AC7522317998321D971FC8C4ED065B0 /* AppIconProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438BEB428531C243E3DB80E7E6BE1C8C /* AppIconProvider.swift */; };
+		50BC3E096E6677189DE412ED596C498E /* RootSplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75594AF8983889F186AA0422731168C /* RootSplitViewController.swift */; };
+		5301A043C5464227552C15A084BE6EA9 /* FileSortServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 459639B48F030FC3E6767565C49712B9 /* FileSortServiceTests.swift */; };
+		544ABD8EAF04C6032626D5ED20CC4A0B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFACA9DFBC871F5278FFBFAFB44F9EFD /* AppDelegate.swift */; };
+		58ECD88995147D251A11D2D9672AEAF0 /* FileProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29BB0C3BB9CFAE82C1C6D9E7896DC434 /* FileProvider.swift */; };
+		68D9CB57B46AB4806466759531142DD9 /* Loggers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC26012A6E2DCDFA14200C39D4186267 /* Loggers.swift */; };
+		75FB404C363FF00BB6612739C3721FD4 /* SidebarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C87543A5E3839AC609A100CF4A02928 /* SidebarItem.swift */; };
+		7EAB3714F5D4D3FFA024B333A5969815 /* PaneState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EA2E3A2DB03E725FF4C374CAE8869B /* PaneState.swift */; };
+		85DF0DE48387BB4A8417DD84E17D81F3 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DEFF10CDFF338362FD6AD57C74C2497 /* AppEnvironment.swift */; };
+		9500466833CC1E26DD2BF3B3A0EBACE0 /* LocalFileProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFD69DF177BD7F0451B6359DFA7D2FB7 /* LocalFileProviderTests.swift */; };
+		9665D2CE61FD9CE7F3D32B194A00997B /* FileOperationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2824C508D92979DE6ECD385EE6F31B4 /* FileOperationService.swift */; };
+		9A1037452CEC70B93AEB41FEEB8A8D25 /* PaneLayoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C80CBA01EFF570C3954937C2ED33F639 /* PaneLayoutController.swift */; };
+		B4E21223B928071A3907A07D62330FB6 /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E79C8B115EC90E3EB7847A11233A94 /* Workspace.swift */; };
+		CE4463E06D4260368EF2038FF258C4CE /* SidebarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C26D40858E1FB3DAF6558DA7B15374B /* SidebarViewController.swift */; };
+		D5E03A3249C9FBDB802036E263410533 /* FilePaneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2FDE8DD9D5B592085831353F0609524 /* FilePaneViewController.swift */; };
+		E5BDE84B234307E6340B55A88E62F725 /* FilePaneViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEF09417931684114E50B8D622BE91A1 /* FilePaneViewModel.swift */; };
+		E5DA76F20C89AD075ED3E057438C03A3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE24ADF9B430F10A1F8C25E46980C4D5 /* main.swift */; };
+		E82B46BACC16A05225090DD3C2807E38 /* WorkspaceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56C614CF444CA44DEF7DBB463381FF6 /* WorkspaceViewController.swift */; };
+		E8DF2DB7FD0359C56F873AEE07E38AD9 /* BookmarkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD8B28F92B6C38E3218E8A7395CADB47 /* BookmarkStore.swift */; };
+		F162A0D8BB2E2AAD8078DA4A8C78EBA1 /* FileSortService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF67561190C5B111ED2C9480AD27945 /* FileSortService.swift */; };
+		FB85612F61A988E2784B807FCD84DEB5 /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560526E24535B79A4868A1CEA9BB538B /* StatusBarView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		045D4E3ED83A0552BE7C5E9F3805A8B2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 61CF81BA6AB0806E78D313444D64A538 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA5988DB3BA36F080AB79615FD4EB8C6;
+			remoteInfo = Clover;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0070D70052F7AD72E0D357BC6FDE03BA /* FileItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileItem.swift; sourceTree = "<group>"; };
+		11082ED574757AC386D409A1F63411D8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		12C52E595F2E188272B6FA731672F6B8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		29BB0C3BB9CFAE82C1C6D9E7896DC434 /* FileProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileProvider.swift; sourceTree = "<group>"; };
+		2BFF4D7788A080F55551F7F62546A68D /* LocalFileProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileProvider.swift; sourceTree = "<group>"; };
+		2C87543A5E3839AC609A100CF4A02928 /* SidebarItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarItem.swift; sourceTree = "<group>"; };
+		40E79C8B115EC90E3EB7847A11233A94 /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
+		438BEB428531C243E3DB80E7E6BE1C8C /* AppIconProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconProvider.swift; sourceTree = "<group>"; };
+		459639B48F030FC3E6767565C49712B9 /* FileSortServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSortServiceTests.swift; sourceTree = "<group>"; };
+		560526E24535B79A4868A1CEA9BB538B /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
+		5DEFF10CDFF338362FD6AD57C74C2497 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		5FF67561190C5B111ED2C9480AD27945 /* FileSortService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSortService.swift; sourceTree = "<group>"; };
+		6C26D40858E1FB3DAF6558DA7B15374B /* SidebarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarViewController.swift; sourceTree = "<group>"; };
+		731A911A9436021A67F9CFD4FEDDDFEF /* CloverTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CloverTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0A888914710CAE80BB34FF502C9D183 /* CloverError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloverError.swift; sourceTree = "<group>"; };
+		A2FDE8DD9D5B592085831353F0609524 /* FilePaneViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePaneViewController.swift; sourceTree = "<group>"; };
+		AC26012A6E2DCDFA14200C39D4186267 /* Loggers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Loggers.swift; sourceTree = "<group>"; };
+		AEF09417931684114E50B8D622BE91A1 /* FilePaneViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePaneViewModel.swift; sourceTree = "<group>"; };
+		AF8BF7DB6E22896AA2FC8A5002208566 /* Clover.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clover.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AFD69DF177BD7F0451B6359DFA7D2FB7 /* LocalFileProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileProviderTests.swift; sourceTree = "<group>"; };
+		BE24ADF9B430F10A1F8C25E46980C4D5 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		BFACA9DFBC871F5278FFBFAFB44F9EFD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C80CBA01EFF570C3954937C2ED33F639 /* PaneLayoutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneLayoutController.swift; sourceTree = "<group>"; };
+		D4C51849AFD6E0D4268AF70A1D2BEA65 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
+		DD8B28F92B6C38E3218E8A7395CADB47 /* BookmarkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkStore.swift; sourceTree = "<group>"; };
+		E1EA2E3A2DB03E725FF4C374CAE8869B /* PaneState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneState.swift; sourceTree = "<group>"; };
+		E56C614CF444CA44DEF7DBB463381FF6 /* WorkspaceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceViewController.swift; sourceTree = "<group>"; };
+		E75594AF8983889F186AA0422731168C /* RootSplitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootSplitViewController.swift; sourceTree = "<group>"; };
+		F2824C508D92979DE6ECD385EE6F31B4 /* FileOperationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOperationService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0EAD6FA34EEEB20D4BC19F182A6BC9B6 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				0070D70052F7AD72E0D357BC6FDE03BA /* FileItem.swift */,
+				E1EA2E3A2DB03E725FF4C374CAE8869B /* PaneState.swift */,
+				2C87543A5E3839AC609A100CF4A02928 /* SidebarItem.swift */,
+				40E79C8B115EC90E3EB7847A11233A94 /* Workspace.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		1BE074912AF53053DFD39294DD0486CC /* Local */ = {
+			isa = PBXGroup;
+			children = (
+				2BFF4D7788A080F55551F7F62546A68D /* LocalFileProvider.swift */,
+			);
+			path = Local;
+			sourceTree = "<group>";
+		};
+		27C4A59F10E80A2E1D6195C0DA0340E9 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				459639B48F030FC3E6767565C49712B9 /* FileSortServiceTests.swift */,
+				11082ED574757AC386D409A1F63411D8 /* Info.plist */,
+				AFD69DF177BD7F0451B6359DFA7D2FB7 /* LocalFileProviderTests.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		28F88C179BFFC62A9970E4F113F3E0BF /* Infrastructure */ = {
+			isa = PBXGroup;
+			children = (
+				EF27D0E6BE07E5E36354CD2A8DE1ACBF /* Logging */,
+				44CEB8156F9FC2E4F16D563ACC9C4AA4 /* Security */,
+			);
+			path = Infrastructure;
+			sourceTree = "<group>";
+		};
+		3C9D0E7A91DC9CBEAB733B35AB5BC181 /* Workspace */ = {
+			isa = PBXGroup;
+			children = (
+				E56C614CF444CA44DEF7DBB463381FF6 /* WorkspaceViewController.swift */,
+			);
+			path = Workspace;
+			sourceTree = "<group>";
+		};
+		442BBB9472BE4F1399790BD67FA38991 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				AAE31968182093803A7FDA245D0FD57A /* FileOperations */,
+				0EAD6FA34EEEB20D4BC19F182A6BC9B6 /* Models */,
+				E883C8A2BF249FDC3614290929524842 /* Search */,
+				A01C8545CCF47D483D1FDF6A832D1791 /* Settings */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		44CEB8156F9FC2E4F16D563ACC9C4AA4 /* Security */ = {
+			isa = PBXGroup;
+			children = (
+				DD8B28F92B6C38E3218E8A7395CADB47 /* BookmarkStore.swift */,
+			);
+			path = Security;
+			sourceTree = "<group>";
+		};
+		45037544E7801E62CB5CD376CEA3146E /* Clover */ = {
+			isa = PBXGroup;
+			children = (
+				6BC5086D83EA13BE2FA91BB35E346CA4 /* App */,
+				442BBB9472BE4F1399790BD67FA38991 /* Domain */,
+				28F88C179BFFC62A9970E4F113F3E0BF /* Infrastructure */,
+				E04A11EF41FE0652F22FDD30FC93E8AE /* Providers */,
+				7D048AF59CD2E36CBF25F7ED30AA2EAD /* Resources */,
+				9BFDC91CEFDFB6951DC96EE68D3E4C2D /* UI */,
+			);
+			path = Clover;
+			sourceTree = "<group>";
+		};
+		62B309E3361D4C7C385EFB3A88697958 /* Sidebar */ = {
+			isa = PBXGroup;
+			children = (
+				6C26D40858E1FB3DAF6558DA7B15374B /* SidebarViewController.swift */,
+			);
+			path = Sidebar;
+			sourceTree = "<group>";
+		};
+		6BC5086D83EA13BE2FA91BB35E346CA4 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				BFACA9DFBC871F5278FFBFAFB44F9EFD /* AppDelegate.swift */,
+				5DEFF10CDFF338362FD6AD57C74C2497 /* AppEnvironment.swift */,
+				BE24ADF9B430F10A1F8C25E46980C4D5 /* main.swift */,
+				D4C51849AFD6E0D4268AF70A1D2BEA65 /* MainWindowController.swift */,
+				E75594AF8983889F186AA0422731168C /* RootSplitViewController.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		784431F7B395EA34869CE0A2F1424A34 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				438BEB428531C243E3DB80E7E6BE1C8C /* AppIconProvider.swift */,
+				560526E24535B79A4868A1CEA9BB538B /* StatusBarView.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		7D048AF59CD2E36CBF25F7ED30AA2EAD /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				12C52E595F2E188272B6FA731672F6B8 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		9BFDC91CEFDFB6951DC96EE68D3E4C2D /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				AD7E246EB080B215ABC6916CA6BEFF19 /* Pane */,
+				784431F7B395EA34869CE0A2F1424A34 /* Shared */,
+				62B309E3361D4C7C385EFB3A88697958 /* Sidebar */,
+				3C9D0E7A91DC9CBEAB733B35AB5BC181 /* Workspace */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		A01C8545CCF47D483D1FDF6A832D1791 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				A0A888914710CAE80BB34FF502C9D183 /* CloverError.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		AAE31968182093803A7FDA245D0FD57A /* FileOperations */ = {
+			isa = PBXGroup;
+			children = (
+				F2824C508D92979DE6ECD385EE6F31B4 /* FileOperationService.swift */,
+			);
+			path = FileOperations;
+			sourceTree = "<group>";
+		};
+		AD7E246EB080B215ABC6916CA6BEFF19 /* Pane */ = {
+			isa = PBXGroup;
+			children = (
+				A2FDE8DD9D5B592085831353F0609524 /* FilePaneViewController.swift */,
+				AEF09417931684114E50B8D622BE91A1 /* FilePaneViewModel.swift */,
+				C80CBA01EFF570C3954937C2ED33F639 /* PaneLayoutController.swift */,
+			);
+			path = Pane;
+			sourceTree = "<group>";
+		};
+		BBC291CF3795F428988A47179356D29D = {
+			isa = PBXGroup;
+			children = (
+				45037544E7801E62CB5CD376CEA3146E /* Clover */,
+				27C4A59F10E80A2E1D6195C0DA0340E9 /* Tests */,
+				F86A2BEC4A781FF08AEB3B85DFAF74CE /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E04A11EF41FE0652F22FDD30FC93E8AE /* Providers */ = {
+			isa = PBXGroup;
+			children = (
+				29BB0C3BB9CFAE82C1C6D9E7896DC434 /* FileProvider.swift */,
+				1BE074912AF53053DFD39294DD0486CC /* Local */,
+			);
+			path = Providers;
+			sourceTree = "<group>";
+		};
+		E883C8A2BF249FDC3614290929524842 /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				5FF67561190C5B111ED2C9480AD27945 /* FileSortService.swift */,
+			);
+			path = Search;
+			sourceTree = "<group>";
+		};
+		EF27D0E6BE07E5E36354CD2A8DE1ACBF /* Logging */ = {
+			isa = PBXGroup;
+			children = (
+				AC26012A6E2DCDFA14200C39D4186267 /* Loggers.swift */,
+			);
+			path = Logging;
+			sourceTree = "<group>";
+		};
+		F86A2BEC4A781FF08AEB3B85DFAF74CE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AF8BF7DB6E22896AA2FC8A5002208566 /* Clover.app */,
+				731A911A9436021A67F9CFD4FEDDDFEF /* CloverTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DA5988DB3BA36F080AB79615FD4EB8C6 /* Clover */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1B50FAC3B05EDD61BA028854C5A03B2A /* Build configuration list for PBXNativeTarget "Clover" */;
+			buildPhases = (
+				6ED3DD64BCDE71743827AADA9DDD4266 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Clover;
+			productName = Clover;
+			productReference = AF8BF7DB6E22896AA2FC8A5002208566 /* Clover.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F1897C3578C0E316456FD5E034F91911 /* CloverTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C9FB196A6B614CB7D44C6BA54EBE957A /* Build configuration list for PBXNativeTarget "CloverTests" */;
+			buildPhases = (
+				F30C16E7DECA6A2F43E55054CB76353F /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8053813907F36074DA51602896C81992 /* PBXTargetDependency */,
+			);
+			name = CloverTests;
+			productName = CloverTests;
+			productReference = 731A911A9436021A67F9CFD4FEDDDFEF /* CloverTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		61CF81BA6AB0806E78D313444D64A538 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1000;
+				TargetAttributes = {
+					DA5988DB3BA36F080AB79615FD4EB8C6 = {
+						DevelopmentTeam = GBJH26W27R;
+						ProvisioningStyle = Automatic;
+					};
+					F1897C3578C0E316456FD5E034F91911 = {
+						TestTargetID = DA5988DB3BA36F080AB79615FD4EB8C6;
+					};
+				};
+			};
+			buildConfigurationList = 2C64E851089FB9832CCA146FDB4BC0AB /* Build configuration list for PBXProject "Clover" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = BBC291CF3795F428988A47179356D29D;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DA5988DB3BA36F080AB79615FD4EB8C6 /* Clover */,
+				F1897C3578C0E316456FD5E034F91911 /* CloverTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6ED3DD64BCDE71743827AADA9DDD4266 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				544ABD8EAF04C6032626D5ED20CC4A0B /* AppDelegate.swift in Sources */,
+				85DF0DE48387BB4A8417DD84E17D81F3 /* AppEnvironment.swift in Sources */,
+				3AC7522317998321D971FC8C4ED065B0 /* AppIconProvider.swift in Sources */,
+				E8DF2DB7FD0359C56F873AEE07E38AD9 /* BookmarkStore.swift in Sources */,
+				2B863BA5B9857B3727CE48A664249BA8 /* CloverError.swift in Sources */,
+				11FFAE2FC4E2C9542E482B060B6773F3 /* FileItem.swift in Sources */,
+				9665D2CE61FD9CE7F3D32B194A00997B /* FileOperationService.swift in Sources */,
+				D5E03A3249C9FBDB802036E263410533 /* FilePaneViewController.swift in Sources */,
+				E5BDE84B234307E6340B55A88E62F725 /* FilePaneViewModel.swift in Sources */,
+				58ECD88995147D251A11D2D9672AEAF0 /* FileProvider.swift in Sources */,
+				F162A0D8BB2E2AAD8078DA4A8C78EBA1 /* FileSortService.swift in Sources */,
+				2D93B169E6EA80D6D741EA936DCA8E57 /* LocalFileProvider.swift in Sources */,
+				68D9CB57B46AB4806466759531142DD9 /* Loggers.swift in Sources */,
+				13B1AE83407EF32F1EDDFD5AE95E47FA /* MainWindowController.swift in Sources */,
+				9A1037452CEC70B93AEB41FEEB8A8D25 /* PaneLayoutController.swift in Sources */,
+				7EAB3714F5D4D3FFA024B333A5969815 /* PaneState.swift in Sources */,
+				50BC3E096E6677189DE412ED596C498E /* RootSplitViewController.swift in Sources */,
+				75FB404C363FF00BB6612739C3721FD4 /* SidebarItem.swift in Sources */,
+				CE4463E06D4260368EF2038FF258C4CE /* SidebarViewController.swift in Sources */,
+				FB85612F61A988E2784B807FCD84DEB5 /* StatusBarView.swift in Sources */,
+				B4E21223B928071A3907A07D62330FB6 /* Workspace.swift in Sources */,
+				E82B46BACC16A05225090DD3C2807E38 /* WorkspaceViewController.swift in Sources */,
+				E5DA76F20C89AD075ED3E057438C03A3 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F30C16E7DECA6A2F43E55054CB76353F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5301A043C5464227552C15A084BE6EA9 /* FileSortServiceTests.swift in Sources */,
+				9500466833CC1E26DD2BF3B3A0EBACE0 /* LocalFileProviderTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8053813907F36074DA51602896C81992 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA5988DB3BA36F080AB79615FD4EB8C6 /* Clover */;
+			targetProxy = 045D4E3ED83A0552BE7C5E9F3805A8B2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		26AD663983A435E8E45CD7146AB39BC1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GBJH26W27R;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = GBJH26W27R;
+				INFOPLIST_FILE = Clover/Resources/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				PRODUCT_BUNDLE_IDENTIFIER = com.lingchen.clover;
+				PRODUCT_NAME = Clover;
+				SWIFT_MODULE_NAME = Clover;
+			};
+			name = Release;
+		};
+		8ABF5B588C767B3E06619E0C0EC9F0F1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ENABLE_TESTABILITY = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		8FF351B6999DCF980CC079396718A9ED /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ENABLE_TESTABILITY = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		B94FE8272A0BC5CE11C8B5547545C2B7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				INFOPLIST_FILE = Tests/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lingchen.cloverTests;
+				PRODUCT_NAME = CloverTests;
+				SWIFT_MODULE_NAME = CloverTests;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Clover.app/Contents/MacOS/Clover";
+				TEST_TARGET_NAME = Clover;
+			};
+			name = Release;
+		};
+		CEEBE58C2222A4A19C7BEDB08A4FA5E0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				INFOPLIST_FILE = Tests/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lingchen.cloverTests;
+				PRODUCT_NAME = CloverTests;
+				SWIFT_MODULE_NAME = CloverTests;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Clover.app/Contents/MacOS/Clover";
+				TEST_TARGET_NAME = Clover;
+			};
+			name = Debug;
+		};
+		F6869040DF3C57F382E547F4BE244E01 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GBJH26W27R;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = GBJH26W27R;
+				INFOPLIST_FILE = Clover/Resources/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				PRODUCT_BUNDLE_IDENTIFIER = com.lingchen.clover;
+				PRODUCT_NAME = Clover;
+				SWIFT_MODULE_NAME = Clover;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1B50FAC3B05EDD61BA028854C5A03B2A /* Build configuration list for PBXNativeTarget "Clover" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F6869040DF3C57F382E547F4BE244E01 /* Debug */,
+				26AD663983A435E8E45CD7146AB39BC1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = "";
+		};
+		2C64E851089FB9832CCA146FDB4BC0AB /* Build configuration list for PBXProject "Clover" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8ABF5B588C767B3E06619E0C0EC9F0F1 /* Debug */,
+				8FF351B6999DCF980CC079396718A9ED /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C9FB196A6B614CB7D44C6BA54EBE957A /* Build configuration list for PBXNativeTarget "CloverTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CEEBE58C2222A4A19C7BEDB08A4FA5E0 /* Debug */,
+				B94FE8272A0BC5CE11C8B5547545C2B7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = "";
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 61CF81BA6AB0806E78D313444D64A538 /* Project object */;
+}

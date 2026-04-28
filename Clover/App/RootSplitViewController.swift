@@ -1,0 +1,44 @@
+import AppKit
+
+final class RootSplitViewController: NSSplitViewController {
+    private let sidebarViewController: SidebarViewController
+    private let workspaceViewController: WorkspaceViewController
+
+    init(environment: AppEnvironment) {
+        sidebarViewController = SidebarViewController()
+        workspaceViewController = WorkspaceViewController(environment: environment)
+        super.init(nibName: nil, bundle: nil)
+        sidebarViewController.delegate = self
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        splitView.isVertical = true
+        splitView.dividerStyle = .thin
+
+        let sidebarItem = NSSplitViewItem(sidebarWithViewController: sidebarViewController)
+        sidebarItem.minimumThickness = 180
+        sidebarItem.maximumThickness = 320
+        sidebarItem.canCollapse = false
+
+        let workspaceItem = NSSplitViewItem(viewController: workspaceViewController)
+        workspaceItem.minimumThickness = 520
+
+        addSplitViewItem(sidebarItem)
+        addSplitViewItem(workspaceItem)
+    }
+
+    func refreshActivePane() {
+        workspaceViewController.refreshActivePane()
+    }
+}
+
+extension RootSplitViewController: SidebarViewControllerDelegate {
+    func sidebarViewController(_ controller: SidebarViewController, didSelect url: URL) {
+        workspaceViewController.openInActivePane(url)
+    }
+}
