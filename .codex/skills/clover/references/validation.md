@@ -49,11 +49,28 @@ Useful log command:
 /usr/bin/log show --style compact --last 5m --predicate 'process == "Clover"'
 ```
 
+## UI Regression Checks
+
+When changing AppKit interactions, manually reason through or test the matching UI surface before finishing:
+
+- Toolbar/layout picker: current toolbar content is readable, commands fire on first click, and popovers anchor to the toolbar control rather than drifting to the window center.
+- List/grid parity: operations available in list mode should also work in grid mode unless explicitly scoped.
+- Drag/drop: verify list-to-list, list-to-grid, grid-to-list, and grid-to-grid paths when drag/drop code changes. Include dropping onto blank grid space.
+- Thumbnails: list and grid cells should first show an icon, then replace it with a non-distorted Quick Look thumbnail when available.
+- Quick Look: Space opens preview for the selected item; arrow keys move through pane items while preview is visible.
+- Inline rename: Return and selected-name click should edit the visible filename in place.
+
 ## Manual Review
 
 Before final response:
 
 - Search for direct UI-layer `FileManager` usage when touching file operations.
+- Search for list/grid asymmetry when changing file interactions:
+
+```bash
+rg -n "tableView|collectionView|FileTableView|FileCollectionView|dragging|thumbnail|QuickLook|QLPreview" Clover/UI Clover/App
+```
+
 - Check large Swift files after meaningful edits:
 
 ```bash
