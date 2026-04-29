@@ -16,6 +16,10 @@ final class PaneLayoutController: NSViewController {
         panes.count
     }
 
+    var currentLayout: PaneLayout {
+        layout
+    }
+
     init(environment: AppEnvironment) {
         self.environment = environment
         super.init(nibName: nil, bundle: nil)
@@ -40,6 +44,26 @@ final class PaneLayoutController: NSViewController {
 
     func focusActivePathInput() {
         activePane?.focusPathInput(nil)
+    }
+
+    func createFolderInActivePane() {
+        activePane?.createFolder(nil)
+    }
+
+    func renameSelectedItemInActivePane() {
+        activePane?.renameSelectedItem(nil)
+    }
+
+    func copySelectedItemsInActivePane() {
+        activePane?.copySelectedItems(nil)
+    }
+
+    func moveSelectedItemsInActivePane() {
+        activePane?.moveSelectedItems(nil)
+    }
+
+    func trashSelectedItemsInActivePane() {
+        activePane?.trashSelectedItems(nil)
     }
 
     func openInActivePane(_ url: URL) {
@@ -77,7 +101,7 @@ final class PaneLayoutController: NSViewController {
     }
 
     private func makePane() -> FilePaneViewController {
-        let viewModel = FilePaneViewModel(provider: environment.fileProvider)
+        let viewModel = FilePaneViewModel(provider: environment.fileProvider, fileOperationService: environment.fileOperationService)
         let pane = FilePaneViewController(viewModel: viewModel)
         pane.statusHandler = { [weak self] text in
             self?.statusHandler?(text)

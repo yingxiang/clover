@@ -17,6 +17,7 @@ enum AppSymbol: String {
     case preview = "eye"
     case grid = "square.grid.2x2"
     case list = "list.bullet"
+    case layoutSplit = "rectangle.split.2x1"
 }
 
 enum AppIconProvider {

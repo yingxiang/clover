@@ -82,32 +82,40 @@ final class LocalFileProvider: FileProvider {
         }.value
     }
 
-    func moveItems(_ urls: [URL], to destinationURL: URL) async throws {
+    func moveItem(at url: URL, to destinationURL: URL) async throws {
         try await Task.detached(priority: .userInitiated) {
             let fileManager = FileManager.default
-            for url in urls {
-                try Task.checkCancellation()
-                let destination = destinationURL.appendingPathComponent(url.lastPathComponent)
-                if fileManager.fileExists(atPath: destination.path) {
-                    throw CloverError.fileAlreadyExists(destination)
-                }
-                try fileManager.moveItem(at: url, to: destination)
+            if fileManager.fileExists(atPath: destinationURL.path) {
+                throw CloverError.fileAlreadyExists(destinationURL)
             }
+            try fileManager.moveItem(at: url, to: destinationURL)
         }.value
     }
 
-    func copyItems(_ urls: [URL], to destinationURL: URL) async throws {
+    func copyItem(at url: URL, to destinationURL: URL) async throws {
         try await Task.detached(priority: .userInitiated) {
             let fileManager = FileManager.default
-            for url in urls {
-                try Task.checkCancellation()
-                let destination = destinationURL.appendingPathComponent(url.lastPathComponent)
-                if fileManager.fileExists(atPath: destination.path) {
-                    throw CloverError.fileAlreadyExists(destination)
-                }
-                try fileManager.copyItem(at: url, to: destination)
+            if fileManager.fileExists(atPath: destinationURL.path) {
+                throw CloverError.fileAlreadyExists(destinationURL)
             }
+            try fileManager.copyItem(at: url, to: destinationURL)
         }.value
+    }
+
+    func moveItems(_ urls: [URL], to destinationURL: URL) async throws {
+        for url in urls {
+            try Task.checkCancellation()
+            let destination = destinationURL.appendingPathComponent(url.lastPathComponent)
+            try await moveItem(at: url, to: destination)
+        }
+    }
+
+    func copyItems(_ urls: [URL], to destinationURL: URL) async throws {
+        for url in urls {
+            try Task.checkCancellation()
+            let destination = destinationURL.appendingPathComponent(url.lastPathComponent)
+            try await copyItem(at: url, to: destination)
+        }
     }
 
     func trashItems(_ urls: [URL]) async throws {

@@ -62,6 +62,14 @@ private final class PaneLayoutMockProvider: FileProvider, @unchecked Sendable {
         throw CloverError.unsupportedOperation
     }
 
+    func moveItem(at url: URL, to destinationURL: URL) async throws {
+        throw CloverError.unsupportedOperation
+    }
+
+    func copyItem(at url: URL, to destinationURL: URL) async throws {
+        throw CloverError.unsupportedOperation
+    }
+
     func moveItems(_ urls: [URL], to destinationURL: URL) async throws {
         throw CloverError.unsupportedOperation
     }

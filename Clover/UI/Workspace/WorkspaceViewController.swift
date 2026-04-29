@@ -47,8 +47,32 @@ final class WorkspaceViewController: NSViewController {
         paneController.focusActivePathInput()
     }
 
+    func createFolderInActivePane() {
+        paneController.createFolderInActivePane()
+    }
+
+    func renameSelectedItemInActivePane() {
+        paneController.renameSelectedItemInActivePane()
+    }
+
+    func copySelectedItemsInActivePane() {
+        paneController.copySelectedItemsInActivePane()
+    }
+
+    func moveSelectedItemsInActivePane() {
+        paneController.moveSelectedItemsInActivePane()
+    }
+
+    func trashSelectedItemsInActivePane() {
+        paneController.trashSelectedItemsInActivePane()
+    }
+
     func setPaneLayout(_ layout: PaneLayout) {
         paneController.setLayout(layout)
+    }
+
+    var currentPaneLayout: PaneLayout {
+        paneController.currentLayout
     }
 
     func openInActivePane(_ url: URL) {

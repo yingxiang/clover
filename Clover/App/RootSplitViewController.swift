@@ -40,8 +40,32 @@ final class RootSplitViewController: NSSplitViewController {
         workspaceViewController.focusActivePathInput()
     }
 
+    func createFolderInActivePane() {
+        workspaceViewController.createFolderInActivePane()
+    }
+
+    func renameSelectedItemInActivePane() {
+        workspaceViewController.renameSelectedItemInActivePane()
+    }
+
+    func copySelectedItemsInActivePane() {
+        workspaceViewController.copySelectedItemsInActivePane()
+    }
+
+    func moveSelectedItemsInActivePane() {
+        workspaceViewController.moveSelectedItemsInActivePane()
+    }
+
+    func trashSelectedItemsInActivePane() {
+        workspaceViewController.trashSelectedItemsInActivePane()
+    }
+
     func setPaneLayout(_ layout: PaneLayout) {
         workspaceViewController.setPaneLayout(layout)
+    }
+
+    var currentPaneLayout: PaneLayout {
+        workspaceViewController.currentPaneLayout
     }
 }
 
