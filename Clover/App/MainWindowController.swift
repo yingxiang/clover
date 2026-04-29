@@ -33,6 +33,14 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         rootViewController.refreshActivePane()
     }
 
+    @objc func focusActivePathInput(_ sender: Any?) {
+        rootViewController.focusActivePathInput()
+    }
+
+    func setPaneLayout(_ layout: PaneLayout) {
+        rootViewController.setPaneLayout(layout)
+    }
+
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
         [.refresh, .flexibleSpace]
     }

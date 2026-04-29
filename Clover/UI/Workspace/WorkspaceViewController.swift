@@ -43,6 +43,14 @@ final class WorkspaceViewController: NSViewController {
         paneController.refreshActivePane()
     }
 
+    func focusActivePathInput() {
+        paneController.focusActivePathInput()
+    }
+
+    func setPaneLayout(_ layout: PaneLayout) {
+        paneController.setLayout(layout)
+    }
+
     func openInActivePane(_ url: URL) {
         paneController.openInActivePane(url)
     }

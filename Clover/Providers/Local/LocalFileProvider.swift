@@ -15,18 +15,28 @@ final class LocalFileProvider: FileProvider {
                 throw CloverError.directoryNotFound(url)
             }
 
-            let keys: Set<URLResourceKey> = [.nameKey, .isDirectoryKey, .fileSizeKey, .totalFileSizeKey, .contentModificationDateKey, .creationDateKey, .contentTypeKey, .isHiddenKey]
+            let keys: Set<URLResourceKey> = [
+                .nameKey,
+                .isDirectoryKey,
+                .fileSizeKey,
+                .totalFileSizeKey,
+                .contentModificationDateKey,
+                .creationDateKey,
+                .contentTypeKey,
+                .isHiddenKey
+            ]
             let childURLs = try fileManager.contentsOfDirectory(at: url, includingPropertiesForKeys: Array(keys), options: [.skipsPackageDescendants])
 
             return childURLs.compactMap { childURL in
                 do {
                     let values = try childURL.resourceValues(forKeys: keys)
                     let name = values.name ?? childURL.lastPathComponent
+                    let isDirectory = values.isDirectory ?? false
                     return FileItem(
                         url: childURL,
                         name: name,
-                        isDirectory: values.isDirectory ?? false,
-                        size: Int64(values.totalFileSize ?? values.fileSize ?? 0),
+                        isDirectory: isDirectory,
+                        size: isDirectory ? nil : Int64(values.totalFileSize ?? values.fileSize ?? 0),
                         modificationDate: values.contentModificationDate,
                         creationDate: values.creationDate,
                         typeIdentifier: values.contentType?.identifier,
@@ -34,7 +44,18 @@ final class LocalFileProvider: FileProvider {
                     )
                 } catch {
                     let name = childURL.lastPathComponent
-                    return FileItem(url: childURL, name: name, isDirectory: false, size: nil, modificationDate: nil, creationDate: nil, typeIdentifier: nil, isHidden: name.hasPrefix("."))
+                    var isDirectory: ObjCBool = false
+                    _ = fileManager.fileExists(atPath: childURL.path, isDirectory: &isDirectory)
+                    return FileItem(
+                        url: childURL,
+                        name: name,
+                        isDirectory: isDirectory.boolValue,
+                        size: nil,
+                        modificationDate: nil,
+                        creationDate: nil,
+                        typeIdentifier: nil,
+                        isHidden: name.hasPrefix(".")
+                    )
                 }
             }
         }.value

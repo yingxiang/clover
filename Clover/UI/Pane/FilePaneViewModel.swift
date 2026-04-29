@@ -26,12 +26,8 @@ final class FilePaneViewModel {
     }
 
     func load(url: URL? = nil) {
-        if let url {
-            currentURL = url
-        }
-
         loadTask?.cancel()
-        let targetURL = currentURL
+        let targetURL = url ?? currentURL
         let includeHidden = showHiddenFiles
         let sort = sortOption
         onStatusChange?("Loading \(targetURL.lastPathComponent.isEmpty ? targetURL.path : targetURL.lastPathComponent)...")
@@ -43,7 +39,8 @@ final class FilePaneViewModel {
                 let visibleItems = includeHidden ? loadedItems : loadedItems.filter { !$0.isHidden }
                 let sortedItems = FileSortService.sort(visibleItems, by: sort)
                 await MainActor.run {
-                    guard let self, self.currentURL == targetURL else { return }
+                    guard let self else { return }
+                    self.currentURL = targetURL
                     self.items = sortedItems
                     self.onChange?()
                     self.onStatusChange?("\(sortedItems.count) items")

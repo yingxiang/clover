@@ -3,8 +3,9 @@ import AppKit
 final class FilePaneViewController: NSViewController {
     let viewModel: FilePaneViewModel
     var activationHandler: ((FilePaneViewController) -> Void)?
+    var statusHandler: ((String) -> Void)?
 
-    private let pathLabel = NSTextField(labelWithString: "")
+    private let pathBarView = PathBarView()
     private let tableView = NSTableView()
     private let scrollView = NSScrollView()
     private let loadingIndicator = NSProgressIndicator()
@@ -19,7 +20,10 @@ final class FilePaneViewController: NSViewController {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
         self.viewModel.onChange = { [weak self] in self?.reload() }
-        self.viewModel.onStatusChange = { [weak self] text in self?.statusChanged(text) }
+        self.viewModel.onStatusChange = { [weak self] text in
+            self?.statusChanged(text)
+            self?.statusHandler?(text)
+        }
         self.viewModel.onError = { [weak self] error in self?.showError(error) }
     }
 
@@ -34,7 +38,7 @@ final class FilePaneViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        configurePathLabel()
+        configurePathBar()
         configureTableView()
         configureLoadingIndicator()
         viewModel.load()
@@ -58,11 +62,20 @@ final class FilePaneViewController: NSViewController {
         viewModel.load(url: url)
     }
 
-    private func configurePathLabel() {
-        pathLabel.font = .systemFont(ofSize: 12, weight: .medium)
-        pathLabel.lineBreakMode = .byTruncatingMiddle
-        pathLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(pathLabel)
+    @objc func focusPathInput(_ sender: Any?) {
+        activationHandler?(self)
+        pathBarView.beginEditing()
+    }
+
+    private func configurePathBar() {
+        pathBarView.translatesAutoresizingMaskIntoConstraints = false
+        pathBarView.navigationHandler = { [weak self] url in
+            self?.viewModel.load(url: url)
+        }
+        pathBarView.pathSubmitHandler = { [weak self] path in
+            self?.openSubmittedPath(path)
+        }
+        view.addSubview(pathBarView)
     }
 
     private func configureTableView() {
@@ -94,13 +107,13 @@ final class FilePaneViewController: NSViewController {
         view.addSubview(scrollView)
 
         NSLayoutConstraint.activate([
-            pathLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
-            pathLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
-            pathLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
-            pathLabel.heightAnchor.constraint(equalToConstant: 22),
+            pathBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            pathBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+            pathBarView.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
+            pathBarView.heightAnchor.constraint(equalToConstant: 26),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.topAnchor.constraint(equalTo: pathLabel.bottomAnchor, constant: 6),
+            scrollView.topAnchor.constraint(equalTo: pathBarView.bottomAnchor, constant: 6),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
@@ -113,14 +126,14 @@ final class FilePaneViewController: NSViewController {
         view.addSubview(loadingIndicator)
 
         NSLayoutConstraint.activate([
-            loadingIndicator.trailingAnchor.constraint(equalTo: pathLabel.trailingAnchor),
-            loadingIndicator.centerYAnchor.constraint(equalTo: pathLabel.centerYAnchor)
+            loadingIndicator.trailingAnchor.constraint(equalTo: pathBarView.trailingAnchor, constant: -4),
+            loadingIndicator.centerYAnchor.constraint(equalTo: pathBarView.centerYAnchor)
         ])
     }
 
     private func reload() {
         loadingIndicator.stopAnimation(nil)
-        pathLabel.stringValue = viewModel.currentURL.path
+        pathBarView.update(url: viewModel.currentURL)
         tableView.reloadData()
     }
 
@@ -150,6 +163,12 @@ final class FilePaneViewController: NSViewController {
                 }
             }
         }
+    }
+
+    private func openSubmittedPath(_ path: String) {
+        let expandedPath = (path as NSString).expandingTildeInPath
+        let url = URL(fileURLWithPath: expandedPath, isDirectory: true)
+        viewModel.load(url: url.standardizedFileURL)
     }
 }
 

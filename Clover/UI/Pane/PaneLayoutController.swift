@@ -4,9 +4,17 @@ final class PaneLayoutController: NSViewController {
     var statusHandler: ((String) -> Void)?
 
     private let environment: AppEnvironment
-    private var layout: PaneLayout = .single
+    private(set) var layout: PaneLayout = .single
     private var panes: [FilePaneViewController] = []
     private weak var activePane: FilePaneViewController?
+
+    var activePaneID: UUID? {
+        activePane?.viewModel.id
+    }
+
+    var paneCount: Int {
+        panes.count
+    }
 
     init(environment: AppEnvironment) {
         self.environment = environment
@@ -30,13 +38,29 @@ final class PaneLayoutController: NSViewController {
         activePane?.refresh()
     }
 
+    func focusActivePathInput() {
+        activePane?.focusPathInput(nil)
+    }
+
     func openInActivePane(_ url: URL) {
         activePane?.open(url)
     }
 
+    func activatePane(at index: Int) {
+        guard panes.indices.contains(index) else { return }
+        setActivePane(panes[index])
+    }
+
     func setLayout(_ newLayout: PaneLayout) {
+        let previousActivePane = activePane
         layout = newLayout
         let count = paneCount(for: newLayout)
+
+        if panes.count > count, let previousActivePane, let activeIndex = panes.firstIndex(where: { $0 === previousActivePane }), activeIndex >= count {
+            panes.remove(at: activeIndex)
+            panes.insert(previousActivePane, at: 0)
+        }
+
         while panes.count < count {
             panes.append(makePane())
         }
@@ -44,17 +68,20 @@ final class PaneLayoutController: NSViewController {
             panes = Array(panes.prefix(count))
         }
         rebuildLayout()
-        if activePane == nil {
+        if let previousActivePane, panes.contains(where: { $0 === previousActivePane }) {
+            setActivePane(previousActivePane)
+        } else {
             setActivePane(panes.first)
         }
+        statusHandler?("Layout: \(displayName(for: newLayout))")
     }
 
     private func makePane() -> FilePaneViewController {
         let viewModel = FilePaneViewModel(provider: environment.fileProvider)
-        viewModel.onStatusChange = { [weak self] text in
+        let pane = FilePaneViewController(viewModel: viewModel)
+        pane.statusHandler = { [weak self] text in
             self?.statusHandler?(text)
         }
-        let pane = FilePaneViewController(viewModel: viewModel)
         pane.activationHandler = { [weak self] pane in
             self?.setActivePane(pane)
         }
@@ -120,6 +147,19 @@ final class PaneLayoutController: NSViewController {
             return 2
         case .fourGrid:
             return 4
+        }
+    }
+
+    private func displayName(for layout: PaneLayout) -> String {
+        switch layout {
+        case .single:
+            return "Single"
+        case .twoVertical:
+            return "Two Vertical"
+        case .twoHorizontal:
+            return "Two Horizontal"
+        case .fourGrid:
+            return "Four Grid"
         }
     }
 }

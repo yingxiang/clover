@@ -12,6 +12,8 @@
 		2B863BA5B9857B3727CE48A664249BA8 /* CloverError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A888914710CAE80BB34FF502C9D183 /* CloverError.swift */; };
 		2D93B169E6EA80D6D741EA936DCA8E57 /* LocalFileProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BFF4D7788A080F55551F7F62546A68D /* LocalFileProvider.swift */; };
 		3AC7522317998321D971FC8C4ED065B0 /* AppIconProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438BEB428531C243E3DB80E7E6BE1C8C /* AppIconProvider.swift */; };
+		43F13BAD9E217E4223FB44501698DA2C /* PathBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C427080944D958076079D8A2630919CE /* PathBarView.swift */; };
+		44B4C66F81F828C32A4A98205A3C119E /* PaneLayoutControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8F9925126EB6F83676A96DF920460D /* PaneLayoutControllerTests.swift */; };
 		50BC3E096E6677189DE412ED596C498E /* RootSplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75594AF8983889F186AA0422731168C /* RootSplitViewController.swift */; };
 		5301A043C5464227552C15A084BE6EA9 /* FileSortServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 459639B48F030FC3E6767565C49712B9 /* FileSortServiceTests.swift */; };
 		544ABD8EAF04C6032626D5ED20CC4A0B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFACA9DFBC871F5278FFBFAFB44F9EFD /* AppDelegate.swift */; };
@@ -31,6 +33,7 @@
 		E82B46BACC16A05225090DD3C2807E38 /* WorkspaceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56C614CF444CA44DEF7DBB463381FF6 /* WorkspaceViewController.swift */; };
 		E8DF2DB7FD0359C56F873AEE07E38AD9 /* BookmarkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD8B28F92B6C38E3218E8A7395CADB47 /* BookmarkStore.swift */; };
 		F162A0D8BB2E2AAD8078DA4A8C78EBA1 /* FileSortService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF67561190C5B111ED2C9480AD27945 /* FileSortService.swift */; };
+		F325566F33E948576C19979F248D6ECD /* FilePaneViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF037061F931775A0EDC975B818010B /* FilePaneViewModelTests.swift */; };
 		FB85612F61A988E2784B807FCD84DEB5 /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560526E24535B79A4868A1CEA9BB538B /* StatusBarView.swift */; };
 /* End PBXBuildFile section */
 
@@ -62,11 +65,13 @@
 		A0A888914710CAE80BB34FF502C9D183 /* CloverError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloverError.swift; sourceTree = "<group>"; };
 		A2FDE8DD9D5B592085831353F0609524 /* FilePaneViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePaneViewController.swift; sourceTree = "<group>"; };
 		AC26012A6E2DCDFA14200C39D4186267 /* Loggers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Loggers.swift; sourceTree = "<group>"; };
+		ADF037061F931775A0EDC975B818010B /* FilePaneViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePaneViewModelTests.swift; sourceTree = "<group>"; };
 		AEF09417931684114E50B8D622BE91A1 /* FilePaneViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePaneViewModel.swift; sourceTree = "<group>"; };
 		AF8BF7DB6E22896AA2FC8A5002208566 /* Clover.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clover.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AFD69DF177BD7F0451B6359DFA7D2FB7 /* LocalFileProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileProviderTests.swift; sourceTree = "<group>"; };
 		BE24ADF9B430F10A1F8C25E46980C4D5 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		BFACA9DFBC871F5278FFBFAFB44F9EFD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C427080944D958076079D8A2630919CE /* PathBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathBarView.swift; sourceTree = "<group>"; };
 		C80CBA01EFF570C3954937C2ED33F639 /* PaneLayoutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneLayoutController.swift; sourceTree = "<group>"; };
 		D4C51849AFD6E0D4268AF70A1D2BEA65 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		DD8B28F92B6C38E3218E8A7395CADB47 /* BookmarkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkStore.swift; sourceTree = "<group>"; };
@@ -74,6 +79,7 @@
 		E56C614CF444CA44DEF7DBB463381FF6 /* WorkspaceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceViewController.swift; sourceTree = "<group>"; };
 		E75594AF8983889F186AA0422731168C /* RootSplitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootSplitViewController.swift; sourceTree = "<group>"; };
 		F2824C508D92979DE6ECD385EE6F31B4 /* FileOperationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOperationService.swift; sourceTree = "<group>"; };
+		FA8F9925126EB6F83676A96DF920460D /* PaneLayoutControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneLayoutControllerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -99,9 +105,11 @@
 		27C4A59F10E80A2E1D6195C0DA0340E9 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				ADF037061F931775A0EDC975B818010B /* FilePaneViewModelTests.swift */,
 				459639B48F030FC3E6767565C49712B9 /* FileSortServiceTests.swift */,
 				11082ED574757AC386D409A1F63411D8 /* Info.plist */,
 				AFD69DF177BD7F0451B6359DFA7D2FB7 /* LocalFileProviderTests.swift */,
+				FA8F9925126EB6F83676A96DF920460D /* PaneLayoutControllerTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -225,6 +233,7 @@
 				A2FDE8DD9D5B592085831353F0609524 /* FilePaneViewController.swift */,
 				AEF09417931684114E50B8D622BE91A1 /* FilePaneViewModel.swift */,
 				C80CBA01EFF570C3954937C2ED33F639 /* PaneLayoutController.swift */,
+				C427080944D958076079D8A2630919CE /* PathBarView.swift */,
 			);
 			path = Pane;
 			sourceTree = "<group>";
@@ -361,6 +370,7 @@
 				13B1AE83407EF32F1EDDFD5AE95E47FA /* MainWindowController.swift in Sources */,
 				9A1037452CEC70B93AEB41FEEB8A8D25 /* PaneLayoutController.swift in Sources */,
 				7EAB3714F5D4D3FFA024B333A5969815 /* PaneState.swift in Sources */,
+				43F13BAD9E217E4223FB44501698DA2C /* PathBarView.swift in Sources */,
 				50BC3E096E6677189DE412ED596C498E /* RootSplitViewController.swift in Sources */,
 				75FB404C363FF00BB6612739C3721FD4 /* SidebarItem.swift in Sources */,
 				CE4463E06D4260368EF2038FF258C4CE /* SidebarViewController.swift in Sources */,
@@ -375,8 +385,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F325566F33E948576C19979F248D6ECD /* FilePaneViewModelTests.swift in Sources */,
 				5301A043C5464227552C15A084BE6EA9 /* FileSortServiceTests.swift in Sources */,
 				9500466833CC1E26DD2BF3B3A0EBACE0 /* LocalFileProviderTests.swift in Sources */,
+				44B4C66F81F828C32A4A98205A3C119E /* PaneLayoutControllerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -410,6 +422,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_TESTABILITY = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				SDKROOT = macosx;
@@ -422,6 +435,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_TESTABILITY = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				SDKROOT = macosx;

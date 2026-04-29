@@ -35,6 +35,14 @@ final class RootSplitViewController: NSSplitViewController {
     func refreshActivePane() {
         workspaceViewController.refreshActivePane()
     }
+
+    func focusActivePathInput() {
+        workspaceViewController.focusActivePathInput()
+    }
+
+    func setPaneLayout(_ layout: PaneLayout) {
+        workspaceViewController.setPaneLayout(layout)
+    }
 }
 
 extension RootSplitViewController: SidebarViewControllerDelegate {
