@@ -27,12 +27,14 @@
 		9500466833CC1E26DD2BF3B3A0EBACE0 /* LocalFileProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFD69DF177BD7F0451B6359DFA7D2FB7 /* LocalFileProviderTests.swift */; };
 		9665D2CE61FD9CE7F3D32B194A00997B /* FileOperationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2824C508D92979DE6ECD385EE6F31B4 /* FileOperationService.swift */; };
 		9A1037452CEC70B93AEB41FEEB8A8D25 /* PaneLayoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C80CBA01EFF570C3954937C2ED33F639 /* PaneLayoutController.swift */; };
+		9EBEF5FD75D6B3983ABE9D0AAE112FA5 /* FileGridDetailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 182C4A8CD037BD81B43F6432EC7FA5D6 /* FileGridDetailProvider.swift */; };
 		ACA56E3B716C5637A42F5A24539C99D8 /* FileGridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 236747207772FEFB695BD2E22339D4CD /* FileGridItem.swift */; };
 		B4E21223B928071A3907A07D62330FB6 /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E79C8B115EC90E3EB7847A11233A94 /* Workspace.swift */; };
 		BE8CBD60485B27E580321907C2A63947 /* FileOperationNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9228904DB68AB8A3A470396154A083FA /* FileOperationNotifications.swift */; };
 		C58011295A78F0B6B0CBE8D21F67131B /* FileOperationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0D4AE91D19658592830143B13D0A1D /* FileOperationServiceTests.swift */; };
 		CE4463E06D4260368EF2038FF258C4CE /* SidebarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C26D40858E1FB3DAF6558DA7B15374B /* SidebarViewController.swift */; };
 		D5E03A3249C9FBDB802036E263410533 /* FilePaneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2FDE8DD9D5B592085831353F0609524 /* FilePaneViewController.swift */; };
+		DB9E99DD71CB6E6A38A26703BF0DBDA7 /* FileThumbnailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EE9C82FD5D8B11D548251F8EFA4A7AC /* FileThumbnailProvider.swift */; };
 		E5BDE84B234307E6340B55A88E62F725 /* FilePaneViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEF09417931684114E50B8D622BE91A1 /* FilePaneViewModel.swift */; };
 		E5DA76F20C89AD075ED3E057438C03A3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE24ADF9B430F10A1F8C25E46980C4D5 /* main.swift */; };
 		E82B46BACC16A05225090DD3C2807E38 /* WorkspaceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56C614CF444CA44DEF7DBB463381FF6 /* WorkspaceViewController.swift */; };
@@ -57,6 +59,7 @@
 		0070D70052F7AD72E0D357BC6FDE03BA /* FileItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileItem.swift; sourceTree = "<group>"; };
 		11082ED574757AC386D409A1F63411D8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		12C52E595F2E188272B6FA731672F6B8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		182C4A8CD037BD81B43F6432EC7FA5D6 /* FileGridDetailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileGridDetailProvider.swift; sourceTree = "<group>"; };
 		1D0D4AE91D19658592830143B13D0A1D /* FileOperationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOperationServiceTests.swift; sourceTree = "<group>"; };
 		22C5B4267D233F3000441EEB4C8911B6 /* Localizable.xcstrings */ = {isa = PBXFileReference; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		236747207772FEFB695BD2E22339D4CD /* FileGridItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileGridItem.swift; sourceTree = "<group>"; };
@@ -72,6 +75,7 @@
 		5FF67561190C5B111ED2C9480AD27945 /* FileSortService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSortService.swift; sourceTree = "<group>"; };
 		6C26D40858E1FB3DAF6558DA7B15374B /* SidebarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarViewController.swift; sourceTree = "<group>"; };
 		731A911A9436021A67F9CFD4FEDDDFEF /* CloverTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CloverTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8EE9C82FD5D8B11D548251F8EFA4A7AC /* FileThumbnailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileThumbnailProvider.swift; sourceTree = "<group>"; };
 		9228904DB68AB8A3A470396154A083FA /* FileOperationNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOperationNotifications.swift; sourceTree = "<group>"; };
 		A0A888914710CAE80BB34FF502C9D183 /* CloverError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloverError.swift; sourceTree = "<group>"; };
 		A2FDE8DD9D5B592085831353F0609524 /* FilePaneViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePaneViewController.swift; sourceTree = "<group>"; };
@@ -201,7 +205,9 @@
 			isa = PBXGroup;
 			children = (
 				438BEB428531C243E3DB80E7E6BE1C8C /* AppIconProvider.swift */,
+				182C4A8CD037BD81B43F6432EC7FA5D6 /* FileGridDetailProvider.swift */,
 				C9B7784CF2E32EFE7D1F4177EBF4FBE0 /* FileIconProvider.swift */,
+				8EE9C82FD5D8B11D548251F8EFA4A7AC /* FileThumbnailProvider.swift */,
 				560526E24535B79A4868A1CEA9BB538B /* StatusBarView.swift */,
 			);
 			path = Shared;
@@ -389,6 +395,7 @@
 				3AC7522317998321D971FC8C4ED065B0 /* AppIconProvider.swift in Sources */,
 				E8DF2DB7FD0359C56F873AEE07E38AD9 /* BookmarkStore.swift in Sources */,
 				2B863BA5B9857B3727CE48A664249BA8 /* CloverError.swift in Sources */,
+				9EBEF5FD75D6B3983ABE9D0AAE112FA5 /* FileGridDetailProvider.swift in Sources */,
 				ACA56E3B716C5637A42F5A24539C99D8 /* FileGridItem.swift in Sources */,
 				948AC93F8ADC0D712E3857D838520DF9 /* FileIconProvider.swift in Sources */,
 				11FFAE2FC4E2C9542E482B060B6773F3 /* FileItem.swift in Sources */,
@@ -398,6 +405,7 @@
 				E5BDE84B234307E6340B55A88E62F725 /* FilePaneViewModel.swift in Sources */,
 				58ECD88995147D251A11D2D9672AEAF0 /* FileProvider.swift in Sources */,
 				F162A0D8BB2E2AAD8078DA4A8C78EBA1 /* FileSortService.swift in Sources */,
+				DB9E99DD71CB6E6A38A26703BF0DBDA7 /* FileThumbnailProvider.swift in Sources */,
 				FDDB8A7D6AEA12CEDE417241A85CAEF5 /* L10n.swift in Sources */,
 				2D93B169E6EA80D6D741EA936DCA8E57 /* LocalFileProvider.swift in Sources */,
 				68D9CB57B46AB4806466759531142DD9 /* Loggers.swift in Sources */,

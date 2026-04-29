@@ -2,8 +2,10 @@ import AppKit
 
 final class MainWindowController: NSWindowController, NSToolbarDelegate {
     private let rootViewController: RootSplitViewController
-    private weak var layoutButton: NSButton?
-    private weak var viewModeButton: NSButton?
+    private weak var layoutToolbarItem: NSToolbarItem?
+    private weak var layoutToolbarControl: ToolbarPickerControl?
+    private weak var viewModeToolbarItem: NSToolbarItem?
+    private weak var viewModeToolbarControl: ToolbarPickerControl?
     private var layoutPopover: NSPopover?
 
     init(environment: AppEnvironment) {
@@ -99,20 +101,17 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         let item = NSToolbarItem(itemIdentifier: identifier)
         item.label = L10n.layout
         item.paletteLabel = L10n.layout
-
-        let button = NSButton(image: rootViewController.currentPaneLayout.toolbarImage, target: self, action: #selector(showLayoutPicker(_:)))
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.bezelStyle = NSButton.BezelStyle.texturedRounded
-        button.imagePosition = NSControl.ImagePosition.imageOnly
-        button.setButtonType(NSButton.ButtonType.momentaryPushIn)
-        button.toolTip = L10n.layout
-        button.setAccessibilityLabel(L10n.layout)
+        let control = ToolbarPickerControl()
+        control.target = self
+        control.action = #selector(showLayoutPicker(_:))
+        control.translatesAutoresizingMaskIntoConstraints = false
+        item.view = control
         NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: 34),
-            button.heightAnchor.constraint(equalToConstant: 28)
+            control.widthAnchor.constraint(equalToConstant: 46),
+            control.heightAnchor.constraint(equalToConstant: 28)
         ])
-        layoutButton = button
-        item.view = button
+        layoutToolbarItem = item
+        layoutToolbarControl = control
         updateLayoutButton()
         return item
     }
@@ -121,34 +120,39 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         let item = NSToolbarItem(itemIdentifier: identifier)
         item.label = L10n.viewModeList
         item.paletteLabel = L10n.viewModeList
-
-        let button = NSButton(image: viewModeImage ?? NSImage(), target: self, action: #selector(toggleViewMode(_:)))
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.bezelStyle = NSButton.BezelStyle.texturedRounded
-        button.imagePosition = NSControl.ImagePosition.imageOnly
-        button.setButtonType(NSButton.ButtonType.momentaryPushIn)
+        let control = ToolbarPickerControl()
+        control.target = self
+        control.action = #selector(toggleViewMode(_:))
+        control.translatesAutoresizingMaskIntoConstraints = false
+        item.view = control
         NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: 34),
-            button.heightAnchor.constraint(equalToConstant: 28)
+            control.widthAnchor.constraint(greaterThanOrEqualToConstant: 76),
+            control.widthAnchor.constraint(lessThanOrEqualToConstant: 92),
+            control.heightAnchor.constraint(equalToConstant: 28)
         ])
-        viewModeButton = button
-        item.view = button
+        viewModeToolbarItem = item
+        viewModeToolbarControl = control
         updateViewModeButton()
         return item
     }
 
     private func updateLayoutButton() {
         let layout = rootViewController.currentPaneLayout
-        layoutButton?.image = layout.toolbarImage
-        layoutButton?.toolTip = layout.displayName
-        layoutButton?.setAccessibilityLabel(layout.displayName)
+        layoutToolbarItem?.image = layout.toolbarImage
+        layoutToolbarItem?.label = L10n.layout
+        layoutToolbarItem?.paletteLabel = L10n.layout
+        layoutToolbarItem?.toolTip = layout.displayName
+        layoutToolbarControl?.configure(title: nil, image: layout.toolbarImage, toolTip: layout.displayName)
     }
 
     private func updateViewModeButton() {
         let mode = rootViewController.currentFileViewMode
-        viewModeButton?.image = viewModeImage
-        viewModeButton?.toolTip = mode == .list ? L10n.viewModeList : L10n.viewModeGrid
-        viewModeButton?.setAccessibilityLabel(mode == .list ? L10n.viewModeList : L10n.viewModeGrid)
+        let title = mode == .list ? L10n.viewModeList : L10n.viewModeGrid
+        viewModeToolbarItem?.image = viewModeImage
+        viewModeToolbarItem?.label = title
+        viewModeToolbarItem?.paletteLabel = title
+        viewModeToolbarItem?.toolTip = title
+        viewModeToolbarControl?.configure(title: title, image: viewModeImage, toolTip: title)
     }
 
     private var viewModeImage: NSImage? {
@@ -156,12 +160,12 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         return AppIconProvider.image(symbol, accessibilityDescription: nil)
     }
 
-    @objc private func toggleViewMode(_ sender: NSButton) {
+    @objc private func toggleViewMode(_ sender: Any?) {
         let nextMode: FileViewMode = rootViewController.currentFileViewMode == .list ? .grid : .list
         setFileViewMode(nextMode)
     }
 
-    @objc private func showLayoutPicker(_ sender: NSButton) {
+    @objc private func showLayoutPicker(_ sender: Any?) {
         let controller = LayoutPickerViewController(selectedLayout: rootViewController.currentPaneLayout)
         controller.selectionHandler = { [weak self] layout in
             self?.layoutPopover?.close()
@@ -173,7 +177,86 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         popover.contentSize = NSSize(width: 174, height: 126)
         popover.contentViewController = controller
         layoutPopover = popover
-        popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .maxY)
+        if let itemView = layoutToolbarControl ?? layoutToolbarItem?.view {
+            popover.show(relativeTo: itemView.bounds, of: itemView, preferredEdge: .maxY)
+        } else if let contentView = window?.contentView {
+            let anchor = NSRect(x: contentView.bounds.midX - 87, y: contentView.bounds.maxY - 1, width: 174, height: 1)
+            popover.show(relativeTo: anchor, of: contentView, preferredEdge: .minY)
+        }
+    }
+}
+
+private final class ToolbarPickerControl: NSControl {
+    private let iconView = NSImageView()
+    private let titleField = NSTextField(labelWithString: "")
+    private let chevronView = NSImageView(image: NSImage(systemSymbolName: "chevron.down", accessibilityDescription: nil) ?? NSImage())
+    private let stackView = NSStackView()
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+
+    override var intrinsicContentSize: NSSize {
+        stackView.fittingSize
+    }
+
+    func configure(title: String?, image: NSImage?, toolTip: String) {
+        titleField.stringValue = title ?? ""
+        titleField.isHidden = title?.isEmpty ?? true
+        iconView.image = image
+        self.toolTip = toolTip
+        invalidateIntrinsicContentSize()
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        highlight(true)
+        sendAction(action, to: target)
+        highlight(false)
+    }
+
+    private func setup() {
+        wantsLayer = true
+        layer?.cornerRadius = 6
+
+        iconView.imageScaling = .scaleProportionallyUpOrDown
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        titleField.font = .systemFont(ofSize: 13)
+        titleField.lineBreakMode = .byTruncatingTail
+        titleField.translatesAutoresizingMaskIntoConstraints = false
+        chevronView.imageScaling = .scaleProportionallyDown
+        chevronView.contentTintColor = .secondaryLabelColor
+        chevronView.translatesAutoresizingMaskIntoConstraints = false
+
+        stackView.orientation = .horizontal
+        stackView.alignment = .centerY
+        stackView.spacing = 5
+        stackView.edgeInsets = NSEdgeInsets(top: 4, left: 7, bottom: 4, right: 7)
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.addArrangedSubview(iconView)
+        stackView.addArrangedSubview(titleField)
+        stackView.addArrangedSubview(chevronView)
+        addSubview(stackView)
+
+        NSLayoutConstraint.activate([
+            stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            stackView.topAnchor.constraint(equalTo: topAnchor),
+            stackView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            iconView.widthAnchor.constraint(equalToConstant: 22),
+            iconView.heightAnchor.constraint(equalToConstant: 22),
+            chevronView.widthAnchor.constraint(equalToConstant: 10),
+            chevronView.heightAnchor.constraint(equalToConstant: 10)
+        ])
+    }
+
+    private func highlight(_ isHighlighted: Bool) {
+        layer?.backgroundColor = isHighlighted ? NSColor.controlAccentColor.withAlphaComponent(0.16).cgColor : NSColor.clear.cgColor
     }
 }
 

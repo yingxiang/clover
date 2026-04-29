@@ -1,4 +1,5 @@
 import AppKit
+import Quartz
 
 final class FilePaneViewController: NSViewController {
     let viewModel: FilePaneViewModel
@@ -9,9 +10,11 @@ final class FilePaneViewController: NSViewController {
     private let tableView = FileTableView()
     private let scrollView = NSScrollView()
     private let collectionView = FileCollectionView()
-    private let collectionScrollView = NSScrollView()
+    private let collectionScrollView = FileDropScrollView()
     private let loadingIndicator = NSProgressIndicator()
     private let contextMenu = NSMenu(title: "File Actions")
+    private var previewItems: [URL] = []
+    private var previewKeyMonitor: EventMonitorToken?
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -34,6 +37,14 @@ final class FilePaneViewController: NSViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    deinit {
+        if let previewKeyMonitor {
+            Task { @MainActor in
+                previewKeyMonitor.remove()
+            }
+        }
+    }
+
     override func loadView() {
         view = NSView()
         view.wantsLayer = true
@@ -45,6 +56,7 @@ final class FilePaneViewController: NSViewController {
         configureTableView()
         configureCollectionView()
         configureLoadingIndicator()
+        configurePreviewKeyMonitor()
         NotificationCenter.default.addObserver(self, selector: #selector(fileOperationCompleted(_:)), name: .cloverFileOperationCompleted, object: nil)
         viewModel.load()
     }
@@ -81,11 +93,19 @@ final class FilePaneViewController: NSViewController {
 
     @objc func renameSelectedItem(_ sender: Any?) {
         activationHandler?(self)
-        guard let item = selectedItems().first else { return }
-        guard let name = promptForText(title: "Rename", message: "Enter a new name:", defaultValue: item.name), !name.isEmpty, name != item.name else { return }
-        runOperation {
-            try await self.viewModel.renameItem(item, to: name)
-        }
+        beginEditingSelectedItemName()
+    }
+
+    @objc func previewSelectedItem(_ sender: Any?) {
+        activationHandler?(self)
+        guard let selectedIndex = selectedItemIndexes().first else { return }
+        previewItems = viewModel.items.map(\.url)
+        guard let panel = QLPreviewPanel.shared() else { return }
+        panel.dataSource = self
+        panel.delegate = self
+        panel.reloadData()
+        panel.currentPreviewItemIndex = selectedIndex
+        panel.makeKeyAndOrderFront(nil)
     }
 
     @objc func copySelectedItems(_ sender: Any?) {
@@ -156,6 +176,9 @@ final class FilePaneViewController: NSViewController {
         tableView.dataSource = self
         tableView.target = self
         tableView.doubleAction = #selector(openSelectedItem)
+        tableView.keyHandler = { [weak self] event in
+            self?.handlePaneKeyDown(event) ?? false
+        }
         tableView.rightClickHandler = { [weak self] row in
             self?.prepareContextSelection(for: row)
         }
@@ -188,10 +211,10 @@ final class FilePaneViewController: NSViewController {
 
     private func configureCollectionView() {
         let layout = NSCollectionViewFlowLayout()
-        layout.itemSize = NSSize(width: 104, height: 92)
+        layout.itemSize = NSSize(width: 112, height: 116)
         layout.minimumInteritemSpacing = 8
-        layout.minimumLineSpacing = 10
-        layout.sectionInset = NSEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        layout.minimumLineSpacing = 14
+        layout.sectionInset = NSEdgeInsets(top: 12, left: 12, bottom: 24, right: 12)
 
         collectionView.collectionViewLayout = layout
         collectionView.frame = NSRect(x: 0, y: 0, width: 640, height: 480)
@@ -204,6 +227,9 @@ final class FilePaneViewController: NSViewController {
         collectionView.doubleClickHandler = { [weak self] index in
             self?.openItem(at: index)
         }
+        collectionView.keyHandler = { [weak self] event in
+            self?.handlePaneKeyDown(event) ?? false
+        }
         collectionView.dropHandler = { [weak self] draggingInfo, index in
             self?.performMoveDrop(draggingInfo, itemIndex: index) ?? false
         }
@@ -214,6 +240,10 @@ final class FilePaneViewController: NSViewController {
         collectionScrollView.documentView = collectionView
         collectionScrollView.hasVerticalScroller = true
         collectionScrollView.isHidden = true
+        collectionScrollView.dropHandler = { [weak self] draggingInfo in
+            self?.performMoveDrop(draggingInfo, itemIndex: nil) ?? false
+        }
+        collectionScrollView.registerForDraggedTypes([.fileURL])
         collectionScrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(collectionScrollView)
 
@@ -223,6 +253,13 @@ final class FilePaneViewController: NSViewController {
             collectionScrollView.topAnchor.constraint(equalTo: pathBarView.bottomAnchor, constant: 6),
             collectionScrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+
+    private func configurePreviewKeyMonitor() {
+        guard let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
+            self?.handlePreviewPanelKeyDown(event) == true ? nil : event
+        }) else { return }
+        previewKeyMonitor = EventMonitorToken(monitor)
     }
 
     private func configureLoadingIndicator() {
@@ -268,6 +305,15 @@ final class FilePaneViewController: NSViewController {
         }
     }
 
+    private func selectedItemIndexes() -> [Int] {
+        switch viewModel.viewMode {
+        case .list:
+            return tableView.selectedRowIndexes.map { $0 }
+        case .grid:
+            return collectionView.selectionIndexPaths.map(\.item)
+        }
+    }
+
     private func prepareContextSelection(for row: Int) {
         activationHandler?(self)
         guard row >= 0 else {
@@ -291,6 +337,87 @@ final class FilePaneViewController: NSViewController {
             }
         }
         return true
+    }
+
+    private func writeDraggedItems(at indexes: [Int], to pasteboard: NSPasteboard) -> Bool {
+        let urls = indexes.compactMap { viewModel.item(at: $0)?.url }
+        guard !urls.isEmpty else { return false }
+        pasteboard.clearContents()
+        return pasteboard.writeObjects(urls.map { $0 as NSURL })
+    }
+
+    private func handlePaneKeyDown(_ event: NSEvent) -> Bool {
+        guard event.modifierFlags.intersection(.deviceIndependentFlagsMask).isEmpty else { return false }
+        switch event.keyCode {
+        case 36:
+            beginEditingSelectedItemName()
+            return true
+        case 49:
+            previewSelectedItem(nil)
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func handlePreviewPanelKeyDown(_ event: NSEvent) -> Bool {
+        guard event.modifierFlags.intersection(.deviceIndependentFlagsMask).isEmpty,
+              let panel = QLPreviewPanel.shared(),
+              panel.isVisible,
+              NSApp.keyWindow === panel,
+              !previewItems.isEmpty else {
+            return false
+        }
+
+        let offset: Int
+        switch event.keyCode {
+        case 123, 126:
+            offset = -1
+        case 124, 125:
+            offset = 1
+        default:
+            return false
+        }
+
+        let nextIndex = min(max(panel.currentPreviewItemIndex + offset, 0), previewItems.count - 1)
+        guard nextIndex != panel.currentPreviewItemIndex else { return true }
+        panel.currentPreviewItemIndex = nextIndex
+        selectItemForPreview(at: nextIndex)
+        return true
+    }
+
+    private func selectItemForPreview(at index: Int) {
+        switch viewModel.viewMode {
+        case .list:
+            tableView.selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
+            tableView.scrollRowToVisible(index)
+        case .grid:
+            let indexPath = IndexPath(item: index, section: 0)
+            collectionView.selectionIndexPaths = [indexPath]
+            collectionView.scrollToItems(at: [indexPath], scrollPosition: .centeredVertically)
+        }
+    }
+
+    private func beginEditingSelectedItemName() {
+        guard let index = selectedItemIndexes().first else { return }
+        switch viewModel.viewMode {
+        case .list:
+            tableView.editColumn(0, row: index, with: nil, select: true)
+        case .grid:
+            let indexPath = IndexPath(item: index, section: 0)
+            guard let item = collectionView.item(at: indexPath) as? FileGridItem else { return }
+            item.beginEditingName()
+        }
+    }
+
+    private func renameItem(at index: Int, to newName: String) {
+        guard let item = viewModel.item(at: index), !newName.isEmpty, newName != item.name else {
+            reload()
+            return
+        }
+        runOperation {
+            try await self.viewModel.renameItem(item, to: newName)
+        }
     }
 
     private func dropDestinationURL(itemIndex: Int?) -> URL {
@@ -411,6 +538,7 @@ final class FilePaneViewController: NSViewController {
 private final class FileTableView: NSTableView {
     var rightClickHandler: ((Int) -> Void)?
     var dropHandler: ((NSDraggingInfo, Int?) -> Bool)?
+    var keyHandler: ((NSEvent) -> Bool)?
 
     override func rightMouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
@@ -419,7 +547,10 @@ private final class FileTableView: NSTableView {
     }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        sender.draggingPasteboard.canReadFileURLs ? .move : []
+        if sender.draggingPasteboard.canReadFileURLs {
+            return .move
+        }
+        return []
     }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
@@ -427,11 +558,17 @@ private final class FileTableView: NSTableView {
         let row = row(at: point)
         return dropHandler?(sender, row >= 0 ? row : nil) ?? false
     }
+
+    override func keyDown(with event: NSEvent) {
+        if keyHandler?(event) == true { return }
+        super.keyDown(with: event)
+    }
 }
 
 private final class FileCollectionView: NSCollectionView {
     var dropHandler: ((NSDraggingInfo, Int?) -> Bool)?
     var doubleClickHandler: ((Int) -> Void)?
+    var keyHandler: ((NSEvent) -> Bool)?
 
     override func mouseDown(with event: NSEvent) {
         super.mouseDown(with: event)
@@ -442,13 +579,56 @@ private final class FileCollectionView: NSCollectionView {
     }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        sender.draggingPasteboard.canReadFileURLs ? .move : []
+        if sender.draggingPasteboard.canReadFileURLs {
+            return .move
+        }
+        return []
     }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
         let point = convert(sender.draggingLocation, from: nil)
         let index = indexPathForItem(at: point)?.item
         return dropHandler?(sender, index) ?? false
+    }
+
+    override func keyDown(with event: NSEvent) {
+        if keyHandler?(event) == true { return }
+        super.keyDown(with: event)
+    }
+}
+
+private final class FileDropScrollView: NSScrollView {
+    var dropHandler: ((NSDraggingInfo) -> Bool)?
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        if sender.draggingPasteboard.canReadFileURLs {
+            return .move
+        }
+        return []
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        if sender.draggingPasteboard.canReadFileURLs {
+            return .move
+        }
+        return []
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        dropHandler?(sender) ?? false
+    }
+}
+
+private final class EventMonitorToken: @unchecked Sendable {
+    private let monitor: Any
+
+    init(_ monitor: Any) {
+        self.monitor = monitor
+    }
+
+    @MainActor
+    func remove() {
+        NSEvent.removeMonitor(monitor)
     }
 }
 
@@ -487,7 +667,7 @@ extension FilePaneViewController: NSMenuDelegate {
     }
 }
 
-extension FilePaneViewController: NSTableViewDataSource, NSTableViewDelegate {
+extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTableViewDelegate {
     func numberOfRows(in tableView: NSTableView) -> Int {
         viewModel.items.count
     }
@@ -499,8 +679,13 @@ extension FilePaneViewController: NSTableViewDataSource, NSTableViewDelegate {
         cell.identifier = identifier
 
         if cell.textField == nil {
-            let textField = NSTextField(labelWithString: "")
+            let textField = NSTextField(string: "")
+            textField.isBordered = false
+            textField.isEditable = false
+            textField.isSelectable = false
+            textField.drawsBackground = false
             textField.lineBreakMode = .byTruncatingMiddle
+            textField.delegate = self
             textField.translatesAutoresizingMaskIntoConstraints = false
             cell.addSubview(textField)
             cell.textField = textField
@@ -528,7 +713,24 @@ extension FilePaneViewController: NSTableViewDataSource, NSTableViewDelegate {
             }
         }
 
-        cell.imageView?.image = tableColumn.identifier.rawValue == "name" ? FileIconProvider.icon(for: item) : nil
+        cell.textField?.identifier = tableColumn.identifier.rawValue == "name" ? NSUserInterfaceItemIdentifier("FileNameEditor") : nil
+        cell.textField?.tag = row
+        cell.textField?.isEditable = tableColumn.identifier.rawValue == "name"
+        cell.textField?.isSelectable = tableColumn.identifier.rawValue == "name"
+        if tableColumn.identifier.rawValue == "name" {
+            cell.imageView?.image = FileIconProvider.icon(for: item)
+            cell.imageView?.toolTip = item.url.absoluteString
+            Task { [weak imageView = cell.imageView] in
+                guard let thumbnail = await FileThumbnailProvider.thumbnail(for: item, size: 18) else { return }
+                await MainActor.run {
+                    guard imageView?.toolTip == item.url.absoluteString else { return }
+                    imageView?.image = thumbnail
+                }
+            }
+        } else {
+            cell.imageView?.image = nil
+            cell.imageView?.toolTip = nil
+        }
         cell.textField?.stringValue = value(for: item, columnIdentifier: tableColumn.identifier.rawValue)
         return cell
     }
@@ -557,9 +759,24 @@ extension FilePaneViewController: NSTableViewDataSource, NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> NSPasteboardWriting? {
         viewModel.item(at: row)?.url as NSURL?
     }
+
+    func tableView(_ tableView: NSTableView, writeRowsWith rowIndexes: IndexSet, to pasteboard: NSPasteboard) -> Bool {
+        writeDraggedItems(at: Array(rowIndexes), to: pasteboard)
+    }
+
+    func tableView(_ tableView: NSTableView, validateDrop info: NSDraggingInfo, proposedRow row: Int, proposedDropOperation dropOperation: NSTableView.DropOperation) -> NSDragOperation {
+        if info.draggingPasteboard.canReadFileURLs {
+            return .move
+        }
+        return []
+    }
+
+    func tableView(_ tableView: NSTableView, acceptDrop info: NSDraggingInfo, row: Int, dropOperation: NSTableView.DropOperation) -> Bool {
+        performMoveDrop(info, itemIndex: row >= 0 ? row : nil)
+    }
 }
 
-extension FilePaneViewController: NSCollectionViewDataSource, NSCollectionViewDelegate {
+extension FilePaneViewController: NSCollectionViewDataSource, @preconcurrency NSCollectionViewDelegate {
     func collectionView(_ collectionView: NSCollectionView, numberOfItemsInSection section: Int) -> Int {
         viewModel.items.count
     }
@@ -568,6 +785,11 @@ extension FilePaneViewController: NSCollectionViewDataSource, NSCollectionViewDe
         let item = collectionView.makeItem(withIdentifier: FileGridItem.identifier, for: indexPath)
         if let gridItem = item as? FileGridItem, let fileItem = viewModel.item(at: indexPath.item) {
             gridItem.configure(with: fileItem)
+            gridItem.renameHandler = { [weak self, weak collectionView] gridItem, newName in
+                guard let collectionView,
+                      let indexPath = collectionView.indexPath(for: gridItem) else { return }
+                self?.renameItem(at: indexPath.item, to: newName)
+            }
         }
         return item
     }
@@ -579,14 +801,74 @@ extension FilePaneViewController: NSCollectionViewDataSource, NSCollectionViewDe
     func collectionView(_ collectionView: NSCollectionView, pasteboardWriterForItemAt indexPath: IndexPath) -> NSPasteboardWriting? {
         viewModel.item(at: indexPath.item)?.url as NSURL?
     }
+
+    func collectionView(_ collectionView: NSCollectionView, writeItemsAt indexPaths: Set<IndexPath>, to pasteboard: NSPasteboard) -> Bool {
+        writeDraggedItems(at: indexPaths.map(\.item), to: pasteboard)
+    }
+
+    func collectionView(_ collectionView: NSCollectionView, validateDrop draggingInfo: NSDraggingInfo, proposedIndexPath proposedDropIndexPath: AutoreleasingUnsafeMutablePointer<NSIndexPath>, dropOperation proposedDropOperation: UnsafeMutablePointer<NSCollectionView.DropOperation>) -> NSDragOperation {
+        proposedDropOperation.pointee = .on
+        if draggingInfo.draggingPasteboard.canReadFileURLs {
+            return .move
+        }
+        return []
+    }
+
+    func collectionView(_ collectionView: NSCollectionView, acceptDrop draggingInfo: NSDraggingInfo, indexPath: IndexPath, dropOperation: NSCollectionView.DropOperation) -> Bool {
+        performMoveDrop(draggingInfo, itemIndex: indexPath.item)
+    }
+}
+
+extension FilePaneViewController: NSTextFieldDelegate {
+    func controlTextDidEndEditing(_ notification: Notification) {
+        guard let textField = notification.object as? NSTextField,
+              textField.identifier?.rawValue == "FileNameEditor" else { return }
+        renameItem(at: textField.tag, to: textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+}
+
+extension FilePaneViewController: @preconcurrency QLPreviewPanelDataSource, QLPreviewPanelDelegate {
+    func numberOfPreviewItems(in panel: QLPreviewPanel!) -> Int {
+        previewItems.count
+    }
+
+    func previewPanel(_ panel: QLPreviewPanel!, previewItemAt index: Int) -> QLPreviewItem! {
+        previewItems[index] as NSURL
+    }
 }
 
 private extension NSPasteboard {
     var canReadFileURLs: Bool {
-        canReadObject(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true])
+        fileURLs?.isEmpty == false
     }
 
     var fileURLs: [URL]? {
-        (readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [NSURL])?.map { $0 as URL }
+        if let urls = readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [NSURL], !urls.isEmpty {
+            return urls.map { $0 as URL }
+        }
+
+        if let fileURLStrings = propertyList(forType: .fileURL) as? [String] {
+            let urls = fileURLStrings.compactMap(URL.init(string:)).filter(\.isFileURL)
+            if !urls.isEmpty { return urls }
+        }
+
+        if let fileURLString = string(forType: .fileURL),
+           let url = URL(string: fileURLString),
+           url.isFileURL {
+            return [url]
+        }
+
+        if let urlStrings = propertyList(forType: .URL) as? [String] {
+            let urls = urlStrings.compactMap(URL.init(string:)).filter(\.isFileURL)
+            if !urls.isEmpty { return urls }
+        }
+
+        if let urlString = string(forType: .URL),
+           let url = URL(string: urlString),
+           url.isFileURL {
+            return [url]
+        }
+
+        return nil
     }
 }
