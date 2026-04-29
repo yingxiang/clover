@@ -54,4 +54,5 @@ Each phase should finish with:
 
 - A running app or focused test proving the behavior.
 - Clear file list of touched implementation areas.
+- A line-count check when the phase adds or expands Swift files; split files before any project-owned source exceeds 1000 lines.
 - Known omissions from the plan, stated explicitly.

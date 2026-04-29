@@ -26,7 +26,7 @@ struct FileItem: Identifiable, Hashable {
 
 enum FileViewMode: String, Codable {
     case list
-    case icon
+    case grid
 }
 
 enum SortOption: String, Codable {

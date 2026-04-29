@@ -20,6 +20,10 @@ final class PaneLayoutController: NSViewController {
         layout
     }
 
+    var currentFileViewMode: FileViewMode {
+        activePane?.viewModel.viewMode ?? .list
+    }
+
     init(environment: AppEnvironment) {
         self.environment = environment
         super.init(nibName: nil, bundle: nil)
@@ -68,6 +72,11 @@ final class PaneLayoutController: NSViewController {
 
     func openInActivePane(_ url: URL) {
         activePane?.open(url)
+    }
+
+    func setFileViewModeInActivePane(_ mode: FileViewMode) {
+        activePane?.setViewMode(mode)
+        statusHandler?(mode == .list ? "View: List" : "View: Grid")
     }
 
     func activatePane(at index: Int) {

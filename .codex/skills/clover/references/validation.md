@@ -54,5 +54,12 @@ Useful log command:
 Before final response:
 
 - Search for direct UI-layer `FileManager` usage when touching file operations.
+- Check large Swift files after meaningful edits:
+
+```bash
+find Clover Tests -name '*.swift' -print0 | xargs -0 wc -l | sort -nr | head
+```
+
+- Inspect files at or above 800 lines and split any project-owned file that exceeds 1000 lines unless the user explicitly accepts a temporary exception.
 - Confirm `project.yml` and generated Xcode settings do not undo user-provided bundle ID, team ID, or signing choices.
 - Mention unimplemented execution-plan phases plainly.

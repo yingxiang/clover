@@ -7,7 +7,7 @@ Use this reference before changing shared models, providers, file operations, wo
 - Target platform: macOS 15+.
 - Language and UI stack: Swift + AppKit.
 - Product: multi-pane local file manager with future room for remote providers, archives, sync, batch rename, and advanced workspace workflows.
-- Keep Swift files below 1000 lines; split by responsibility before a file becomes difficult to scan.
+- Keep project-owned Swift files below 1000 lines. At 800 lines, plan the next split; before 1000 lines, split by responsibility instead of appending more behavior.
 
 ## Module Boundaries
 
@@ -15,6 +15,13 @@ Use this reference before changing shared models, providers, file operations, wo
 - `Clover/Domain`: stable product concepts such as `FileItem`, `PaneLayout`, `PaneState`, `Workspace`, and sort/view modes.
 - `Clover/Infrastructure`: concrete providers, operations, persistence, icon loading, and filesystem-facing services.
 - `Clover/UI`: AppKit controllers and views. Keep these thin; use view models for state.
+
+## Size And Responsibility Rules
+
+- Do not intentionally make a Swift source file exceed 1000 lines.
+- When a file approaches 800 lines, decide whether state, view construction, menu construction, data source behavior, provider implementation, or tests should move into a separate type/file.
+- Prefer small named files over broad utility files. A file should have a clear product responsibility, not merely collect unrelated helpers.
+- Extensions in the same file still count toward the file size limit; move meaningful extensions into focused files when they grow.
 
 ## File Access Rules
 

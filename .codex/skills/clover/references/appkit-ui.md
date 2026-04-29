@@ -26,6 +26,7 @@ Window lifecycle rules:
 - Keep the main window retained while the app is running.
 - On launch and app reopen, call `showWindow`, `makeKeyAndOrderFront`, and activate the app.
 - Avoid relying on state restoration for the initial shell unless restoration has explicit tests.
+- Keep window controllers focused on composition and command routing. Move popovers, menu builders, toolbar controls, drawing helpers, and complex child views into separate files before the controller approaches 800 lines.
 
 ## Pane Layouts
 
@@ -51,9 +52,11 @@ Rules:
 - File rows should expose name, type, size, modification date, and directory state.
 - Sort and filter through view-model/domain behavior, not ad hoc table callbacks.
 - Prefer SF Symbols or system icons through `AppIconProvider`; do not add third-party icon sets.
+- Keep context-menu setup, table delegate/data source behavior, and row interaction logic separable. If `FilePaneViewController` grows toward 800 lines, extract menu routing, table subclasses, or view construction into focused files.
 
 ## Menus And Shortcuts
 
 - Provide a minimal main menu so the app has normal macOS activation, quit, close, hide, and window behavior.
 - Add commands incrementally and route them to the active pane or selected file items.
 - Keep command handlers separate from direct filesystem operations.
+- Menu entries that depend on a selected file or folder should be built from the current selection context, not from hard-coded global availability.

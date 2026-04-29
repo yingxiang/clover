@@ -3,6 +3,7 @@ import AppKit
 final class MainWindowController: NSWindowController, NSToolbarDelegate {
     private let rootViewController: RootSplitViewController
     private weak var layoutButton: NSButton?
+    private weak var viewModeButton: NSButton?
     private var layoutPopover: NSPopover?
 
     init(environment: AppEnvironment) {
@@ -64,23 +65,31 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         updateLayoutButton()
     }
 
+    func setFileViewMode(_ mode: FileViewMode) {
+        rootViewController.setFileViewModeInActivePane(mode)
+        updateViewModeButton()
+    }
+
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.refresh, .paneLayout, .flexibleSpace]
+        [.refresh, .viewMode, .paneLayout, .flexibleSpace]
     }
 
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.refresh, .paneLayout, .flexibleSpace]
+        [.refresh, .viewMode, .paneLayout, .flexibleSpace]
     }
 
     func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
         if itemIdentifier == .paneLayout {
             return makeLayoutToolbarItem(identifier: itemIdentifier)
         }
+        if itemIdentifier == .viewMode {
+            return makeViewModeToolbarItem(identifier: itemIdentifier)
+        }
         guard itemIdentifier == .refresh else { return nil }
         let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-        item.label = "Refresh"
-        item.paletteLabel = "Refresh"
-        item.image = AppIconProvider.image(.refresh, accessibilityDescription: "Refresh")
+        item.label = L10n.refresh
+        item.paletteLabel = L10n.refresh
+        item.image = AppIconProvider.image(.refresh, accessibilityDescription: L10n.refresh)
         item.target = self
         item.action = #selector(refreshActivePane(_:))
         return item
@@ -88,16 +97,16 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
 
     private func makeLayoutToolbarItem(identifier: NSToolbarItem.Identifier) -> NSToolbarItem {
         let item = NSToolbarItem(itemIdentifier: identifier)
-        item.label = "Layout"
-        item.paletteLabel = "Layout"
+        item.label = L10n.layout
+        item.paletteLabel = L10n.layout
 
         let button = NSButton(image: rootViewController.currentPaneLayout.toolbarImage, target: self, action: #selector(showLayoutPicker(_:)))
         button.translatesAutoresizingMaskIntoConstraints = false
         button.bezelStyle = NSButton.BezelStyle.texturedRounded
         button.imagePosition = NSControl.ImagePosition.imageOnly
         button.setButtonType(NSButton.ButtonType.momentaryPushIn)
-        button.toolTip = "Layout"
-        button.setAccessibilityLabel("Layout")
+        button.toolTip = L10n.layout
+        button.setAccessibilityLabel(L10n.layout)
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: 34),
             button.heightAnchor.constraint(equalToConstant: 28)
@@ -108,11 +117,48 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         return item
     }
 
+    private func makeViewModeToolbarItem(identifier: NSToolbarItem.Identifier) -> NSToolbarItem {
+        let item = NSToolbarItem(itemIdentifier: identifier)
+        item.label = L10n.viewModeList
+        item.paletteLabel = L10n.viewModeList
+
+        let button = NSButton(image: viewModeImage ?? NSImage(), target: self, action: #selector(toggleViewMode(_:)))
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.bezelStyle = NSButton.BezelStyle.texturedRounded
+        button.imagePosition = NSControl.ImagePosition.imageOnly
+        button.setButtonType(NSButton.ButtonType.momentaryPushIn)
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: 34),
+            button.heightAnchor.constraint(equalToConstant: 28)
+        ])
+        viewModeButton = button
+        item.view = button
+        updateViewModeButton()
+        return item
+    }
+
     private func updateLayoutButton() {
         let layout = rootViewController.currentPaneLayout
         layoutButton?.image = layout.toolbarImage
         layoutButton?.toolTip = layout.displayName
         layoutButton?.setAccessibilityLabel(layout.displayName)
+    }
+
+    private func updateViewModeButton() {
+        let mode = rootViewController.currentFileViewMode
+        viewModeButton?.image = viewModeImage
+        viewModeButton?.toolTip = mode == .list ? L10n.viewModeList : L10n.viewModeGrid
+        viewModeButton?.setAccessibilityLabel(mode == .list ? L10n.viewModeList : L10n.viewModeGrid)
+    }
+
+    private var viewModeImage: NSImage? {
+        let symbol: AppSymbol = rootViewController.currentFileViewMode == .list ? .list : .grid
+        return AppIconProvider.image(symbol, accessibilityDescription: nil)
+    }
+
+    @objc private func toggleViewMode(_ sender: NSButton) {
+        let nextMode: FileViewMode = rootViewController.currentFileViewMode == .list ? .grid : .list
+        setFileViewMode(nextMode)
     }
 
     @objc private func showLayoutPicker(_ sender: NSButton) {
@@ -133,6 +179,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
 
 private extension NSToolbarItem.Identifier {
     static let refresh = NSToolbarItem.Identifier("CloverToolbar.Refresh")
+    static let viewMode = NSToolbarItem.Identifier("CloverToolbar.ViewMode")
     static let paneLayout = NSToolbarItem.Identifier("CloverToolbar.PaneLayout")
 }
 

@@ -1,6 +1,7 @@
 name: Clover
 options:
   bundleIdPrefix: com.lingchen
+  developmentLanguage: en
   deploymentTarget:
     macOS: "15.0"
 settings:
@@ -11,6 +12,8 @@ settings:
     ENABLE_DEBUG_DYLIB: "NO"
     SWIFT_OPTIMIZATION_LEVEL: "-Onone"
     ALWAYS_SEARCH_USER_PATHS: "NO"
+    SWIFT_EMIT_LOC_STRINGS: "YES"
+    LOCALIZATION_PREFERS_STRING_CATALOGS: "YES"
 targets:
   Clover:
     type: application

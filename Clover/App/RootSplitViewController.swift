@@ -67,6 +67,14 @@ final class RootSplitViewController: NSSplitViewController {
     var currentPaneLayout: PaneLayout {
         workspaceViewController.currentPaneLayout
     }
+
+    var currentFileViewMode: FileViewMode {
+        workspaceViewController.currentFileViewMode
+    }
+
+    func setFileViewModeInActivePane(_ mode: FileViewMode) {
+        workspaceViewController.setFileViewModeInActivePane(mode)
+    }
 }
 
 extension RootSplitViewController: SidebarViewControllerDelegate {

@@ -9,6 +9,7 @@ final class FilePaneViewModel {
     let id: UUID
     private(set) var currentURL: URL
     private(set) var items: [FileItem] = []
+    private(set) var viewMode: FileViewMode = .list
     var sortOption: SortOption = .nameAscending
     var showHiddenFiles = false
 
@@ -71,6 +72,12 @@ final class FilePaneViewModel {
         load(url: currentURL)
     }
 
+    func setViewMode(_ mode: FileViewMode) {
+        guard viewMode != mode else { return }
+        viewMode = mode
+        onChange?()
+    }
+
     func openItem(_ url: URL) async throws {
         try await provider.openItem(url)
     }
@@ -94,6 +101,7 @@ final class FilePaneViewModel {
         onStatusChange?("Copying \(items.count) item\(items.count == 1 ? "" : "s")...")
         try await fileOperationService.copyItems(items.map(\.url), to: destinationURL, conflictResolver: conflictResolver)
         onStatusChange?("Copied \(items.count) item\(items.count == 1 ? "" : "s")")
+        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
         if destinationURL == currentURL {
             refresh()
         }
@@ -104,6 +112,16 @@ final class FilePaneViewModel {
         onStatusChange?("Moving \(items.count) item\(items.count == 1 ? "" : "s")...")
         try await fileOperationService.moveItems(items.map(\.url), to: destinationURL, conflictResolver: conflictResolver)
         onStatusChange?("Moved \(items.count) item\(items.count == 1 ? "" : "s")")
+        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
+        refresh()
+    }
+
+    func moveFileURLs(_ urls: [URL], to destinationURL: URL, conflictResolver: FileConflictResolver? = nil) async throws {
+        guard !urls.isEmpty else { return }
+        onStatusChange?("Moving \(urls.count) item\(urls.count == 1 ? "" : "s")...")
+        try await fileOperationService.moveItems(urls, to: destinationURL, conflictResolver: conflictResolver)
+        onStatusChange?("Moved \(urls.count) item\(urls.count == 1 ? "" : "s")")
+        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
         refresh()
     }
 
@@ -112,6 +130,7 @@ final class FilePaneViewModel {
         onStatusChange?("Moving \(items.count) item\(items.count == 1 ? "" : "s") to Trash...")
         try await fileOperationService.trashItems(items.map(\.url))
         onStatusChange?("Moved to Trash")
+        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
         refresh()
     }
 

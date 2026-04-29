@@ -19,6 +19,7 @@ Use this skill for development inside the Clover repository.
 
 - Read `references/architecture.md` before changing models, providers, file operations, workspaces, or shared app services.
 - Read `references/appkit-ui.md` before changing windows, panes, sidebars, tables, path bars, toolbars, menus, shortcuts, or drag/drop.
+- Read `references/code-organization.md` before adding new controllers, services, views, test suites, or expanding any Swift file that is already near 800 lines.
 - Read `references/validation.md` before finishing a task or touching signing, app startup, `project.yml`, sandboxing, or tests.
 - Read `references/roadmap.md` when choosing the next implementation phase from the execution plan.
 
@@ -28,4 +29,6 @@ Use this skill for development inside the Clover repository.
 - UI code must not perform direct file operations with `FileManager`; route file reads/writes through `FileProvider` and `FileOperationService`.
 - Disk work must be asynchronous and must not block the main thread.
 - Preserve the provider abstraction so remote, archive, and sync providers can later use the same UI.
+- Keep project-owned Swift files under 1000 lines. Before adding substantial behavior, check the target file length with `wc -l`; if the edit would push it past 1000 lines, split by responsibility first.
+- Treat 800 lines as a warning threshold. Prefer extracting focused controllers, views, services, model types, helpers, or tests before the file becomes hard to review.
 - Do not copy QSpace, Path Finder, Finder, or other products' branding, icons, copy, or proprietary layout details.

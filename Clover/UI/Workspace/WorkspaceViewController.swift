@@ -75,7 +75,15 @@ final class WorkspaceViewController: NSViewController {
         paneController.currentLayout
     }
 
+    var currentFileViewMode: FileViewMode {
+        paneController.currentFileViewMode
+    }
+
     func openInActivePane(_ url: URL) {
         paneController.openInActivePane(url)
+    }
+
+    func setFileViewModeInActivePane(_ mode: FileViewMode) {
+        paneController.setFileViewModeInActivePane(mode)
     }
 }
