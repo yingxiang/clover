@@ -7,8 +7,10 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
     private weak var viewModeToolbarItem: NSToolbarItem?
     private weak var viewModeToolbarButton: NSButton?
     private var layoutPopover: NSPopover?
+    private let environment: AppEnvironment
 
-    init(environment: AppEnvironment) {
+    init(environment: AppEnvironment, restoredWorkspace: Workspace? = nil) {
+        self.environment = environment
         rootViewController = RootSplitViewController(environment: environment)
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1100, height: 720),
@@ -30,6 +32,15 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         let toolbar = NSToolbar(identifier: "CloverToolbar")
         toolbar.delegate = self
         window.toolbar = toolbar
+
+        if let restoredWorkspace {
+            rootViewController.loadViewIfNeeded()
+            rootViewController.restore(from: restoredWorkspace)
+            let restoredFrame = NSRectFromString(restoredWorkspace.windowFrame)
+            if !restoredFrame.isEmpty {
+                window.setFrame(restoredFrame, display: false)
+            }
+        }
     }
 
     required init?(coder: NSCoder) {
@@ -72,6 +83,15 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
     func setFileViewMode(_ mode: FileViewMode) {
         rootViewController.setFileViewModeInActivePane(mode)
         updateViewModeButton()
+    }
+
+    func workspaceSnapshot() -> Workspace? {
+        guard let window else { return nil }
+        return rootViewController.workspaceSnapshot(
+            name: "Default",
+            windowFrame: NSStringFromRect(window.frame),
+            using: environment.workspaceStore
+        )
     }
 
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {

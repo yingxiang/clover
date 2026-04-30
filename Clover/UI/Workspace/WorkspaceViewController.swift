@@ -76,6 +76,14 @@ final class WorkspaceViewController: NSViewController {
         paneController.setLayout(layout)
     }
 
+    func restore(from workspace: Workspace) {
+        paneController.restore(from: workspace)
+    }
+
+    func workspaceState(using store: WorkspaceStore) -> (layout: PaneLayout, panes: [PaneState]) {
+        paneController.workspaceState(using: store)
+    }
+
     var currentPaneLayout: PaneLayout {
         paneController.currentLayout
     }

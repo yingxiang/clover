@@ -30,6 +30,8 @@
 		9EBEF5FD75D6B3983ABE9D0AAE112FA5 /* FileGridDetailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 182C4A8CD037BD81B43F6432EC7FA5D6 /* FileGridDetailProvider.swift */; };
 		ACA56E3B716C5637A42F5A24539C99D8 /* FileGridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 236747207772FEFB695BD2E22339D4CD /* FileGridItem.swift */; };
 		B4E21223B928071A3907A07D62330FB6 /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E79C8B115EC90E3EB7847A11233A94 /* Workspace.swift */; };
+		B7E7D69B7A3D47A3B4F0C001 /* WorkspaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E7D69B7A3D47A3B4F0C000 /* WorkspaceStore.swift */; };
+		B7E7D69B7A3D47A3B4F0C003 /* WorkspaceStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E7D69B7A3D47A3B4F0C002 /* WorkspaceStoreTests.swift */; };
 		BE8CBD60485B27E580321907C2A63947 /* FileOperationNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9228904DB68AB8A3A470396154A083FA /* FileOperationNotifications.swift */; };
 		C58011295A78F0B6B0CBE8D21F67131B /* FileOperationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0D4AE91D19658592830143B13D0A1D /* FileOperationServiceTests.swift */; };
 		CE4463E06D4260368EF2038FF258C4CE /* SidebarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C26D40858E1FB3DAF6558DA7B15374B /* SidebarViewController.swift */; };
@@ -84,6 +86,8 @@
 		AEF09417931684114E50B8D622BE91A1 /* FilePaneViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePaneViewModel.swift; sourceTree = "<group>"; };
 		AF8BF7DB6E22896AA2FC8A5002208566 /* Clover.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clover.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AFD69DF177BD7F0451B6359DFA7D2FB7 /* LocalFileProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileProviderTests.swift; sourceTree = "<group>"; };
+		B7E7D69B7A3D47A3B4F0C000 /* WorkspaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStore.swift; sourceTree = "<group>"; };
+		B7E7D69B7A3D47A3B4F0C002 /* WorkspaceStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStoreTests.swift; sourceTree = "<group>"; };
 		BE24ADF9B430F10A1F8C25E46980C4D5 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		BFACA9DFBC871F5278FFBFAFB44F9EFD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C427080944D958076079D8A2630919CE /* PathBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathBarView.swift; sourceTree = "<group>"; };
@@ -127,6 +131,7 @@
 				11082ED574757AC386D409A1F63411D8 /* Info.plist */,
 				AFD69DF177BD7F0451B6359DFA7D2FB7 /* LocalFileProviderTests.swift */,
 				FA8F9925126EB6F83676A96DF920460D /* PaneLayoutControllerTests.swift */,
+				B7E7D69B7A3D47A3B4F0C002 /* WorkspaceStoreTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -135,6 +140,7 @@
 			isa = PBXGroup;
 			children = (
 				EF27D0E6BE07E5E36354CD2A8DE1ACBF /* Logging */,
+				B7E7D69B7A3D47A3B4F0C004 /* Persistence */,
 				44CEB8156F9FC2E4F16D563ACC9C4AA4 /* Security */,
 			);
 			path = Infrastructure;
@@ -260,6 +266,14 @@
 				C427080944D958076079D8A2630919CE /* PathBarView.swift */,
 			);
 			path = Pane;
+			sourceTree = "<group>";
+		};
+		B7E7D69B7A3D47A3B4F0C004 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				B7E7D69B7A3D47A3B4F0C000 /* WorkspaceStore.swift */,
+			);
+			path = Persistence;
 			sourceTree = "<group>";
 		};
 		BBC291CF3795F428988A47179356D29D = {
@@ -418,6 +432,7 @@
 				CE4463E06D4260368EF2038FF258C4CE /* SidebarViewController.swift in Sources */,
 				FB85612F61A988E2784B807FCD84DEB5 /* StatusBarView.swift in Sources */,
 				B4E21223B928071A3907A07D62330FB6 /* Workspace.swift in Sources */,
+				B7E7D69B7A3D47A3B4F0C001 /* WorkspaceStore.swift in Sources */,
 				E82B46BACC16A05225090DD3C2807E38 /* WorkspaceViewController.swift in Sources */,
 				E5DA76F20C89AD075ED3E057438C03A3 /* main.swift in Sources */,
 			);
@@ -432,6 +447,7 @@
 				5301A043C5464227552C15A084BE6EA9 /* FileSortServiceTests.swift in Sources */,
 				9500466833CC1E26DD2BF3B3A0EBACE0 /* LocalFileProviderTests.swift in Sources */,
 				44B4C66F81F828C32A4A98205A3C119E /* PaneLayoutControllerTests.swift in Sources */,
+				B7E7D69B7A3D47A3B4F0C003 /* WorkspaceStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

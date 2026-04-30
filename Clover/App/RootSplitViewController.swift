@@ -69,6 +69,29 @@ final class RootSplitViewController: NSSplitViewController {
         workspaceViewController.setPaneLayout(layout)
     }
 
+    func restore(from workspace: Workspace) {
+        workspaceViewController.restore(from: workspace)
+        if workspace.sidebarWidth > 0 {
+            splitView.layoutSubtreeIfNeeded()
+            splitView.setPosition(workspace.sidebarWidth, ofDividerAt: 0)
+        }
+    }
+
+    func workspaceSnapshot(name: String, windowFrame: String, using store: WorkspaceStore) -> Workspace {
+        let state = workspaceViewController.workspaceState(using: store)
+        let sidebarWidth = splitViewItems.first?.viewController.view.frame.width ?? 220
+        return Workspace(
+            id: UUID(),
+            name: name,
+            layout: state.layout,
+            panes: state.panes,
+            windowFrame: windowFrame,
+            sidebarWidth: sidebarWidth,
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+    }
+
     var currentPaneLayout: PaneLayout {
         workspaceViewController.currentPaneLayout
     }

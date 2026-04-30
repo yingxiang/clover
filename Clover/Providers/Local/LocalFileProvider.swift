@@ -10,6 +10,8 @@ final class LocalFileProvider: FileProvider {
 
     func listDirectory(at url: URL) async throws -> [FileItem] {
         try await Task.detached(priority: .userInitiated) {
+            let scopedAccess = SecurityScopedAccess(url)
+            defer { scopedAccess.stop() }
             let fileManager = FileManager.default
             var isDirectory: ObjCBool = false
             guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue else {
@@ -79,6 +81,8 @@ final class LocalFileProvider: FileProvider {
 
     func createFolder(at parentURL: URL, name: String) async throws -> URL {
         try await Task.detached(priority: .userInitiated) {
+            let scopedAccess = SecurityScopedAccess(parentURL)
+            defer { scopedAccess.stop() }
             let fileManager = FileManager.default
             let url = parentURL.appendingPathComponent(name, isDirectory: true)
             try fileManager.createDirectory(at: url, withIntermediateDirectories: false)
@@ -88,6 +92,8 @@ final class LocalFileProvider: FileProvider {
 
     func renameItem(at url: URL, to newName: String) async throws -> URL {
         try await Task.detached(priority: .userInitiated) {
+            let scopedAccess = SecurityScopedAccess(url.deletingLastPathComponent())
+            defer { scopedAccess.stop() }
             let fileManager = FileManager.default
             let destination = url.deletingLastPathComponent().appendingPathComponent(newName)
             if fileManager.fileExists(atPath: destination.path) {
@@ -100,6 +106,12 @@ final class LocalFileProvider: FileProvider {
 
     func moveItem(at url: URL, to destinationURL: URL) async throws {
         try await Task.detached(priority: .userInitiated) {
+            let sourceAccess = SecurityScopedAccess(url.deletingLastPathComponent())
+            let destinationAccess = SecurityScopedAccess(destinationURL.deletingLastPathComponent())
+            defer {
+                destinationAccess.stop()
+                sourceAccess.stop()
+            }
             let fileManager = FileManager.default
             if fileManager.fileExists(atPath: destinationURL.path) {
                 throw CloverError.fileAlreadyExists(destinationURL)
@@ -110,6 +122,12 @@ final class LocalFileProvider: FileProvider {
 
     func copyItem(at url: URL, to destinationURL: URL) async throws {
         try await Task.detached(priority: .userInitiated) {
+            let sourceAccess = SecurityScopedAccess(url.deletingLastPathComponent())
+            let destinationAccess = SecurityScopedAccess(destinationURL.deletingLastPathComponent())
+            defer {
+                destinationAccess.stop()
+                sourceAccess.stop()
+            }
             let fileManager = FileManager.default
             if fileManager.fileExists(atPath: destinationURL.path) {
                 throw CloverError.fileAlreadyExists(destinationURL)
@@ -139,6 +157,8 @@ final class LocalFileProvider: FileProvider {
             let fileManager = FileManager.default
             for url in urls {
                 try Task.checkCancellation()
+                let scopedAccess = SecurityScopedAccess(url.deletingLastPathComponent())
+                defer { scopedAccess.stop() }
                 var resultingURL: NSURL?
                 try fileManager.trashItem(at: url, resultingItemURL: &resultingURL)
             }
@@ -150,6 +170,8 @@ final class LocalFileProvider: FileProvider {
             let fileManager = FileManager.default
             for url in urls {
                 try Task.checkCancellation()
+                let scopedAccess = SecurityScopedAccess(url.deletingLastPathComponent())
+                defer { scopedAccess.stop() }
                 try fileManager.removeItem(at: url)
             }
         }.value
@@ -158,6 +180,22 @@ final class LocalFileProvider: FileProvider {
     func openItem(_ url: URL) async throws {
         await MainActor.run {
             _ = NSWorkspace.shared.open(url)
+        }
+    }
+}
+
+private final class SecurityScopedAccess: @unchecked Sendable {
+    private let url: URL
+    private let didStartAccessing: Bool
+
+    init(_ url: URL) {
+        self.url = url
+        didStartAccessing = url.startAccessingSecurityScopedResource()
+    }
+
+    func stop() {
+        if didStartAccessing {
+            url.stopAccessingSecurityScopedResource()
         }
     }
 }

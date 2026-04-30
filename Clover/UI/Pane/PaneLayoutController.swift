@@ -110,8 +110,43 @@ final class PaneLayoutController: NSViewController {
         statusHandler?("Layout: \(displayName(for: newLayout))")
     }
 
+    func restore(from workspace: Workspace) {
+        layout = workspace.layout
+        let count = paneCount(for: workspace.layout)
+        panes = workspace.panes.prefix(count).map { makePane(from: $0) }
+        while panes.count < count {
+            panes.append(makePane())
+        }
+        rebuildLayout()
+        setActivePane(panes.first)
+        statusHandler?("Restored workspace")
+    }
+
+    func workspaceState(using store: WorkspaceStore) -> (layout: PaneLayout, panes: [PaneState]) {
+        (layout, panes.map { $0.viewModel.workspaceState(using: store) })
+    }
+
     private func makePane() -> FilePaneViewController {
         let viewModel = FilePaneViewModel(provider: environment.fileProvider, fileOperationService: environment.fileOperationService)
+        return makePane(viewModel: viewModel)
+    }
+
+    private func makePane(from paneState: PaneState) -> FilePaneViewController {
+        let viewModel = FilePaneViewModel(
+            id: paneState.id,
+            currentURL: environment.workspaceStore.resolvedURL(for: paneState),
+            provider: environment.fileProvider,
+            fileOperationService: environment.fileOperationService
+        )
+        viewModel.restoreState(
+            currentURL: environment.workspaceStore.resolvedURL(for: paneState),
+            viewMode: paneState.viewMode,
+            sortOption: paneState.sortOption
+        )
+        return makePane(viewModel: viewModel)
+    }
+
+    private func makePane(viewModel: FilePaneViewModel) -> FilePaneViewController {
         let pane = FilePaneViewController(viewModel: viewModel)
         pane.statusHandler = { [weak self] text in
             self?.statusHandler?(text)

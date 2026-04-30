@@ -40,7 +40,8 @@ final class PaneLayoutControllerTests: XCTestCase {
         let provider = PaneLayoutMockProvider()
         let environment = AppEnvironment(
             fileProvider: provider,
-            fileOperationService: FileOperationService(provider: provider)
+            fileOperationService: FileOperationService(provider: provider),
+            workspaceStore: try! WorkspaceStore(workspaceURL: FileManager.default.temporaryDirectory.appendingPathComponent("PaneLayoutControllerTests.json"))
         )
         return PaneLayoutController(environment: environment)
     }

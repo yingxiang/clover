@@ -82,6 +82,17 @@ final class FilePaneViewModel {
         onChange?()
     }
 
+    func restoreState(currentURL: URL, viewMode: FileViewMode, sortOption: SortOption) {
+        self.currentURL = currentURL
+        self.viewMode = viewMode
+        self.sortOption = sortOption
+        typeFilter = nil
+    }
+
+    func workspaceState(using store: WorkspaceStore) -> PaneState {
+        store.paneState(id: id, currentURL: currentURL, viewMode: viewMode, sortOption: sortOption)
+    }
+
     var availableTypeFilters: [String] {
         Array(Set(allItems.map { FileItemPresentation.typeName(for: $0) })).sorted {
             $0.localizedStandardCompare($1) == .orderedAscending

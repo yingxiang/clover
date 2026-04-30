@@ -1,4 +1,5 @@
 import AppKit
+import OSLog
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -33,7 +34,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if reuseExisting, let existing = windowControllers.first {
             controller = existing
         } else {
-            controller = MainWindowController(environment: environment)
+            let restoredWorkspace = try? environment.workspaceStore.loadDefaultWorkspace()
+            controller = MainWindowController(environment: environment, restoredWorkspace: restoredWorkspace)
             controller.window?.delegate = self
             windowControllers.append(controller)
         }
@@ -175,7 +177,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 extension AppDelegate: NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         guard let window = notification.object as? NSWindow else { return }
+        if let controller = windowControllers.first(where: { $0.window === window }) {
+            saveWorkspace(from: controller)
+        }
         windowControllers.removeAll { $0.window === window }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        windowControllers.forEach(saveWorkspace(from:))
+    }
+
+    private func saveWorkspace(from controller: MainWindowController) {
+        guard let workspace = controller.workspaceSnapshot() else { return }
+        do {
+            try environment.workspaceStore.saveDefaultWorkspace(workspace)
+        } catch {
+            Logger.workspace.error("Failed to save workspace: \(error.localizedDescription, privacy: .public)")
+        }
     }
 }
 
