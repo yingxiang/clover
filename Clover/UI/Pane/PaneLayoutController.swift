@@ -2,6 +2,7 @@ import AppKit
 
 final class PaneLayoutController: NSViewController {
     var statusHandler: ((String) -> Void)?
+    var activePaneChangeHandler: (() -> Void)?
 
     private let environment: AppEnvironment
     private(set) var layout: PaneLayout = .single
@@ -170,6 +171,7 @@ final class PaneLayoutController: NSViewController {
     private func setActivePane(_ pane: FilePaneViewController?) {
         activePane = pane
         panes.forEach { $0.setActive($0 === pane) }
+        activePaneChangeHandler?()
     }
 
     private func paneCount(for layout: PaneLayout) -> Int {

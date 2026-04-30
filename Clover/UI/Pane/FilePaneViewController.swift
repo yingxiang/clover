@@ -11,10 +11,14 @@ final class FilePaneViewController: NSViewController {
     private let scrollView = NSScrollView()
     private let collectionView = FileCollectionView()
     private let collectionScrollView = FileDropScrollView()
+    private let typeFilterPopup = NSPopUpButton()
     private let loadingIndicator = NSProgressIndicator()
     private let contextMenu = NSMenu(title: "File Actions")
     private var previewItems: [URL] = []
+    private var currentPreviewIndex: Int = 0
+    private var detailCache: [URL: String] = [:]
     private var previewKeyMonitor: EventMonitorToken?
+    private static weak var previewOwner: FilePaneViewController?
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -53,6 +57,7 @@ final class FilePaneViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configurePathBar()
+        configureTypeFilterPopup()
         configureTableView()
         configureCollectionView()
         configureLoadingIndicator()
@@ -100,6 +105,8 @@ final class FilePaneViewController: NSViewController {
         activationHandler?(self)
         guard let selectedIndex = selectedItemIndexes().first else { return }
         previewItems = viewModel.items.map(\.url)
+        currentPreviewIndex = selectedIndex
+        Self.previewOwner = self
         guard let panel = QLPreviewPanel.shared() else { return }
         panel.dataSource = self
         panel.delegate = self
@@ -159,7 +166,6 @@ final class FilePaneViewController: NSViewController {
         let columns: [(String, String, CGFloat)] = [
             ("name", "Name", 280),
             ("size", "Size", 90),
-            ("type", "Type", 160),
             ("modified", "Modified", 180)
         ]
 
@@ -199,13 +205,27 @@ final class FilePaneViewController: NSViewController {
 
         NSLayoutConstraint.activate([
             pathBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
-            pathBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+            pathBarView.trailingAnchor.constraint(equalTo: typeFilterPopup.leadingAnchor, constant: -8),
             pathBarView.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
             pathBarView.heightAnchor.constraint(equalToConstant: 26),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.topAnchor.constraint(equalTo: pathBarView.bottomAnchor, constant: 6),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+
+    private func configureTypeFilterPopup() {
+        typeFilterPopup.translatesAutoresizingMaskIntoConstraints = false
+        typeFilterPopup.target = self
+        typeFilterPopup.action = #selector(typeFilterChanged(_:))
+        typeFilterPopup.controlSize = .small
+        view.addSubview(typeFilterPopup)
+
+        NSLayoutConstraint.activate([
+            typeFilterPopup.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+            typeFilterPopup.centerYAnchor.constraint(equalTo: pathBarView.centerYAnchor),
+            typeFilterPopup.widthAnchor.constraint(equalToConstant: 150)
         ])
     }
 
@@ -277,7 +297,9 @@ final class FilePaneViewController: NSViewController {
 
     private func reload() {
         loadingIndicator.stopAnimation(nil)
+        detailCache.removeAll()
         pathBarView.update(url: viewModel.currentURL)
+        updateTypeFilterPopup()
         tableView.reloadData()
         collectionView.reloadData()
         let isList = viewModel.viewMode == .list
@@ -347,7 +369,7 @@ final class FilePaneViewController: NSViewController {
     }
 
     private func handlePaneKeyDown(_ event: NSEvent) -> Bool {
-        guard event.modifierFlags.intersection(.deviceIndependentFlagsMask).isEmpty else { return false }
+        guard event.nonNavigationModifierFlags.isEmpty else { return false }
         switch event.keyCode {
         case 36:
             beginEditingSelectedItemName()
@@ -361,29 +383,50 @@ final class FilePaneViewController: NSViewController {
     }
 
     private func handlePreviewPanelKeyDown(_ event: NSEvent) -> Bool {
-        guard event.modifierFlags.intersection(.deviceIndependentFlagsMask).isEmpty,
+        guard event.nonNavigationModifierFlags.isEmpty,
+              Self.previewOwner === self,
               let panel = QLPreviewPanel.shared(),
               panel.isVisible,
-              NSApp.keyWindow === panel,
               !previewItems.isEmpty else {
             return false
         }
 
-        let offset: Int
+        let nextIndex: Int
         switch event.keyCode {
         case 123, 126:
-            offset = -1
+            nextIndex = previewIndex(before: currentPreviewIndex, keyCode: event.keyCode)
         case 124, 125:
-            offset = 1
+            nextIndex = previewIndex(after: currentPreviewIndex, keyCode: event.keyCode)
         default:
             return false
         }
 
-        let nextIndex = min(max(panel.currentPreviewItemIndex + offset, 0), previewItems.count - 1)
-        guard nextIndex != panel.currentPreviewItemIndex else { return true }
+        guard nextIndex != currentPreviewIndex else { return true }
+        currentPreviewIndex = nextIndex
         panel.currentPreviewItemIndex = nextIndex
         selectItemForPreview(at: nextIndex)
         return true
+    }
+
+    private func previewIndex(before currentIndex: Int, keyCode: UInt16) -> Int {
+        if viewModel.viewMode == .grid, keyCode == 126 {
+            return max(currentIndex - gridPreviewColumnCount(), 0)
+        }
+        return max(currentIndex - 1, 0)
+    }
+
+    private func previewIndex(after currentIndex: Int, keyCode: UInt16) -> Int {
+        if viewModel.viewMode == .grid, keyCode == 125 {
+            return min(currentIndex + gridPreviewColumnCount(), previewItems.count - 1)
+        }
+        return min(currentIndex + 1, previewItems.count - 1)
+    }
+
+    private func gridPreviewColumnCount() -> Int {
+        guard let layout = collectionView.collectionViewLayout as? NSCollectionViewFlowLayout else { return 1 }
+        let contentWidth = collectionView.bounds.width - layout.sectionInset.left - layout.sectionInset.right
+        let stride = layout.itemSize.width + layout.minimumInteritemSpacing
+        return max(Int((contentWidth + layout.minimumInteritemSpacing) / stride), 1)
     }
 
     private func selectItemForPreview(at index: Int) {
@@ -394,6 +437,7 @@ final class FilePaneViewController: NSViewController {
         case .grid:
             let indexPath = IndexPath(item: index, section: 0)
             collectionView.selectionIndexPaths = [indexPath]
+            collectionView.selectItems(at: [indexPath], scrollPosition: .centeredVertically)
             collectionView.scrollToItems(at: [indexPath], scrollPosition: .centeredVertically)
         }
     }
@@ -421,7 +465,7 @@ final class FilePaneViewController: NSViewController {
     }
 
     private func dropDestinationURL(itemIndex: Int?) -> URL {
-        guard let itemIndex, let item = viewModel.item(at: itemIndex), item.isDirectory else {
+        guard let itemIndex, let item = viewModel.item(at: itemIndex), item.isBrowsableDirectory else {
             return viewModel.currentURL
         }
         return item.url
@@ -511,7 +555,7 @@ final class FilePaneViewController: NSViewController {
     private func openItem(at index: Int) {
         guard let item = viewModel.item(at: index) else { return }
 
-        if item.isDirectory {
+        if item.isBrowsableDirectory {
             viewModel.load(url: item.url)
         } else {
             Task {
@@ -533,12 +577,52 @@ final class FilePaneViewController: NSViewController {
     @objc private func fileOperationCompleted(_ notification: Notification) {
         refresh()
     }
+
+    @objc private func typeFilterChanged(_ sender: NSPopUpButton) {
+        let selectedTitle = sender.titleOfSelectedItem
+        viewModel.setTypeFilter(selectedTitle == "All" ? nil : selectedTitle)
+    }
+
+    private func updateTypeFilterPopup() {
+        let selectedFilter = viewModel.typeFilter
+        typeFilterPopup.removeAllItems()
+        typeFilterPopup.addItem(withTitle: "All")
+        for type in viewModel.availableTypeFilters {
+            typeFilterPopup.addItem(withTitle: type)
+        }
+        typeFilterPopup.selectItem(withTitle: selectedFilter ?? "All")
+    }
+
+    private func detailValue(for item: FileItem, row: Int) -> String {
+        if let cachedDetail = detailCache[item.url] {
+            return cachedDetail
+        }
+        Task { [weak self] in
+            let detail = await FileGridDetailProvider.detail(for: item)
+            await MainActor.run {
+                guard let self, self.viewModel.item(at: row)?.url == item.url else { return }
+                self.detailCache[item.url] = detail
+                self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integer: 1))
+            }
+        }
+        return item.isBrowsableDirectory ? "--" : (item.size.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) } ?? "--")
+    }
 }
 
 private final class FileTableView: NSTableView {
     var rightClickHandler: ((Int) -> Void)?
     var dropHandler: ((NSDraggingInfo, Int?) -> Bool)?
     var keyHandler: ((NSEvent) -> Bool)?
+
+    override var acceptsFirstResponder: Bool { true }
+
+    override func mouseDown(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        if row(at: point) < 0 {
+            window?.makeFirstResponder(self)
+        }
+        super.mouseDown(with: event)
+    }
 
     override func rightMouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
@@ -547,6 +631,13 @@ private final class FileTableView: NSTableView {
     }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        if sender.draggingPasteboard.canReadFileURLs {
+            return .move
+        }
+        return []
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
         if sender.draggingPasteboard.canReadFileURLs {
             return .move
         }
@@ -570,15 +661,27 @@ private final class FileCollectionView: NSCollectionView {
     var doubleClickHandler: ((Int) -> Void)?
     var keyHandler: ((NSEvent) -> Bool)?
 
+    override var acceptsFirstResponder: Bool { true }
+
     override func mouseDown(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        if indexPathForItem(at: point) == nil {
+            window?.makeFirstResponder(self)
+        }
         super.mouseDown(with: event)
         guard event.clickCount == 2 else { return }
-        let point = convert(event.locationInWindow, from: nil)
         guard let index = indexPathForItem(at: point)?.item else { return }
         doubleClickHandler?(index)
     }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        if sender.draggingPasteboard.canReadFileURLs {
+            return .move
+        }
+        return []
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
         if sender.draggingPasteboard.canReadFileURLs {
             return .move
         }
@@ -599,6 +702,13 @@ private final class FileCollectionView: NSCollectionView {
 
 private final class FileDropScrollView: NSScrollView {
     var dropHandler: ((NSDraggingInfo) -> Bool)?
+
+    override var acceptsFirstResponder: Bool { true }
+
+    override func mouseDown(with event: NSEvent) {
+        window?.makeFirstResponder(self)
+        super.mouseDown(with: event)
+    }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
         if sender.draggingPasteboard.canReadFileURLs {
@@ -740,16 +850,17 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
         case "name":
             return item.name
         case "size":
-            guard !item.isDirectory, let size = item.size else { return "--" }
-            return ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
-        case "type":
-            return item.typeIdentifier ?? (item.isDirectory ? "Folder" : "File")
+            return detailValue(for: item, row: cellRow(for: item))
         case "modified":
             guard let date = item.modificationDate else { return "--" }
             return dateFormatter.string(from: date)
         default:
             return ""
         }
+    }
+
+    private func cellRow(for item: FileItem) -> Int {
+        viewModel.items.firstIndex(where: { $0.url == item.url }) ?? 0
     }
 
     func tableViewSelectionDidChange(_ notification: Notification) {
@@ -870,5 +981,11 @@ private extension NSPasteboard {
         }
 
         return nil
+    }
+}
+
+private extension NSEvent {
+    var nonNavigationModifierFlags: NSEvent.ModifierFlags {
+        modifierFlags.intersection(.deviceIndependentFlagsMask).subtracting(.numericPad)
     }
 }

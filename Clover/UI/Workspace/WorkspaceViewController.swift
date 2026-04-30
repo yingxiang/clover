@@ -1,6 +1,8 @@
 import AppKit
 
 final class WorkspaceViewController: NSViewController {
+    var activePaneChangeHandler: (() -> Void)?
+
     private let paneController: PaneLayoutController
     private let statusBar = StatusBarView()
 
@@ -9,6 +11,9 @@ final class WorkspaceViewController: NSViewController {
         super.init(nibName: nil, bundle: nil)
         paneController.statusHandler = { [weak self] text in
             self?.statusBar.setText(text)
+        }
+        paneController.activePaneChangeHandler = { [weak self] in
+            self?.activePaneChangeHandler?()
         }
     }
 

@@ -1,6 +1,8 @@
 import AppKit
 
 final class RootSplitViewController: NSSplitViewController {
+    var activePaneChangeHandler: (() -> Void)?
+
     private let sidebarViewController: SidebarViewController
     private let workspaceViewController: WorkspaceViewController
 
@@ -9,6 +11,9 @@ final class RootSplitViewController: NSSplitViewController {
         workspaceViewController = WorkspaceViewController(environment: environment)
         super.init(nibName: nil, bundle: nil)
         sidebarViewController.delegate = self
+        workspaceViewController.activePaneChangeHandler = { [weak self] in
+            self?.activePaneChangeHandler?()
+        }
     }
 
     required init?(coder: NSCoder) {

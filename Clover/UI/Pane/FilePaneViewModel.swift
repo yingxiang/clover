@@ -8,10 +8,12 @@ final class FilePaneViewModel {
 
     let id: UUID
     private(set) var currentURL: URL
+    private var allItems: [FileItem] = []
     private(set) var items: [FileItem] = []
     private(set) var viewMode: FileViewMode = .list
     var sortOption: SortOption = .nameAscending
     var showHiddenFiles = false
+    private(set) var typeFilter: String?
 
     var onChange: (() -> Void)?
     var onStatusChange: ((String) -> Void)?
@@ -49,9 +51,10 @@ final class FilePaneViewModel {
                 await MainActor.run {
                     guard let self else { return }
                     self.currentURL = targetURL
-                    self.items = sortedItems
+                    self.allItems = sortedItems
+                    self.applyFilters()
                     self.onChange?()
-                    self.onStatusChange?("\(sortedItems.count) items")
+                    self.onStatusChange?("\(self.items.count) items")
                 }
             } catch is CancellationError {
                 await MainActor.run { [weak self] in
@@ -59,6 +62,7 @@ final class FilePaneViewModel {
                 }
             } catch {
                 await MainActor.run { [weak self] in
+                    self?.allItems = []
                     self?.items = []
                     self?.onChange?()
                     self?.onStatusChange?("Unable to load folder")
@@ -76,6 +80,19 @@ final class FilePaneViewModel {
         guard viewMode != mode else { return }
         viewMode = mode
         onChange?()
+    }
+
+    var availableTypeFilters: [String] {
+        Array(Set(allItems.map { FileItemPresentation.typeName(for: $0) })).sorted {
+            $0.localizedStandardCompare($1) == .orderedAscending
+        }
+    }
+
+    func setTypeFilter(_ typeFilter: String?) {
+        self.typeFilter = typeFilter
+        applyFilters()
+        onChange?()
+        onStatusChange?("\(items.count) items")
     }
 
     func openItem(_ url: URL) async throws {
@@ -137,5 +154,13 @@ final class FilePaneViewModel {
     func item(at index: Int) -> FileItem? {
         guard items.indices.contains(index) else { return nil }
         return items[index]
+    }
+
+    private func applyFilters() {
+        guard let typeFilter else {
+            items = allItems
+            return
+        }
+        items = allItems.filter { FileItemPresentation.typeName(for: $0) == typeFilter }
     }
 }

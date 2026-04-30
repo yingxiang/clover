@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 enum FileGridDetailProvider {
     static func detail(for item: FileItem) async -> String {
-        if item.isDirectory {
+        if item.isBrowsableDirectory {
             let count = await directoryItemCount(at: item.url)
             return "\(count) items"
         }
@@ -13,7 +13,15 @@ enum FileGridDetailProvider {
             return "\(dimensions.width)x\(dimensions.height)"
         }
 
-        guard let size = item.size else { return "" }
+        let size: Int64?
+        if let itemSize = item.size {
+            size = itemSize
+        } else if item.isPackage || item.isApplication {
+            size = await packageDirectorySize(at: item.url)
+        } else {
+            size = nil
+        }
+        guard let size else { return "" }
         return ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
     }
 
@@ -21,6 +29,29 @@ enum FileGridDetailProvider {
         await Task.detached(priority: .utility) {
             (try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]).count) ?? 0
         }.value
+    }
+
+    private static func packageDirectorySize(at url: URL) async -> Int64? {
+        await Task.detached(priority: .utility) {
+            packageDirectorySizeSync(at: url)
+        }.value
+    }
+
+    private static func packageDirectorySizeSync(at url: URL) -> Int64? {
+        let keys: [URLResourceKey] = [.isDirectoryKey, .fileAllocatedSizeKey, .totalFileAllocatedSizeKey, .fileSizeKey, .totalFileSizeKey]
+        guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles]) else {
+            return nil
+        }
+        var total: Int64 = 0
+        for case let childURL as URL in enumerator {
+            guard !Task.isCancelled,
+                  let values = try? childURL.resourceValues(forKeys: Set(keys)),
+                  values.isDirectory != true else {
+                continue
+            }
+            total += Int64(values.totalFileAllocatedSize ?? values.fileAllocatedSize ?? values.totalFileSize ?? values.fileSize ?? 0)
+        }
+        return total
     }
 
     private static func imageDimensions(for item: FileItem) -> (width: Int, height: Int)? {

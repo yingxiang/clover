@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import UniformTypeIdentifiers
 
 final class LocalFileProvider: FileProvider {
     let providerID = "local"
@@ -18,8 +19,11 @@ final class LocalFileProvider: FileProvider {
             let keys: Set<URLResourceKey> = [
                 .nameKey,
                 .isDirectoryKey,
+                .isPackageKey,
                 .fileSizeKey,
                 .totalFileSizeKey,
+                .fileAllocatedSizeKey,
+                .totalFileAllocatedSizeKey,
                 .contentModificationDateKey,
                 .creationDateKey,
                 .contentTypeKey,
@@ -32,20 +36,30 @@ final class LocalFileProvider: FileProvider {
                     let values = try childURL.resourceValues(forKeys: keys)
                     let name = values.name ?? childURL.lastPathComponent
                     let isDirectory = values.isDirectory ?? false
+                    let isPackage = values.isPackage ?? false
+                    let isApplication = values.contentType?.conforms(to: .application) == true
+                    let size: Int64? = if isDirectory {
+                        nil
+                    } else {
+                        Int64(values.totalFileSize ?? values.fileSize ?? 0)
+                    }
                     return FileItem(
                         url: childURL,
                         name: name,
                         isDirectory: isDirectory,
-                        size: isDirectory ? nil : Int64(values.totalFileSize ?? values.fileSize ?? 0),
+                        size: size,
                         modificationDate: values.contentModificationDate,
                         creationDate: values.creationDate,
                         typeIdentifier: values.contentType?.identifier,
-                        isHidden: values.isHidden ?? name.hasPrefix(".")
+                        isHidden: values.isHidden ?? name.hasPrefix("."),
+                        isPackage: isPackage,
+                        isApplication: isApplication
                     )
                 } catch {
                     let name = childURL.lastPathComponent
                     var isDirectory: ObjCBool = false
                     _ = fileManager.fileExists(atPath: childURL.path, isDirectory: &isDirectory)
+                    let isApplication = childURL.pathExtension.localizedCaseInsensitiveCompare("app") == .orderedSame
                     return FileItem(
                         url: childURL,
                         name: name,
@@ -54,7 +68,9 @@ final class LocalFileProvider: FileProvider {
                         modificationDate: nil,
                         creationDate: nil,
                         typeIdentifier: nil,
-                        isHidden: name.hasPrefix(".")
+                        isHidden: name.hasPrefix("."),
+                        isPackage: isApplication,
+                        isApplication: isApplication
                     )
                 }
             }

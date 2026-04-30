@@ -28,6 +28,7 @@ Use this skill for development inside the Clover repository.
 - Use Swift + AppKit. Do not introduce SwiftUI unless the user explicitly asks.
 - UI code must not perform direct file operations with `FileManager`; route file reads/writes through `FileProvider` and `FileOperationService`.
 - Disk work must be asynchronous and must not block the main thread.
+- Directory listing must return quickly. Do not perform recursive size, thumbnail, image metadata, package inspection, or other expensive per-item work while opening a folder; load that data asynchronously or lazily after the directory contents are visible.
 - Preserve the provider abstraction so remote, archive, and sync providers can later use the same UI.
 - Keep project-owned Swift files under 1000 lines. Before adding substantial behavior, check the target file length with `wc -l`; if the edit would push it past 1000 lines, split by responsibility first.
 - Treat 800 lines as a warning threshold. Prefer extracting focused controllers, views, services, model types, helpers, or tests before the file becomes hard to review.

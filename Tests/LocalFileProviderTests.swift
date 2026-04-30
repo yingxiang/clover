@@ -41,6 +41,25 @@ final class LocalFileProviderTests: XCTestCase {
         XCTAssertTrue(hidden.isHidden)
     }
 
+    func testListDirectoryTreatsAppPackagesAsOpenableFiles() async throws {
+        let root = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let appURL = root.appendingPathComponent("Example.app", isDirectory: true)
+        try FileManager.default.createDirectory(at: appURL, withIntermediateDirectories: false)
+        try Data(repeating: 1, count: 12).write(to: appURL.appendingPathComponent("payload"))
+
+        let provider = LocalFileProvider()
+        let items = try await provider.listDirectory(at: root)
+        let app = try XCTUnwrap(items.first { $0.name == "Example.app" })
+
+        XCTAssertTrue(app.isDirectory)
+        XCTAssertTrue(app.isPackage)
+        XCTAssertTrue(app.isApplication)
+        XCTAssertFalse(app.isBrowsableDirectory)
+        XCTAssertNil(app.size)
+    }
+
     func testListDirectoryThrowsForMissingDirectory() async throws {
         let missingURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("Missing-\(UUID().uuidString)", isDirectory: true)
         let provider = LocalFileProvider()
