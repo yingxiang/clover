@@ -31,6 +31,15 @@ final class PathBarView: NSView, NSTextFieldDelegate {
         pathField.currentEditor()?.selectAll(nil)
     }
 
+    override func mouseDown(with event: NSEvent) {
+        let location = convert(event.locationInWindow, from: nil)
+        if !stackView.frame.contains(location), !pathField.frame.contains(location) {
+            beginEditing()
+            return
+        }
+        super.mouseDown(with: event)
+    }
+
     @objc private func submitPath(_ sender: NSTextField) {
         let path = sender.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !path.isEmpty else {

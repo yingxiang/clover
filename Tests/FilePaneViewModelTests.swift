@@ -82,6 +82,66 @@ final class FilePaneViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.items.isEmpty)
     }
 
+    func testSearchFiltersLoadedItemsByNameWithoutReloadingDirectory() async throws {
+        let root = URL(fileURLWithPath: "/tmp/CloverPane")
+        let provider = MockFileProvider(itemsByURL: [
+            root: [
+                makeItem(name: "Invoice.pdf", parent: root),
+                makeItem(name: "Notes.txt", parent: root),
+                makeItem(name: "Images", parent: root, isDirectory: true)
+            ]
+        ])
+        let viewModel = FilePaneViewModel(currentURL: root, provider: provider)
+
+        viewModel.load()
+        try await waitForItems(in: viewModel, count: 3)
+        viewModel.setSearchQuery("i")
+
+        XCTAssertEqual(viewModel.items.map(\.name), ["Images", "Invoice.pdf"])
+        XCTAssertEqual(provider.listedURLs, [root])
+    }
+
+    func testClearingSearchRestoresLoadedItems() async throws {
+        let root = URL(fileURLWithPath: "/tmp/CloverPane")
+        let provider = MockFileProvider(itemsByURL: [
+            root: [
+                makeItem(name: "Archive.zip", parent: root),
+                makeItem(name: "Readme.md", parent: root)
+            ]
+        ])
+        let viewModel = FilePaneViewModel(currentURL: root, provider: provider)
+
+        viewModel.load()
+        try await waitForItems(in: viewModel, count: 2)
+        viewModel.setSearchQuery("read")
+        XCTAssertEqual(viewModel.items.map(\.name), ["Readme.md"])
+
+        viewModel.setSearchQuery("")
+
+        XCTAssertEqual(viewModel.items.map(\.name), ["Archive.zip", "Readme.md"])
+        XCTAssertEqual(provider.listedURLs, [root])
+    }
+
+    func testSearchMatchesChineseNameByFullPinyinAndInitials() async throws {
+        let root = URL(fileURLWithPath: "/tmp/CloverPane")
+        let provider = MockFileProvider(itemsByURL: [
+            root: [
+                makeItem(name: "下载", parent: root, isDirectory: true),
+                makeItem(name: "文档.txt", parent: root)
+            ]
+        ])
+        let viewModel = FilePaneViewModel(currentURL: root, provider: provider)
+
+        viewModel.load()
+        try await waitForItems(in: viewModel, count: 2)
+        viewModel.setSearchQuery("xiazai")
+        XCTAssertEqual(viewModel.items.map(\.name), ["下载"])
+
+        viewModel.setSearchQuery("xz")
+        XCTAssertEqual(viewModel.items.map(\.name), ["下载"])
+        XCTAssertEqual(provider.listedURLs, [root])
+    }
+
     private func waitForItems(in viewModel: FilePaneViewModel, count: Int) async throws {
         let deadline = Date().addingTimeInterval(2)
         while viewModel.items.count != count {

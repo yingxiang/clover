@@ -14,6 +14,8 @@ final class FilePaneViewModel {
     var sortOption: SortOption = .nameAscending
     var showHiddenFiles = false
     private(set) var typeFilter: String?
+    private(set) var searchQuery = ""
+    var searchCaseSensitive = false
 
     var onChange: (() -> Void)?
     var onStatusChange: ((String) -> Void)?
@@ -87,6 +89,7 @@ final class FilePaneViewModel {
         self.viewMode = viewMode
         self.sortOption = sortOption
         typeFilter = nil
+        searchQuery = ""
     }
 
     func workspaceState(using store: WorkspaceStore) -> PaneState {
@@ -101,6 +104,13 @@ final class FilePaneViewModel {
 
     func setTypeFilter(_ typeFilter: String?) {
         self.typeFilter = typeFilter
+        applyFilters()
+        onChange?()
+        onStatusChange?("\(items.count) items")
+    }
+
+    func setSearchQuery(_ query: String) {
+        searchQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         applyFilters()
         onChange?()
         onStatusChange?("\(items.count) items")
@@ -168,10 +178,13 @@ final class FilePaneViewModel {
     }
 
     private func applyFilters() {
-        guard let typeFilter else {
-            items = allItems
-            return
+        var filteredItems = allItems
+        if let typeFilter {
+            filteredItems = filteredItems.filter { FileItemPresentation.typeName(for: $0) == typeFilter }
         }
-        items = allItems.filter { FileItemPresentation.typeName(for: $0) == typeFilter }
+        if !searchQuery.isEmpty {
+            filteredItems = filteredItems.filter { FileSearchMatcher.matches($0, query: searchQuery, caseSensitive: searchCaseSensitive) }
+        }
+        items = filteredItems
     }
 }
