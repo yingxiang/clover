@@ -153,6 +153,8 @@ extension NSPasteboard {
 
 extension NSEvent {
     var nonNavigationModifierFlags: NSEvent.ModifierFlags {
-        modifierFlags.intersection(.deviceIndependentFlagsMask).subtracting(.numericPad)
+        modifierFlags
+            .intersection(.deviceIndependentFlagsMask)
+            .subtracting([.numericPad, .function])
     }
 }

@@ -147,6 +147,10 @@ final class FileGridItem: NSCollectionViewItem {
         nameField.currentEditor()?.selectAll(nil)
     }
 
+    var previewSourceRect: NSRect {
+        view.convert(iconSelectionView.frame, to: nil)
+    }
+
     private func updateSelectionAppearance() {
         iconSelectionView.layer?.backgroundColor = isSelected ? NSColor.systemGray.withAlphaComponent(0.18).cgColor : NSColor.clear.cgColor
         nameSelectionView.layer?.backgroundColor = isSelected ? NSColor.selectedContentBackgroundColor.cgColor : NSColor.clear.cgColor

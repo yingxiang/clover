@@ -19,6 +19,7 @@ final class FilePaneViewController: NSViewController {
     private(set) var currentPreviewIndex: Int = 0
     var detailCache: [URL: String] = [:]
     private var previewKeyMonitor: EventMonitorToken?
+    private var previewIndexObservation: NSKeyValueObservation?
     private var searchTask: Task<Void, Never>?
     static weak var previewOwner: FilePaneViewController?
     let dateFormatter: DateFormatter = {
@@ -107,6 +108,10 @@ final class FilePaneViewController: NSViewController {
 
     @objc func previewSelectedItem(_ sender: Any?) {
         activationHandler?(self)
+        if isControllingVisiblePreviewPanel {
+            closePreviewPanel()
+            return
+        }
         guard let selectedIndex = selectedItemIndexes().first else { return }
         previewItems = viewModel.items.map(\.url)
         currentPreviewIndex = selectedIndex
@@ -115,6 +120,7 @@ final class FilePaneViewController: NSViewController {
         panel.dataSource = self
         panel.delegate = self
         panel.reloadData()
+        observePreviewIndex(on: panel)
         panel.currentPreviewItemIndex = selectedIndex
         panel.makeKeyAndOrderFront(nil)
     }
@@ -401,51 +407,109 @@ final class FilePaneViewController: NSViewController {
             beginEditingSelectedItemName()
             return true
         case 49:
-            previewSelectedItem(nil)
+            togglePreviewPanel()
             return true
         default:
             return false
         }
     }
 
-    private func handlePreviewPanelKeyDown(_ event: NSEvent) -> Bool {
+    func handlePreviewPanelKeyDown(_ event: NSEvent) -> Bool {
         guard event.nonNavigationModifierFlags.isEmpty,
               Self.previewOwner === self,
               let panel = QLPreviewPanel.shared(),
-              panel.isVisible,
-              !previewItems.isEmpty else {
+              panel.isVisible else {
             return false
         }
 
-        let nextIndex: Int
         switch event.keyCode {
-        case 123, 126:
-            nextIndex = previewIndex(before: currentPreviewIndex, keyCode: event.keyCode)
-        case 124, 125:
-            nextIndex = previewIndex(after: currentPreviewIndex, keyCode: event.keyCode)
+        case 49:
+            closePreviewPanel()
+            return true
+        case 123, 124, 125, 126:
+            guard let nextIndex = previewIndex(from: currentPreviewIndex, keyCode: event.keyCode) else {
+                return false
+            }
+            showPreview(at: nextIndex, in: panel)
+            return true
         default:
             return false
         }
-
-        guard nextIndex != currentPreviewIndex else { return true }
-        setCurrentPreviewIndex(nextIndex)
-        panel.currentPreviewItemIndex = nextIndex
-        selectItemForPreview(at: nextIndex)
-        return true
     }
 
-    private func previewIndex(before currentIndex: Int, keyCode: UInt16) -> Int {
-        if viewModel.viewMode == .grid, keyCode == 126 {
-            return max(currentIndex - gridPreviewColumnCount(), 0)
-        }
-        return max(currentIndex - 1, 0)
+    private var isControllingVisiblePreviewPanel: Bool {
+        guard Self.previewOwner === self,
+              let panel = QLPreviewPanel.shared() else { return false }
+        return panel.isVisible
     }
 
-    private func previewIndex(after currentIndex: Int, keyCode: UInt16) -> Int {
-        if viewModel.viewMode == .grid, keyCode == 125 {
-            return min(currentIndex + gridPreviewColumnCount(), previewItems.count - 1)
+    private func togglePreviewPanel() {
+        if isControllingVisiblePreviewPanel {
+            closePreviewPanel()
+        } else {
+            previewSelectedItem(nil)
         }
-        return min(currentIndex + 1, previewItems.count - 1)
+    }
+
+    private func closePreviewPanel() {
+        guard Self.previewOwner === self,
+              let panel = QLPreviewPanel.shared() else { return }
+        panel.close()
+        stopControllingPreviewPanel(panel)
+    }
+
+    private func observePreviewIndex(on panel: QLPreviewPanel) {
+        previewIndexObservation = panel.observe(\.currentPreviewItemIndex, options: [.new]) { [weak self] panel, _ in
+            Task { @MainActor in
+                self?.syncSelectionWithPreviewPanel(panel)
+            }
+        }
+    }
+
+    private func syncSelectionWithPreviewPanel(_ panel: QLPreviewPanel) {
+        guard Self.previewOwner === self,
+              panel.isVisible else { return }
+        let index = panel.currentPreviewItemIndex
+        guard previewItems.indices.contains(index) else { return }
+        currentPreviewIndex = index
+        selectItemForPreview(at: index)
+    }
+
+    func stopControllingPreviewPanel(_ panel: QLPreviewPanel) {
+        guard Self.previewOwner === self else { return }
+        previewIndexObservation = nil
+        if panel.dataSource === self { panel.dataSource = nil }
+        if panel.delegate === self { panel.delegate = nil }
+        Self.previewOwner = nil
+    }
+
+    private func showPreview(at index: Int, in panel: QLPreviewPanel) {
+        guard index != currentPreviewIndex else { return }
+        setCurrentPreviewIndex(index)
+        panel.currentPreviewItemIndex = index
+        selectItemForPreview(at: index)
+    }
+
+    private func previewIndex(from currentIndex: Int, keyCode: UInt16) -> Int? {
+        guard !previewItems.isEmpty else { return nil }
+        let nextIndex: Int
+        switch (viewModel.viewMode, keyCode) {
+        case (.list, 126):
+            nextIndex = currentIndex - 1
+        case (.list, 125):
+            nextIndex = currentIndex + 1
+        case (.grid, 123):
+            nextIndex = currentIndex - 1
+        case (.grid, 124):
+            nextIndex = currentIndex + 1
+        case (.grid, 126):
+            nextIndex = currentIndex - gridPreviewColumnCount()
+        case (.grid, 125):
+            nextIndex = currentIndex + gridPreviewColumnCount()
+        default:
+            return nil
+        }
+        return min(max(nextIndex, 0), previewItems.count - 1)
     }
 
     private func gridPreviewColumnCount() -> Int {
@@ -466,6 +530,65 @@ final class FilePaneViewController: NSViewController {
             collectionView.selectItems(at: [indexPath], scrollPosition: .centeredVertically)
             collectionView.scrollToItems(at: [indexPath], scrollPosition: .centeredVertically)
         }
+    }
+
+    func previewSourceFrameOnScreen(for previewItem: QLPreviewItem) -> NSRect {
+        guard let url = previewItem.previewItemURL,
+              let index = previewItems.firstIndex(of: url) else {
+            return .zero
+        }
+
+        switch viewModel.viewMode {
+        case .list:
+            return listPreviewSourceFrameOnScreen(at: index)
+        case .grid:
+            return gridPreviewSourceFrameOnScreen(at: index)
+        }
+    }
+
+    private func listPreviewSourceFrameOnScreen(at index: Int) -> NSRect {
+        guard tableView.window != nil,
+              index >= 0,
+              index < tableView.numberOfRows else {
+            return .zero
+        }
+
+        tableView.scrollRowToVisible(index)
+        tableView.layoutSubtreeIfNeeded()
+        let cellFrame = tableView.frameOfCell(atColumn: 0, row: index)
+        let sourceFrame = cellFrame.isEmpty ? tableView.rect(ofRow: index) : cellFrame
+        return screenFrame(for: tableView, rect: sourceFrame.insetBy(dx: 2, dy: 2))
+    }
+
+    private func gridPreviewSourceFrameOnScreen(at index: Int) -> NSRect {
+        guard collectionView.window != nil,
+              index >= 0,
+              index < collectionView.numberOfItems(inSection: 0) else {
+            return .zero
+        }
+
+        let indexPath = IndexPath(item: index, section: 0)
+        collectionView.scrollToItems(at: [indexPath], scrollPosition: .centeredVertically)
+        collectionView.layoutSubtreeIfNeeded()
+
+        if let item = collectionView.item(at: indexPath) as? FileGridItem {
+            return item.view.window?.convertToScreen(item.previewSourceRect) ?? .zero
+        }
+
+        let itemFrame = collectionView.frameForItem(at: index)
+        guard !itemFrame.isEmpty else { return .zero }
+        let iconFrame = NSRect(
+            x: itemFrame.midX - 30,
+            y: itemFrame.maxY - 63,
+            width: 60,
+            height: 58
+        )
+        return screenFrame(for: collectionView, rect: iconFrame)
+    }
+
+    private func screenFrame(for view: NSView, rect: NSRect) -> NSRect {
+        guard let window = view.window else { return .zero }
+        return window.convertToScreen(view.convert(rect, to: nil))
     }
 
     private func beginEditingSelectedItemName() {
