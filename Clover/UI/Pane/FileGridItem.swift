@@ -190,6 +190,14 @@ private final class GridNameTextField: NSTextField {
         super.mouseDown(with: event)
     }
 
+    override func rightMouseDown(with event: NSEvent) {
+        if let collectionView = enclosingCollectionView {
+            collectionView.rightMouseDown(with: event)
+            return
+        }
+        super.rightMouseDown(with: event)
+    }
+
     func beginEditingMode() {
         isEditable = true
         isSelectable = true
@@ -204,5 +212,16 @@ private final class GridNameTextField: NSTextField {
         isBordered = false
         drawsBackground = false
         maximumNumberOfLines = 2
+    }
+
+    private var enclosingCollectionView: FileCollectionView? {
+        var currentView = superview
+        while let view = currentView {
+            if let collectionView = view as? FileCollectionView {
+                return collectionView
+            }
+            currentView = view.superview
+        }
+        return nil
     }
 }

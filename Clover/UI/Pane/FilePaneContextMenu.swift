@@ -33,4 +33,56 @@ extension FilePaneViewController: NSMenuDelegate {
         activationHandler?(self)
         refresh()
     }
+
+    func prepareContextSelection(for index: Int?) {
+        activationHandler?(self)
+        switch viewModel.viewMode {
+        case .list:
+            guard let row = index, row >= 0 else {
+                tableView.deselectAll(nil)
+                return
+            }
+            if !tableView.selectedRowIndexes.contains(row) {
+                tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+            }
+        case .grid:
+            guard let item = index, item >= 0 else {
+                collectionView.deselectAll(nil)
+                return
+            }
+            let indexPath = IndexPath(item: item, section: 0)
+            if !collectionView.selectionIndexPaths.contains(indexPath) {
+                collectionView.deselectAll(nil)
+                collectionView.selectItems(at: [indexPath], scrollPosition: [])
+            }
+        }
+    }
+
+    func rememberSelection(urls: [URL]) {
+        pendingSelectionURLs = urls.map(\.standardizedFileURL)
+    }
+
+    func restorePendingSelectionIfNeeded() {
+        guard !pendingSelectionURLs.isEmpty else { return }
+        let urls = Set(pendingSelectionURLs)
+        pendingSelectionURLs.removeAll()
+
+        switch viewModel.viewMode {
+        case .list:
+            let indexes = viewModel.listRows.enumerated().compactMap { index, row in
+                urls.contains(row.item.url.standardizedFileURL) ? index : nil
+            }
+            guard !indexes.isEmpty else { return }
+            tableView.selectRowIndexes(IndexSet(indexes), byExtendingSelection: false)
+            tableView.scrollRowToVisible(indexes[0])
+        case .grid:
+            let indexPaths = viewModel.items.enumerated().compactMap { index, item in
+                urls.contains(item.url.standardizedFileURL) ? IndexPath(item: index, section: 0) : nil
+            }
+            guard !indexPaths.isEmpty else { return }
+            let selection = Set(indexPaths)
+            collectionView.selectionIndexPaths = selection
+            collectionView.scrollToItems(at: selection, scrollPosition: .centeredVertically)
+        }
+    }
 }

@@ -2,12 +2,39 @@ import AppKit
 
 extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTableViewDelegate {
     func numberOfRows(in tableView: NSTableView) -> Int {
-        viewModel.items.count
+        viewModel.listRows.count
     }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         guard let item = viewModel.item(at: row), let tableColumn else { return nil }
         let identifier = NSUserInterfaceItemIdentifier("FileCell-\(tableColumn.identifier.rawValue)")
+        if tableColumn.identifier.rawValue == "name" {
+            let cell = tableView.makeView(withIdentifier: identifier, owner: self) as? FileListNameCellView ?? FileListNameCellView()
+            cell.identifier = identifier
+            cell.textField?.identifier = NSUserInterfaceItemIdentifier("FileNameEditor")
+            cell.textField?.tag = row
+            cell.textField?.delegate = self
+            cell.textField?.stringValue = item.name
+            cell.imageView?.image = FileIconProvider.icon(for: item)
+            cell.imageView?.toolTip = item.url.absoluteString
+            cell.disclosureButton.target = self
+            cell.disclosureButton.action = #selector(toggleListDirectoryExpansion(_:))
+            cell.disclosureButton.tag = row
+            cell.configureDisclosure(
+                depth: viewModel.listDepth(at: row),
+                canExpand: viewModel.listRowCanExpand(at: row),
+                isExpanded: viewModel.listRowIsExpanded(at: row)
+            )
+            Task { [weak imageView = cell.imageView] in
+                guard let thumbnail = await FileThumbnailProvider.thumbnail(for: item, size: 18) else { return }
+                await MainActor.run {
+                    guard imageView?.toolTip == item.url.absoluteString else { return }
+                    imageView?.image = thumbnail
+                }
+            }
+            return cell
+        }
+
         let cell = tableView.makeView(withIdentifier: identifier, owner: self) as? NSTableCellView ?? NSTableCellView()
         cell.identifier = identifier
 
@@ -22,58 +49,29 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
             textField.translatesAutoresizingMaskIntoConstraints = false
             cell.addSubview(textField)
             cell.textField = textField
-            if tableColumn.identifier.rawValue == "name" {
-                let imageView = NSImageView()
-                imageView.translatesAutoresizingMaskIntoConstraints = false
-                imageView.imageScaling = .scaleProportionallyUpOrDown
-                cell.addSubview(imageView)
-                cell.imageView = imageView
-                NSLayoutConstraint.activate([
-                    imageView.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 6),
-                    imageView.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
-                    imageView.widthAnchor.constraint(equalToConstant: 18),
-                    imageView.heightAnchor.constraint(equalToConstant: 18),
-                    textField.leadingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 6),
-                    textField.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -6),
-                    textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
-                ])
-            } else {
-                NSLayoutConstraint.activate([
-                    textField.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 6),
-                    textField.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -6),
-                    textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
-                ])
-            }
+            NSLayoutConstraint.activate([
+                textField.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 6),
+                textField.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -6),
+                textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
+            ])
         }
 
-        cell.textField?.identifier = tableColumn.identifier.rawValue == "name" ? NSUserInterfaceItemIdentifier("FileNameEditor") : nil
+        cell.textField?.identifier = nil
         cell.textField?.tag = row
-        cell.textField?.isEditable = tableColumn.identifier.rawValue == "name"
-        cell.textField?.isSelectable = tableColumn.identifier.rawValue == "name"
-        if tableColumn.identifier.rawValue == "name" {
-            cell.imageView?.image = FileIconProvider.icon(for: item)
-            cell.imageView?.toolTip = item.url.absoluteString
-            Task { [weak imageView = cell.imageView] in
-                guard let thumbnail = await FileThumbnailProvider.thumbnail(for: item, size: 18) else { return }
-                await MainActor.run {
-                    guard imageView?.toolTip == item.url.absoluteString else { return }
-                    imageView?.image = thumbnail
-                }
-            }
-        } else {
-            cell.imageView?.image = nil
-            cell.imageView?.toolTip = nil
-        }
-        cell.textField?.stringValue = value(for: item, columnIdentifier: tableColumn.identifier.rawValue)
+        cell.textField?.isEditable = false
+        cell.textField?.isSelectable = false
+        cell.imageView?.image = nil
+        cell.imageView?.toolTip = nil
+        cell.textField?.stringValue = value(for: item, columnIdentifier: tableColumn.identifier.rawValue, row: row)
         return cell
     }
 
-    private func value(for item: FileItem, columnIdentifier: String) -> String {
+    private func value(for item: FileItem, columnIdentifier: String, row: Int) -> String {
         switch columnIdentifier {
         case "name":
             return item.name
         case "size":
-            return detailValue(for: item, row: cellRow(for: item))
+            return detailValue(for: item, row: row)
         case "type":
             return FileItemPresentation.typeName(for: item)
         case "modified":
@@ -82,10 +80,6 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
         default:
             return ""
         }
-    }
-
-    private func cellRow(for item: FileItem) -> Int {
-        viewModel.items.firstIndex(where: { $0.url == item.url }) ?? 0
     }
 
     func tableViewSelectionDidChange(_ notification: Notification) {
@@ -97,14 +91,6 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
         guard let descriptor = tableView.sortDescriptors.first,
               let key = descriptor.key else { return }
         setSortOption(for: key, ascending: descriptor.ascending)
-    }
-
-    func tableView(_ tableView: NSTableView, mouseDownInHeaderOf tableColumn: NSTableColumn) {
-        guard tableColumn.identifier.rawValue == "type" else { return }
-        DispatchQueue.main.async { [weak self, weak tableColumn] in
-            guard let self, let tableColumn else { return }
-            self.showTypeFilterMenu(for: tableColumn)
-        }
     }
 
     func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> NSPasteboardWriting? {
@@ -121,6 +107,12 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
 
     func tableView(_ tableView: NSTableView, acceptDrop info: NSDraggingInfo, row: Int, dropOperation: NSTableView.DropOperation) -> Bool {
         performMoveDrop(info, itemIndex: row >= 0 ? row : nil)
+    }
+
+    @objc private func toggleListDirectoryExpansion(_ sender: NSButton) {
+        activationHandler?(self)
+        view.window?.makeFirstResponder(tableView)
+        viewModel.toggleListExpansion(at: sender.tag)
     }
 }
 
@@ -214,6 +206,11 @@ extension FilePaneViewController {
 
     @objc private func selectTypeFilter(_ sender: NSMenuItem) {
         viewModel.setTypeFilter(sender.representedObject as? String)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.view.window?.makeFirstResponder(self.tableView)
+            NSCursor.arrow.set()
+        }
     }
 }
 

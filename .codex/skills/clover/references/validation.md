@@ -58,6 +58,7 @@ When changing AppKit interactions, manually reason through or test the matching 
 - Drag/drop: verify list-to-list, list-to-grid, grid-to-list, and grid-to-grid paths when drag/drop code changes. Include dropping onto blank grid space.
 - Thumbnails: list and grid cells should first show an icon, then replace it with a non-distorted Quick Look thumbnail when available.
 - Quick Look: Space opens preview for the selected item; arrow keys move through pane items while preview is visible.
+- Quick Look animation: in list mode, the zoom should start from the left file icon area; closing should zoom back and crossfade instead of hard-disappearing.
 - Inline rename: Return and selected-name click should edit the visible filename in place.
 
 ## Manual Review

@@ -87,7 +87,8 @@ Rules:
 - When Quick Look is visible, arrow keys should move between previewable items in the current pane and keep the pane selection synchronized. macOS arrow-key events often include the `.function` modifier flag, so navigation-key modifier filtering must subtract both `.numericPad` and `.function`.
 - Use `QLPreviewPanelDelegate.previewPanel(_:handle:)` plus a local key monitor when needed; Quick Look can own focus, and pane table/collection key handlers may not receive preview-window events.
 - Observe or otherwise synchronize `QLPreviewPanel.currentPreviewItemIndex` so system-handled navigation and Clover-handled navigation keep the list/grid selection aligned.
-- Implement `previewPanel(_:sourceFrameOnScreenFor:)` for Quick Look zoom animations. Return the list row/name-cell rect in list mode and the grid icon rect in grid mode; return `.zero` only when no visible source can be found.
+- Implement `previewPanel(_:sourceFrameOnScreenFor:)` for Quick Look zoom animations. In list mode, anchor the animation to the name-column's left file icon area rather than the whole row; in grid mode, use the grid icon rect. Return `.zero` only when no visible source can be found.
+- Implement `previewPanel(_:transitionImageFor:contentRect:)` so Quick Look open/close animations use the same file icon/thumbnail as the source view. Closing the preview should keep the zoom-back motion and add a visible crossfade rather than disappearing abruptly.
 - Quick Look data source/delegate ownership should be cleaned up when the preview panel closes so stale pane controllers do not continue receiving panel callbacks.
 
 ## Menus And Shortcuts

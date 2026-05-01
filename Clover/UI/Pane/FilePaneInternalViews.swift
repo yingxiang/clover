@@ -1,5 +1,94 @@
 import AppKit
 
+final class FileTableHeaderView: NSTableHeaderView {
+    var typeColumnClickHandler: ((NSTableColumn) -> Void)?
+
+    override func mouseDown(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        let columnIndex = column(at: point)
+        guard columnIndex >= 0,
+              let tableView,
+              tableView.tableColumns[columnIndex].identifier.rawValue == "type" else {
+            super.mouseDown(with: event)
+            return
+        }
+        window?.makeFirstResponder(tableView)
+        typeColumnClickHandler?(tableView.tableColumns[columnIndex])
+    }
+}
+
+final class FileListNameCellView: NSTableCellView {
+    let disclosureButton = NSButton()
+    let fileIconView = NSImageView()
+    let nameTextField = NSTextField(string: "")
+    private var disclosureLeadingConstraint: NSLayoutConstraint?
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        configure()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        configure()
+    }
+
+    private func configure() {
+        guard textField == nil else { return }
+        disclosureButton.isBordered = false
+        disclosureButton.imagePosition = .imageOnly
+        disclosureButton.setButtonType(.momentaryChange)
+        disclosureButton.translatesAutoresizingMaskIntoConstraints = false
+
+        fileIconView.imageScaling = .scaleProportionallyUpOrDown
+        fileIconView.translatesAutoresizingMaskIntoConstraints = false
+
+        nameTextField.isBordered = false
+        nameTextField.isEditable = true
+        nameTextField.isSelectable = true
+        nameTextField.drawsBackground = false
+        nameTextField.lineBreakMode = .byTruncatingMiddle
+        nameTextField.translatesAutoresizingMaskIntoConstraints = false
+
+        addSubview(disclosureButton)
+        addSubview(fileIconView)
+        addSubview(nameTextField)
+        imageView = fileIconView
+        textField = nameTextField
+
+        let leading = disclosureButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6)
+        disclosureLeadingConstraint = leading
+        NSLayoutConstraint.activate([
+            leading,
+            disclosureButton.centerYAnchor.constraint(equalTo: centerYAnchor),
+            disclosureButton.widthAnchor.constraint(equalToConstant: 14),
+            disclosureButton.heightAnchor.constraint(equalToConstant: 18),
+            fileIconView.leadingAnchor.constraint(equalTo: disclosureButton.trailingAnchor, constant: 4),
+            fileIconView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            fileIconView.widthAnchor.constraint(equalToConstant: 18),
+            fileIconView.heightAnchor.constraint(equalToConstant: 18),
+            nameTextField.leadingAnchor.constraint(equalTo: fileIconView.trailingAnchor, constant: 6),
+            nameTextField.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -6),
+            nameTextField.centerYAnchor.constraint(equalTo: centerYAnchor)
+        ])
+    }
+
+    func configureDisclosure(depth: Int, canExpand: Bool, isExpanded: Bool) {
+        disclosureLeadingConstraint?.constant = 6 + CGFloat(depth * 16)
+        disclosureButton.isHidden = !canExpand
+        let symbolName = isExpanded ? "chevron.down" : "chevron.right"
+        disclosureButton.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+    }
+
+    var previewSourceRect: NSRect {
+        fileIconView.frame.insetBy(dx: -1, dy: -1)
+    }
+
+    var previewTransitionImage: NSImage? {
+        fileIconView.image
+    }
+}
+
 final class FileTableView: NSTableView {
     var activationHandler: (() -> Void)?
     var rightClickHandler: ((Int) -> Void)?
@@ -68,6 +157,7 @@ final class FileCollectionView: NSCollectionView {
     override func rightMouseDown(with event: NSEvent) {
         activationHandler?()
         let point = convert(event.locationInWindow, from: nil)
+        window?.makeFirstResponder(self)
         rightClickHandler?(indexPathForItem(at: point)?.item)
         super.rightMouseDown(with: event)
     }

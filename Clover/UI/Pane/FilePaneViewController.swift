@@ -24,6 +24,7 @@ final class FilePaneViewController: NSViewController {
     private var previewIndexObservation: NSKeyValueObservation?
     var isUpdatingSortIndicators = false
     private var searchTask: Task<Void, Never>?
+    var pendingSelectionURLs: [URL] = []
     static weak var previewOwner: FilePaneViewController?
     let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -125,7 +126,7 @@ final class FilePaneViewController: NSViewController {
             return
         }
         guard let selectedIndex = selectedItemIndexes().first else { return }
-        previewItems = viewModel.items.map(\.url)
+        previewItems = previewItemURLsForCurrentMode()
         currentPreviewIndex = selectedIndex
         Self.previewOwner = self
         guard let panel = QLPreviewPanel.shared() else { return }
@@ -228,10 +229,16 @@ final class FilePaneViewController: NSViewController {
 
         tableView.usesAlternatingRowBackgroundColors = true
         tableView.rowSizeStyle = .medium
+        tableView.allowsMultipleSelection = true
         tableView.delegate = self
         tableView.dataSource = self
         tableView.target = self
         tableView.doubleAction = #selector(openSelectedItem)
+        let headerView = FileTableHeaderView()
+        headerView.typeColumnClickHandler = { [weak self] column in
+            self?.showTypeFilterMenu(for: column)
+        }
+        tableView.headerView = headerView
         tableView.activationHandler = { [weak self] in
             guard let self else { return }
             self.activationHandler?(self)
@@ -395,6 +402,7 @@ final class FilePaneViewController: NSViewController {
         updateSortIndicators()
         tableView.reloadData()
         collectionView.reloadData()
+        restorePendingSelectionIfNeeded()
         let isList = viewModel.viewMode == .list
         scrollView.isHidden = !isList
         collectionScrollView.isHidden = isList
@@ -455,29 +463,6 @@ final class FilePaneViewController: NSViewController {
             return tableView.selectedRowIndexes.map { $0 }
         case .grid:
             return collectionView.selectionIndexPaths.map(\.item)
-        }
-    }
-
-    private func prepareContextSelection(for index: Int?) {
-        activationHandler?(self)
-        switch viewModel.viewMode {
-        case .list:
-            guard let row = index, row >= 0 else {
-                tableView.deselectAll(nil)
-                return
-            }
-            if !tableView.selectedRowIndexes.contains(row) {
-                tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
-            }
-        case .grid:
-            guard let item = index, item >= 0 else {
-                collectionView.deselectAll(nil)
-                return
-            }
-            let indexPath = IndexPath(item: item, section: 0)
-            if !collectionView.selectionIndexPaths.contains(indexPath) {
-                collectionView.selectItems(at: [indexPath], scrollPosition: [])
-            }
         }
     }
 
@@ -648,9 +633,14 @@ final class FilePaneViewController: NSViewController {
 
     func renameItem(at index: Int, to newName: String) {
         guard let item = viewModel.item(at: index), !newName.isEmpty, newName != item.name else {
+            if let item = viewModel.item(at: index) {
+                rememberSelection(urls: [item.url])
+            }
             reload()
             return
         }
+        let renamedURL = item.url.deletingLastPathComponent().appendingPathComponent(newName)
+        rememberSelection(urls: [renamedURL])
         runOperation {
             try await self.viewModel.renameItem(item, to: newName)
         }
