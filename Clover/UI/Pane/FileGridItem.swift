@@ -147,6 +147,10 @@ final class FileGridItem: NSCollectionViewItem {
         nameField.currentEditor()?.selectAll(nil)
     }
 
+    var isEditingName: Bool {
+        nameField.isEditable && nameField.currentEditor() != nil
+    }
+
     var previewSourceRect: NSRect {
         view.convert(iconSelectionView.frame, to: nil)
     }

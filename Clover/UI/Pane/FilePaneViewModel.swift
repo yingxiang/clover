@@ -1,4 +1,5 @@
 import Foundation
+import UniformTypeIdentifiers
 
 struct FilePaneListRow {
     let item: FileItem
@@ -167,18 +168,36 @@ final class FilePaneViewModel {
         try await provider.openItem(url)
     }
 
-    func createFolder(named name: String) async throws {
+    func createFolder(named name: String) async throws -> URL {
         onStatusChange?("Creating folder...")
-        _ = try await fileOperationService.createFolder(at: currentURL, name: name)
+        let createdURL = try await fileOperationService.createFolder(at: currentURL, name: name)
         onStatusChange?("Folder created")
-        refresh()
+        return createdURL
     }
 
-    func createTextFile(named name: String) async throws {
+    func createTextFile(named name: String) async throws -> URL {
         onStatusChange?("Creating file...")
-        _ = try await fileOperationService.createFile(at: currentURL, name: name, contents: Data())
+        let createdURL = try await fileOperationService.createFile(at: currentURL, name: name, contents: Data())
         onStatusChange?("File created")
-        refresh()
+        return createdURL
+    }
+
+    func insertCreatedItem(at url: URL, isDirectory: Bool) {
+        let item = FileItem(
+            url: url,
+            name: url.lastPathComponent,
+            isDirectory: isDirectory,
+            size: isDirectory ? nil : 0,
+            modificationDate: Date(),
+            creationDate: Date(),
+            typeIdentifier: inferredTypeIdentifier(for: url, isDirectory: isDirectory),
+            isHidden: url.lastPathComponent.hasPrefix(".")
+        )
+        allItems.removeAll { $0.url.standardizedFileURL == url.standardizedFileURL }
+        allItems.append(item)
+        allItems = FileSortService.sort(allItems, by: sortOption)
+        applyFilters()
+        onChange?()
     }
 
     func renameItem(_ item: FileItem, to newName: String) async throws {
@@ -329,6 +348,14 @@ final class FilePaneViewModel {
     private func filteredSortedItems(_ loadedItems: [FileItem]) -> [FileItem] {
         let visibleItems = showHiddenFiles ? loadedItems : loadedItems.filter { !$0.isHidden }
         return FileSortService.sort(visibleItems, by: sortOption)
+    }
+
+    private func inferredTypeIdentifier(for url: URL, isDirectory: Bool) -> String? {
+        if isDirectory {
+            return UTType.folder.identifier
+        }
+        guard !url.pathExtension.isEmpty else { return nil }
+        return UTType(filenameExtension: url.pathExtension)?.identifier
     }
 
     private func rebuildListRows() {

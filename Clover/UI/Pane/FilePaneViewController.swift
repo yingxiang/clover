@@ -25,6 +25,8 @@ final class FilePaneViewController: NSViewController {
     var isUpdatingSortIndicators = false
     private var searchTask: Task<Void, Never>?
     var pendingSelectionURLs: [URL] = []
+    private var pendingRenameURL: URL?
+    private var pendingRenameAttemptCount = 0
     static weak var previewOwner: FilePaneViewController?
     let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -108,27 +110,34 @@ final class FilePaneViewController: NSViewController {
 
     @objc func createFolder(_ sender: Any?) {
         activationHandler?(self)
-        guard let name = promptForText(title: L10n.createFolderTitle, message: L10n.createFolderMessage, defaultValue: L10n.untitledFolder) else { return }
         runOperation {
-            try await self.viewModel.createFolder(named: name)
+            let createdURL = try await self.viewModel.createFolder(named: L10n.untitledFolder)
+            await MainActor.run {
+                self.rememberCreatedItemForRenaming(at: createdURL)
+                self.viewModel.insertCreatedItem(at: createdURL, isDirectory: true)
+            }
         }
     }
 
     @objc func createTextFile(_ sender: Any?) {
         activationHandler?(self)
-        guard let name = promptForText(title: L10n.createTextFileTitle, message: L10n.createTextFileMessage, defaultValue: L10n.untitledTextFile) else { return }
-        let resolvedName = name.contains(".") ? name : "\(name).txt"
         runOperation {
-            try await self.viewModel.createTextFile(named: resolvedName)
+            let createdURL = try await self.viewModel.createTextFile(named: L10n.untitledTextFile)
+            await MainActor.run {
+                self.rememberCreatedItemForRenaming(at: createdURL)
+                self.viewModel.insertCreatedItem(at: createdURL, isDirectory: false)
+            }
         }
     }
 
     @objc func createMarkdownFile(_ sender: Any?) {
         activationHandler?(self)
-        guard let name = promptForText(title: L10n.createMarkdownFileTitle, message: L10n.createTextFileMessage, defaultValue: L10n.untitledMarkdownFile) else { return }
-        let resolvedName = name.contains(".") ? name : "\(name).md"
         runOperation {
-            try await self.viewModel.createTextFile(named: resolvedName)
+            let createdURL = try await self.viewModel.createTextFile(named: L10n.untitledMarkdownFile)
+            await MainActor.run {
+                self.rememberCreatedItemForRenaming(at: createdURL)
+                self.viewModel.insertCreatedItem(at: createdURL, isDirectory: false)
+            }
         }
     }
 
@@ -436,6 +445,7 @@ final class FilePaneViewController: NSViewController {
         tableView.reloadData()
         collectionView.reloadData()
         restorePendingSelectionIfNeeded()
+        beginPendingRenameIfNeeded()
         let isList = viewModel.viewMode == .list
         scrollView.isHidden = !isList
         collectionScrollView.isHidden = isList
@@ -665,12 +675,62 @@ final class FilePaneViewController: NSViewController {
         }
     }
 
+    private func rememberCreatedItemForRenaming(at url: URL) {
+        let standardizedURL = url.standardizedFileURL
+        pendingRenameURL = standardizedURL
+        pendingRenameAttemptCount = 0
+        rememberSelection(urls: [standardizedURL])
+    }
+
+    private func beginPendingRenameIfNeeded() {
+        guard let pendingRenameURL else { return }
+        let selectedURLs = Set(selectedItems().map { $0.url.standardizedFileURL })
+        guard selectedURLs.contains(pendingRenameURL) else { return }
+        schedulePendingRenameAttempt()
+    }
+
+    private func schedulePendingRenameAttempt() {
+        guard pendingRenameURL != nil else { return }
+        pendingRenameAttemptCount += 1
+        let attempt = pendingRenameAttemptCount
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
+            guard let self, self.pendingRenameURL != nil else { return }
+            self.beginEditingSelectedItemName()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                guard let self, self.pendingRenameURL != nil else { return }
+                if self.isEditingSelectedItemName {
+                    self.pendingRenameURL = nil
+                    self.pendingRenameAttemptCount = 0
+                    return
+                }
+                guard attempt < 4 else {
+                    self.pendingRenameURL = nil
+                    self.pendingRenameAttemptCount = 0
+                    return
+                }
+                self.schedulePendingRenameAttempt()
+            }
+        }
+    }
+
+    private var isEditingSelectedItemName: Bool {
+        guard let index = selectedItemIndexes().first else { return false }
+        switch viewModel.viewMode {
+        case .list:
+            return tableView.editedRow == index && tableView.editedColumn == 0
+        case .grid:
+            let indexPath = IndexPath(item: index, section: 0)
+            guard let item = collectionView.item(at: indexPath) as? FileGridItem else { return false }
+            return item.isEditingName
+        }
+    }
+
     func renameItem(at index: Int, to newName: String) {
         guard let item = viewModel.item(at: index), !newName.isEmpty, newName != item.name else {
             if let item = viewModel.item(at: index) {
                 rememberSelection(urls: [item.url])
             }
-            reload()
+            refresh()
             return
         }
         let renamedURL = item.url.deletingLastPathComponent().appendingPathComponent(newName)
@@ -700,22 +760,6 @@ final class FilePaneViewController: NSViewController {
                 await MainActor.run { showError(error) }
             }
         }
-    }
-
-    private func promptForText(title: String, message: String, defaultValue: String) -> String? {
-        let input = NSTextField(string: defaultValue)
-        input.frame = NSRect(x: 0, y: 0, width: 320, height: 24)
-
-        let alert = NSAlert()
-        alert.messageText = title
-        alert.informativeText = message
-        alert.accessoryView = input
-        alert.addButton(withTitle: L10n.ok)
-        alert.addButton(withTitle: L10n.cancel)
-
-        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
-        let value = input.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        return value.isEmpty ? nil : value
     }
 
     func chooseDestination(title: String) -> URL? {
