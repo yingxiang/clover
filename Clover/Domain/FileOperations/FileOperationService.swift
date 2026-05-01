@@ -7,6 +7,7 @@ enum FileOperationKind: Sendable {
     case trash
     case deletePermanently
     case createFolder
+    case createFile
 }
 
 enum FileOperationState {
@@ -57,6 +58,20 @@ final class FileOperationService: Sendable {
         }
     }
 
+    func createFile(at parentURL: URL, name: String, contents: Data) async throws -> URL {
+        do {
+            return try await provider.createFile(at: parentURL, name: name, contents: contents)
+        } catch CloverError.fileAlreadyExists {
+            let extensionName = URL(fileURLWithPath: name).pathExtension
+            let baseName = URL(fileURLWithPath: name).deletingPathExtension().lastPathComponent
+            return try await provider.createFile(
+                at: parentURL,
+                name: uniqueName(for: baseName, pathExtension: extensionName, attempt: 2),
+                contents: contents
+            )
+        }
+    }
+
     func renameItem(at url: URL, to newName: String) async throws -> URL {
         try await provider.renameItem(at: url, to: newName)
     }
@@ -71,6 +86,14 @@ final class FileOperationService: Sendable {
 
     func trashItems(_ urls: [URL]) async throws {
         try await provider.trashItems(urls)
+    }
+
+    func deleteItemsPermanently(_ urls: [URL]) async throws {
+        try await provider.deleteItemsPermanently(urls)
+    }
+
+    func setLabelNumber(_ labelNumber: Int?, for urls: [URL]) async throws {
+        try await provider.setLabelNumber(labelNumber, for: urls)
     }
 
     private func perform(_ kind: FileOperationKind, urls: [URL], destinationURL: URL, conflictResolver: FileConflictResolver?) async throws {

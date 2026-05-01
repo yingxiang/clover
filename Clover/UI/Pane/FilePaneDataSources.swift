@@ -84,6 +84,7 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
 
     func tableViewSelectionDidChange(_ notification: Notification) {
         activationHandler?(self)
+        updateCommandAvailability()
     }
 
     func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
@@ -136,6 +137,11 @@ extension FilePaneViewController: NSCollectionViewDataSource, @preconcurrency NS
 
     func collectionView(_ collectionView: NSCollectionView, didSelectItemsAt indexPaths: Set<IndexPath>) {
         activationHandler?(self)
+        updateCommandAvailability()
+    }
+
+    func collectionView(_ collectionView: NSCollectionView, didDeselectItemsAt indexPaths: Set<IndexPath>) {
+        updateCommandAvailability()
     }
 
     func collectionView(_ collectionView: NSCollectionView, pasteboardWriterForItemAt indexPath: IndexPath) -> NSPasteboardWriting? {
@@ -181,8 +187,8 @@ extension FilePaneViewController {
 
     func showTypeFilterMenu(for tableColumn: NSTableColumn) {
         guard let headerView = tableView.headerView else { return }
-        let menu = NSMenu(title: "Type")
-        let allItem = NSMenuItem(title: "All", action: #selector(selectTypeFilter(_:)), keyEquivalent: "")
+        let menu = NSMenu(title: L10n.type)
+        let allItem = NSMenuItem(title: L10n.all, action: #selector(selectTypeFilter(_:)), keyEquivalent: "")
         allItem.target = self
         allItem.state = viewModel.typeFilter == nil ? .on : .off
         menu.addItem(allItem)

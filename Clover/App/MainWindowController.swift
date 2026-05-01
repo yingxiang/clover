@@ -1,6 +1,6 @@
 import AppKit
 
-final class MainWindowController: NSWindowController, NSToolbarDelegate {
+final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserInterfaceValidations {
     private let rootViewController: RootSplitViewController
     private weak var layoutToolbarItem: NSToolbarItem?
     private weak var layoutToolbarButton: NSButton?
@@ -64,6 +64,15 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         rootViewController.createFolderInActivePane()
     }
 
+    @objc func createTextFileInActivePane(_ sender: Any?) {
+        rootViewController.createTextFileInActivePane()
+    }
+
+    @objc func performNewItemActionInActivePane(_ sender: NSMenuItem) {
+        guard let kind = NewItemKind(rawValue: sender.tag) else { return }
+        rootViewController.performNewItemActionInActivePane(kind)
+    }
+
     @objc func renameSelectedItemInActivePane(_ sender: Any?) {
         rootViewController.renameSelectedItemInActivePane()
     }
@@ -78,6 +87,46 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
 
     @objc func trashSelectedItemsInActivePane(_ sender: Any?) {
         rootViewController.trashSelectedItemsInActivePane()
+    }
+
+    @objc func copy(_ sender: Any?) {
+        rootViewController.copySelectionInActivePane()
+    }
+
+    @objc func paste(_ sender: Any?) {
+        rootViewController.pasteIntoActivePane()
+    }
+
+    @objc override func selectAll(_ sender: Any?) {
+        rootViewController.selectAllInActivePane()
+    }
+
+    @objc func deleteSelectedItemsPermanentlyInActivePane(_ sender: Any?) {
+        rootViewController.deleteSelectedItemsPermanentlyInActivePane()
+    }
+
+    @objc func revealSelectedItemsInFinderInActivePane(_ sender: Any?) {
+        rootViewController.revealSelectedItemsInFinderInActivePane()
+    }
+
+    @objc func openSelectedItemsInTerminalInActivePane(_ sender: Any?) {
+        rootViewController.openSelectedItemsInTerminalInActivePane()
+    }
+
+    @objc func copySelectedPathsInActivePane(_ sender: Any?) {
+        rootViewController.copySelectedPathsInActivePane()
+    }
+
+    @objc func showSelectedItemsInfoInActivePane(_ sender: Any?) {
+        rootViewController.showSelectedItemsInfoInActivePane()
+    }
+
+    @objc func sendSelectedItemsViaAirDropInActivePane(_ sender: Any?) {
+        rootViewController.sendSelectedItemsViaAirDropInActivePane()
+    }
+
+    @objc func showShareMenuInActivePane(_ sender: Any?) {
+        rootViewController.showShareMenuInActivePane(relativeTo: sender as? NSView)
     }
 
     func setPaneLayout(_ layout: PaneLayout) {
@@ -100,11 +149,11 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
     }
 
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.refresh, .viewMode, .paneLayout, .flexibleSpace]
+        [.refresh, .airDrop, .share, .info, .viewMode, .paneLayout, .flexibleSpace]
     }
 
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.refresh, .flexibleSpace, .viewMode, .paneLayout]
+        [.refresh, .airDrop, .share, .info, .flexibleSpace, .viewMode, .paneLayout]
     }
 
     func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
@@ -114,6 +163,30 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         if itemIdentifier == .viewMode {
             return makeViewModeToolbarItem(identifier: itemIdentifier)
         }
+        if itemIdentifier == .airDrop {
+            return makeActionToolbarItem(
+                identifier: itemIdentifier,
+                label: L10n.airDrop,
+                image: AppIconProvider.image(.airDrop, accessibilityDescription: L10n.airDrop),
+                action: #selector(sendSelectedItemsViaAirDropInActivePane(_:))
+            )
+        }
+        if itemIdentifier == .share {
+            return makeActionToolbarItem(
+                identifier: itemIdentifier,
+                label: L10n.share,
+                image: AppIconProvider.image(.share, accessibilityDescription: L10n.share),
+                action: #selector(showShareMenuInActivePane(_:))
+            )
+        }
+        if itemIdentifier == .info {
+            return makeActionToolbarItem(
+                identifier: itemIdentifier,
+                label: L10n.showInfo,
+                image: AppIconProvider.image(.info, accessibilityDescription: L10n.showInfo),
+                action: #selector(showSelectedItemsInfoInActivePane(_:))
+            )
+        }
         guard itemIdentifier == .refresh else { return nil }
         let item = NSToolbarItem(itemIdentifier: itemIdentifier)
         item.label = L10n.refresh
@@ -122,6 +195,50 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         item.target = self
         item.action = #selector(refreshActivePane(_:))
         return item
+    }
+
+    func validateUserInterfaceItem(_ item: any NSValidatedUserInterfaceItem) -> Bool {
+        switch item.action {
+        case #selector(refreshActivePane(_:)),
+             #selector(focusActivePathInput(_:)),
+             #selector(createFolderInActivePane(_:)),
+             #selector(createTextFileInActivePane(_:)),
+             #selector(performNewItemActionInActivePane(_:)),
+             #selector(showLayoutPicker(_:)),
+             #selector(toggleViewMode(_:)):
+            return true
+        case #selector(renameSelectedItemInActivePane(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.renameSelectedItem(_:)))
+        case #selector(copySelectedItemsInActivePane(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.copySelectedItems(_:)))
+        case #selector(moveSelectedItemsInActivePane(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.moveSelectedItems(_:)))
+        case #selector(trashSelectedItemsInActivePane(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.trashSelectedItems(_:)))
+        case #selector(deleteSelectedItemsPermanentlyInActivePane(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.deleteSelectedItemsPermanently(_:)))
+        case #selector(revealSelectedItemsInFinderInActivePane(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.revealSelectedItemsInFinder(_:)))
+        case #selector(openSelectedItemsInTerminalInActivePane(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.openSelectedItemsInTerminal(_:)))
+        case #selector(copySelectedPathsInActivePane(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.copySelectedItemPaths(_:)))
+        case #selector(showSelectedItemsInfoInActivePane(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.showSelectedItemsInfo(_:)))
+        case #selector(sendSelectedItemsViaAirDropInActivePane(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.sendSelectedItemsViaAirDrop(_:)))
+        case #selector(showShareMenuInActivePane(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.showShareMenuProxy(_:)))
+        case #selector(copy(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.copySelectionToPasteboard(_:)))
+        case #selector(paste(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.pasteFromPasteboard(_:)))
+        case #selector(selectAll(_:)):
+            return rootViewController.canPerformFileAction(#selector(FilePaneViewController.selectAllItems(_:)))
+        default:
+            guard let action = item.action else { return true }
+            return rootViewController.canPerformFileAction(action)
+        }
     }
 
     private func makeLayoutToolbarItem(identifier: NSToolbarItem.Identifier) -> NSToolbarItem {
@@ -145,6 +262,20 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         viewModeToolbarItem = item
         viewModeToolbarButton = button
         updateViewModeButton()
+        return item
+    }
+
+    private func makeActionToolbarItem(identifier: NSToolbarItem.Identifier, label: String, image: NSImage?, action: Selector) -> NSToolbarItem {
+        let item = NSToolbarItem(itemIdentifier: identifier)
+        item.label = label
+        item.paletteLabel = label
+        let button = makeToolbarIconButton(action: action)
+        button.image = image
+        button.toolTip = label
+        button.setAccessibilityLabel(label)
+        item.view = button
+        item.target = self
+        item.action = action
         return item
     }
 
@@ -225,6 +356,9 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
 
 private extension NSToolbarItem.Identifier {
     static let refresh = NSToolbarItem.Identifier("CloverToolbar.Refresh")
+    static let airDrop = NSToolbarItem.Identifier("CloverToolbar.AirDrop")
+    static let share = NSToolbarItem.Identifier("CloverToolbar.Share")
+    static let info = NSToolbarItem.Identifier("CloverToolbar.Info")
     static let viewMode = NSToolbarItem.Identifier("CloverToolbar.ViewMode")
     static let paneLayout = NSToolbarItem.Identifier("CloverToolbar.PaneLayout")
 }

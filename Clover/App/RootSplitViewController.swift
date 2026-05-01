@@ -53,6 +53,14 @@ final class RootSplitViewController: NSSplitViewController {
         workspaceViewController.createFolderInActivePane()
     }
 
+    func createTextFileInActivePane() {
+        workspaceViewController.createTextFileInActivePane()
+    }
+
+    func performNewItemActionInActivePane(_ kind: NewItemKind) {
+        workspaceViewController.performNewItemActionInActivePane(kind)
+    }
+
     func renameSelectedItemInActivePane() {
         workspaceViewController.renameSelectedItemInActivePane()
     }
@@ -67,6 +75,50 @@ final class RootSplitViewController: NSSplitViewController {
 
     func trashSelectedItemsInActivePane() {
         workspaceViewController.trashSelectedItemsInActivePane()
+    }
+
+    func copySelectionInActivePane() {
+        workspaceViewController.copySelectionInActivePane()
+    }
+
+    func pasteIntoActivePane() {
+        workspaceViewController.pasteIntoActivePane()
+    }
+
+    func selectAllInActivePane() {
+        workspaceViewController.selectAllInActivePane()
+    }
+
+    func deleteSelectedItemsPermanentlyInActivePane() {
+        workspaceViewController.deleteSelectedItemsPermanentlyInActivePane()
+    }
+
+    func revealSelectedItemsInFinderInActivePane() {
+        workspaceViewController.revealSelectedItemsInFinderInActivePane()
+    }
+
+    func openSelectedItemsInTerminalInActivePane() {
+        workspaceViewController.openSelectedItemsInTerminalInActivePane()
+    }
+
+    func copySelectedPathsInActivePane() {
+        workspaceViewController.copySelectedPathsInActivePane()
+    }
+
+    func showSelectedItemsInfoInActivePane() {
+        workspaceViewController.showSelectedItemsInfoInActivePane()
+    }
+
+    func sendSelectedItemsViaAirDropInActivePane() {
+        workspaceViewController.sendSelectedItemsViaAirDropInActivePane()
+    }
+
+    func showShareMenuInActivePane(relativeTo view: NSView?) {
+        workspaceViewController.showShareMenuInActivePane(relativeTo: view)
+    }
+
+    func canPerformFileAction(_ action: Selector) -> Bool {
+        workspaceViewController.canPerformFileAction(action)
     }
 
     func setPaneLayout(_ layout: PaneLayout) {

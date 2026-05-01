@@ -59,6 +59,10 @@ private final class PaneLayoutMockProvider: FileProvider, @unchecked Sendable {
         throw CloverError.unsupportedOperation
     }
 
+    func createFile(at parentURL: URL, name: String, contents: Data) async throws -> URL {
+        throw CloverError.unsupportedOperation
+    }
+
     func renameItem(at url: URL, to newName: String) async throws -> URL {
         throw CloverError.unsupportedOperation
     }
@@ -84,6 +88,10 @@ private final class PaneLayoutMockProvider: FileProvider, @unchecked Sendable {
     }
 
     func deleteItemsPermanently(_ urls: [URL]) async throws {
+        throw CloverError.unsupportedOperation
+    }
+
+    func setLabelNumber(_ labelNumber: Int?, for urls: [URL]) async throws {
         throw CloverError.unsupportedOperation
     }
 

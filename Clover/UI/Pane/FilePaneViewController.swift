@@ -108,9 +108,42 @@ final class FilePaneViewController: NSViewController {
 
     @objc func createFolder(_ sender: Any?) {
         activationHandler?(self)
-        guard let name = promptForText(title: "New Folder", message: "Enter a folder name:", defaultValue: "Untitled Folder") else { return }
+        guard let name = promptForText(title: L10n.createFolderTitle, message: L10n.createFolderMessage, defaultValue: L10n.untitledFolder) else { return }
         runOperation {
             try await self.viewModel.createFolder(named: name)
+        }
+    }
+
+    @objc func createTextFile(_ sender: Any?) {
+        activationHandler?(self)
+        guard let name = promptForText(title: L10n.createTextFileTitle, message: L10n.createTextFileMessage, defaultValue: L10n.untitledTextFile) else { return }
+        let resolvedName = name.contains(".") ? name : "\(name).txt"
+        runOperation {
+            try await self.viewModel.createTextFile(named: resolvedName)
+        }
+    }
+
+    @objc func createMarkdownFile(_ sender: Any?) {
+        activationHandler?(self)
+        guard let name = promptForText(title: L10n.createMarkdownFileTitle, message: L10n.createTextFileMessage, defaultValue: L10n.untitledMarkdownFile) else { return }
+        let resolvedName = name.contains(".") ? name : "\(name).md"
+        runOperation {
+            try await self.viewModel.createTextFile(named: resolvedName)
+        }
+    }
+
+    @objc func performNewItemAction(_ sender: NSMenuItem) {
+        activationHandler?(self)
+        guard let kind = NewItemKind(rawValue: sender.tag) else { return }
+        switch kind {
+        case .folder:
+            createFolder(sender)
+        case .textFile:
+            createTextFile(sender)
+        case .markdownFile:
+            createMarkdownFile(sender)
+        case .word, .excel, .powerPoint, .keynote, .pages, .numbers, .wps:
+            openNewDocumentApp(kind)
         }
     }
 
@@ -406,6 +439,7 @@ final class FilePaneViewController: NSViewController {
         let isList = viewModel.viewMode == .list
         scrollView.isHidden = !isList
         collectionScrollView.isHidden = isList
+        updateCommandAvailability()
         pathChangeHandler?(self)
     }
 
@@ -443,7 +477,7 @@ final class FilePaneViewController: NSViewController {
         }
     }
 
-    private func showError(_ error: Error) {
+    func showError(_ error: Error) {
         guard let window = view.window else { return }
         NSAlert(error: error).beginSheetModal(for: window)
     }
@@ -457,7 +491,7 @@ final class FilePaneViewController: NSViewController {
         }
     }
 
-    private func selectedItemIndexes() -> [Int] {
+    func selectedItemIndexes() -> [Int] {
         switch viewModel.viewMode {
         case .list:
             return tableView.selectedRowIndexes.map { $0 }
@@ -653,7 +687,7 @@ final class FilePaneViewController: NSViewController {
         return item.url
     }
 
-    private func runOperation(_ operation: @escaping () async throws -> Void) {
+    func runOperation(_ operation: @escaping () async throws -> Void) {
         Task {
             do {
                 try await operation()
@@ -676,18 +710,18 @@ final class FilePaneViewController: NSViewController {
         alert.messageText = title
         alert.informativeText = message
         alert.accessoryView = input
-        alert.addButton(withTitle: "OK")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: L10n.ok)
+        alert.addButton(withTitle: L10n.cancel)
 
         guard alert.runModal() == .alertFirstButtonReturn else { return nil }
         let value = input.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         return value.isEmpty ? nil : value
     }
 
-    private func chooseDestination(title: String) -> URL? {
+    func chooseDestination(title: String) -> URL? {
         let panel = NSOpenPanel()
         panel.title = title
-        panel.prompt = "Choose"
+        panel.prompt = L10n.choose
         panel.directoryURL = viewModel.currentURL
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -707,7 +741,7 @@ final class FilePaneViewController: NSViewController {
     }
 
     @MainActor
-    private func resolveConflict(_ conflict: FileConflict) async -> FileConflictResolution {
+    func resolveConflict(_ conflict: FileConflict) async -> FileConflictResolution {
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = "An item named \"\(conflict.destinationURL.lastPathComponent)\" already exists."
@@ -730,8 +764,14 @@ final class FilePaneViewController: NSViewController {
     }
 
     @objc func openSelectedItem() {
-        let row = tableView.clickedRow >= 0 ? tableView.clickedRow : tableView.selectedRow
-        openItem(at: row)
+        let index: Int
+        switch viewModel.viewMode {
+        case .list:
+            index = tableView.clickedRow >= 0 ? tableView.clickedRow : tableView.selectedRow
+        case .grid:
+            index = selectedItemIndexes().first ?? -1
+        }
+        openItem(at: index)
     }
 
     private func openItem(at index: Int) {
@@ -756,8 +796,28 @@ final class FilePaneViewController: NSViewController {
         viewModel.load(url: url.standardizedFileURL)
     }
 
+    private func openNewDocumentApp(_ kind: NewItemKind) {
+        guard let appURL = kind.appURL else {
+            showError(CloverError.unsupportedOperation)
+            return
+        }
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { _, error in
+            if let error {
+                Task { @MainActor in
+                    self.showError(error)
+                }
+            }
+        }
+    }
+
     @objc private func fileOperationCompleted(_ notification: Notification) {
         refresh()
+    }
+
+    func updateCommandAvailability() {
+        view.window?.toolbar?.validateVisibleItems()
     }
 
     @objc private func searchTextChanged(_ sender: NSSearchField) {

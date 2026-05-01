@@ -60,6 +60,14 @@ final class WorkspaceViewController: NSViewController {
         paneController.createFolderInActivePane()
     }
 
+    func createTextFileInActivePane() {
+        paneController.createTextFileInActivePane()
+    }
+
+    func performNewItemActionInActivePane(_ kind: NewItemKind) {
+        paneController.performNewItemActionInActivePane(kind)
+    }
+
     func renameSelectedItemInActivePane() {
         paneController.renameSelectedItemInActivePane()
     }
@@ -74,6 +82,50 @@ final class WorkspaceViewController: NSViewController {
 
     func trashSelectedItemsInActivePane() {
         paneController.trashSelectedItemsInActivePane()
+    }
+
+    func copySelectionInActivePane() {
+        paneController.copySelectionInActivePane()
+    }
+
+    func pasteIntoActivePane() {
+        paneController.pasteIntoActivePane()
+    }
+
+    func selectAllInActivePane() {
+        paneController.selectAllInActivePane()
+    }
+
+    func deleteSelectedItemsPermanentlyInActivePane() {
+        paneController.deleteSelectedItemsPermanentlyInActivePane()
+    }
+
+    func revealSelectedItemsInFinderInActivePane() {
+        paneController.revealSelectedItemsInFinderInActivePane()
+    }
+
+    func openSelectedItemsInTerminalInActivePane() {
+        paneController.openSelectedItemsInTerminalInActivePane()
+    }
+
+    func copySelectedPathsInActivePane() {
+        paneController.copySelectedPathsInActivePane()
+    }
+
+    func showSelectedItemsInfoInActivePane() {
+        paneController.showSelectedItemsInfoInActivePane()
+    }
+
+    func sendSelectedItemsViaAirDropInActivePane() {
+        paneController.sendSelectedItemsViaAirDropInActivePane()
+    }
+
+    func showShareMenuInActivePane(relativeTo view: NSView?) {
+        paneController.showShareMenuInActivePane(relativeTo: view)
+    }
+
+    func canPerformFileAction(_ action: Selector) -> Bool {
+        paneController.canPerformFileAction(action)
     }
 
     func setPaneLayout(_ layout: PaneLayout) {

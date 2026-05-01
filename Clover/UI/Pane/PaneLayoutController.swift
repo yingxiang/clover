@@ -60,6 +60,16 @@ final class PaneLayoutController: NSViewController {
         activePane?.createFolder(nil)
     }
 
+    func createTextFileInActivePane() {
+        activePane?.createTextFile(nil)
+    }
+
+    func performNewItemActionInActivePane(_ kind: NewItemKind) {
+        let item = NSMenuItem()
+        item.tag = kind.rawValue
+        activePane?.performNewItemAction(item)
+    }
+
     func renameSelectedItemInActivePane() {
         activePane?.renameSelectedItem(nil)
     }
@@ -74,6 +84,50 @@ final class PaneLayoutController: NSViewController {
 
     func trashSelectedItemsInActivePane() {
         activePane?.trashSelectedItems(nil)
+    }
+
+    func copySelectionInActivePane() {
+        activePane?.copySelectionToPasteboard(nil)
+    }
+
+    func pasteIntoActivePane() {
+        activePane?.pasteFromPasteboard(nil)
+    }
+
+    func selectAllInActivePane() {
+        activePane?.selectAllItems(nil)
+    }
+
+    func deleteSelectedItemsPermanentlyInActivePane() {
+        activePane?.deleteSelectedItemsPermanently(nil)
+    }
+
+    func revealSelectedItemsInFinderInActivePane() {
+        activePane?.revealSelectedItemsInFinder(nil)
+    }
+
+    func openSelectedItemsInTerminalInActivePane() {
+        activePane?.openSelectedItemsInTerminal(nil)
+    }
+
+    func copySelectedPathsInActivePane() {
+        activePane?.copySelectedItemPaths(nil)
+    }
+
+    func showSelectedItemsInfoInActivePane() {
+        activePane?.showSelectedItemsInfo(nil)
+    }
+
+    func sendSelectedItemsViaAirDropInActivePane() {
+        activePane?.sendSelectedItemsViaAirDrop(nil)
+    }
+
+    func showShareMenuInActivePane(relativeTo view: NSView?) {
+        activePane?.showShareMenu(relativeTo: view)
+    }
+
+    func canPerformFileAction(_ action: Selector) -> Bool {
+        activePane?.canPerformFileAction(action) ?? false
     }
 
     func openInActivePane(_ url: URL) {

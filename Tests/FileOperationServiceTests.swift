@@ -84,6 +84,10 @@ private final class OperationMockProvider: FileProvider, @unchecked Sendable {
         parentURL.appendingPathComponent(name, isDirectory: true)
     }
 
+    func createFile(at parentURL: URL, name: String, contents: Data) async throws -> URL {
+        parentURL.appendingPathComponent(name, isDirectory: false)
+    }
+
     func renameItem(at url: URL, to newName: String) async throws -> URL {
         url.deletingLastPathComponent().appendingPathComponent(newName)
     }
@@ -116,6 +120,8 @@ private final class OperationMockProvider: FileProvider, @unchecked Sendable {
             urls.forEach { existingURLs.remove($0) }
         }
     }
+
+    func setLabelNumber(_ labelNumber: Int?, for urls: [URL]) async throws {}
 
     func openItem(_ url: URL) async throws {}
 

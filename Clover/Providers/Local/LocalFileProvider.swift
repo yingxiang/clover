@@ -90,6 +90,20 @@ final class LocalFileProvider: FileProvider {
         }.value
     }
 
+    func createFile(at parentURL: URL, name: String, contents: Data) async throws -> URL {
+        try await Task.detached(priority: .userInitiated) {
+            let scopedAccess = SecurityScopedAccess(parentURL)
+            defer { scopedAccess.stop() }
+            let fileManager = FileManager.default
+            let url = parentURL.appendingPathComponent(name, isDirectory: false)
+            if fileManager.fileExists(atPath: url.path) {
+                throw CloverError.fileAlreadyExists(url)
+            }
+            try contents.write(to: url, options: .withoutOverwriting)
+            return url
+        }.value
+    }
+
     func renameItem(at url: URL, to newName: String) async throws -> URL {
         try await Task.detached(priority: .userInitiated) {
             let scopedAccess = SecurityScopedAccess(url.deletingLastPathComponent())
@@ -173,6 +187,20 @@ final class LocalFileProvider: FileProvider {
                 let scopedAccess = SecurityScopedAccess(url.deletingLastPathComponent())
                 defer { scopedAccess.stop() }
                 try fileManager.removeItem(at: url)
+            }
+        }.value
+    }
+
+    func setLabelNumber(_ labelNumber: Int?, for urls: [URL]) async throws {
+        try await Task.detached(priority: .userInitiated) {
+            for url in urls {
+                try Task.checkCancellation()
+                let scopedAccess = SecurityScopedAccess(url.deletingLastPathComponent())
+                defer { scopedAccess.stop() }
+                var values = URLResourceValues()
+                values.labelNumber = labelNumber
+                var mutableURL = url
+                try mutableURL.setResourceValues(values)
             }
         }.value
     }

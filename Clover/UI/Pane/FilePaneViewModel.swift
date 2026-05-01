@@ -174,6 +174,13 @@ final class FilePaneViewModel {
         refresh()
     }
 
+    func createTextFile(named name: String) async throws {
+        onStatusChange?("Creating file...")
+        _ = try await fileOperationService.createFile(at: currentURL, name: name, contents: Data())
+        onStatusChange?("File created")
+        refresh()
+    }
+
     func renameItem(_ item: FileItem, to newName: String) async throws {
         onStatusChange?("Renaming \(item.name)...")
         _ = try await fileOperationService.renameItem(at: item.url, to: newName)
@@ -186,6 +193,17 @@ final class FilePaneViewModel {
         onStatusChange?("Copying \(items.count) item\(items.count == 1 ? "" : "s")...")
         try await fileOperationService.copyItems(items.map(\.url), to: destinationURL, conflictResolver: conflictResolver)
         onStatusChange?("Copied \(items.count) item\(items.count == 1 ? "" : "s")")
+        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
+        if destinationURL == currentURL {
+            refresh()
+        }
+    }
+
+    func copyFileURLs(_ urls: [URL], to destinationURL: URL, conflictResolver: FileConflictResolver? = nil) async throws {
+        guard !urls.isEmpty else { return }
+        onStatusChange?("Copying \(urls.count) item\(urls.count == 1 ? "" : "s")...")
+        try await fileOperationService.copyItems(urls, to: destinationURL, conflictResolver: conflictResolver)
+        onStatusChange?("Copied \(urls.count) item\(urls.count == 1 ? "" : "s")")
         NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
         if destinationURL == currentURL {
             refresh()
@@ -217,6 +235,22 @@ final class FilePaneViewModel {
         onStatusChange?("Moved to Trash")
         NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
         refresh()
+    }
+
+    func deleteItemsPermanently(_ items: [FileItem]) async throws {
+        guard !items.isEmpty else { return }
+        onStatusChange?("Deleting \(items.count) item\(items.count == 1 ? "" : "s")...")
+        try await fileOperationService.deleteItemsPermanently(items.map(\.url))
+        onStatusChange?("Deleted \(items.count) item\(items.count == 1 ? "" : "s")")
+        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
+        refresh()
+    }
+
+    func setLabelNumber(_ labelNumber: Int?, for items: [FileItem]) async throws {
+        guard !items.isEmpty else { return }
+        try await fileOperationService.setLabelNumber(labelNumber, for: items.map(\.url))
+        onStatusChange?("Updated labels")
+        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
     }
 
     func item(at index: Int) -> FileItem? {

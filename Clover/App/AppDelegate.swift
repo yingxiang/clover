@@ -55,42 +55,53 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let appItem = NSMenuItem()
         let appMenu = NSMenu(title: "Clover")
-        appMenu.addItem(NSMenuItem(title: L10n.quitClover, action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        let quitItem = NSMenuItem(title: L10n.quitClover, action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(quitItem)
         appItem.submenu = appMenu
         mainMenu.addItem(appItem)
 
         let fileItem = NSMenuItem()
         let fileMenu = NSMenu(title: L10n.file)
-        let newWindowItem = NSMenuItem(title: L10n.newWindow, action: #selector(newWindow(_:)), keyEquivalent: "n")
-        newWindowItem.target = self
+        let newWindowItem = makeMenuItem(title: L10n.newWindow, action: #selector(newWindow(_:)), keyEquivalent: "n", target: self)
+        newWindowItem.image = AppIconProvider.image(.open, accessibilityDescription: L10n.newWindow)
         fileMenu.addItem(newWindowItem)
         fileMenu.addItem(.separator())
-        let newFolderItem = NSMenuItem(title: L10n.newFolder, action: #selector(createFolderInActivePane(_:)), keyEquivalent: "n")
-        newFolderItem.keyEquivalentModifierMask = [.command, .shift]
-        newFolderItem.target = self
-        fileMenu.addItem(newFolderItem)
+        let newItem = NSMenuItem(title: L10n.new, action: nil, keyEquivalent: "")
+        newItem.image = AppIconProvider.menuImage(.folderPlus, accessibilityDescription: L10n.new)
+        newItem.submenu = makeNewMenu()
+        fileMenu.addItem(newItem)
         fileMenu.addItem(.separator())
-        let refreshItem = NSMenuItem(title: L10n.refresh, action: #selector(refreshActivePane(_:)), keyEquivalent: "r")
-        refreshItem.target = self
+        let refreshItem = makeMenuItem(title: L10n.refresh, action: #selector(refreshActivePane(_:)), keyEquivalent: "r", target: self)
+        refreshItem.image = AppIconProvider.image(.refresh, accessibilityDescription: L10n.refresh)
         fileMenu.addItem(refreshItem)
-        let focusPathItem = NSMenuItem(title: L10n.goToFolder, action: #selector(focusActivePathInput(_:)), keyEquivalent: "l")
-        focusPathItem.target = self
+        let focusPathItem = makeMenuItem(title: L10n.goToFolder, action: #selector(focusActivePathInput(_:)), keyEquivalent: "l", target: self)
+        focusPathItem.image = AppIconProvider.image(.folder, accessibilityDescription: L10n.goToFolder)
         fileMenu.addItem(focusPathItem)
         fileMenu.addItem(.separator())
-        let renameItem = NSMenuItem(title: L10n.rename, action: #selector(renameSelectedItemInActivePane(_:)), keyEquivalent: "\r")
-        renameItem.target = self
+        let renameItem = makeMenuItem(title: L10n.rename, action: #selector(renameSelectedItemInActivePane(_:)), keyEquivalent: "\r", target: self)
+        renameItem.image = AppIconProvider.image(.rename, accessibilityDescription: L10n.rename)
         fileMenu.addItem(renameItem)
-        let copyToItem = NSMenuItem(title: L10n.copyTo, action: #selector(copySelectedItemsInActivePane(_:)), keyEquivalent: "c")
+        let copyItem = makeMenuItem(title: L10n.copy, action: #selector(MainWindowController.copy(_:)), keyEquivalent: "c")
+        copyItem.image = AppIconProvider.image(.copy, accessibilityDescription: L10n.copy)
+        fileMenu.addItem(copyItem)
+        let pasteItem = makeMenuItem(title: L10n.paste, action: #selector(MainWindowController.paste(_:)), keyEquivalent: "v")
+        pasteItem.image = AppIconProvider.image(.paste, accessibilityDescription: L10n.paste)
+        fileMenu.addItem(pasteItem)
+        let copyToItem = makeMenuItem(title: L10n.copyTo, action: #selector(copySelectedItemsInActivePane(_:)), keyEquivalent: "c", target: self)
         copyToItem.keyEquivalentModifierMask = [.command, .option]
-        copyToItem.target = self
+        copyToItem.image = AppIconProvider.image(.copy, accessibilityDescription: L10n.copyTo)
         fileMenu.addItem(copyToItem)
-        let moveToItem = NSMenuItem(title: L10n.moveTo, action: #selector(moveSelectedItemsInActivePane(_:)), keyEquivalent: "m")
+        let moveToItem = makeMenuItem(title: L10n.moveTo, action: #selector(moveSelectedItemsInActivePane(_:)), keyEquivalent: "m", target: self)
         moveToItem.keyEquivalentModifierMask = [.command, .option]
-        moveToItem.target = self
+        moveToItem.image = AppIconProvider.image(.move, accessibilityDescription: L10n.moveTo)
         fileMenu.addItem(moveToItem)
-        let trashItem = NSMenuItem(title: L10n.moveToTrash, action: #selector(trashSelectedItemsInActivePane(_:)), keyEquivalent: "\u{8}")
-        trashItem.target = self
+        let trashItem = makeMenuItem(title: L10n.moveToTrash, action: #selector(trashSelectedItemsInActivePane(_:)), keyEquivalent: "\u{8}", target: self)
+        trashItem.image = AppIconProvider.image(.trash, accessibilityDescription: L10n.moveToTrash)
         fileMenu.addItem(trashItem)
+        fileMenu.addItem(.separator())
+        let selectAllItem = makeMenuItem(title: L10n.selectAll, action: #selector(NSResponder.selectAll(_:)), keyEquivalent: "a")
+        selectAllItem.image = AppIconProvider.image(.selectAll, accessibilityDescription: L10n.selectAll)
+        fileMenu.addItem(selectAllItem)
         fileItem.submenu = fileMenu
         mainMenu.addItem(fileItem)
 
@@ -110,17 +121,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func addLayoutItem(title: String, key: String, layout: PaneLayout, to menu: NSMenu) {
-        let item = NSMenuItem(title: title, action: #selector(changePaneLayout(_:)), keyEquivalent: key)
-        item.target = self
+        let item = makeMenuItem(title: title, action: #selector(changePaneLayout(_:)), keyEquivalent: key, target: self)
         item.tag = layout.menuTag
+        item.image = AppIconProvider.image(.layoutSplit, accessibilityDescription: title)
         menu.addItem(item)
     }
 
     private func addViewModeItem(title: String, key: String, mode: FileViewMode, to menu: NSMenu) {
-        let item = NSMenuItem(title: title, action: #selector(changeFileViewMode(_:)), keyEquivalent: key)
-        item.target = self
+        let item = makeMenuItem(title: title, action: #selector(changeFileViewMode(_:)), keyEquivalent: key, target: self)
         item.tag = mode.menuTag
+        item.image = AppIconProvider.image(mode == .list ? .list : .grid, accessibilityDescription: title)
         menu.addItem(item)
+    }
+
+    private func makeNewMenu() -> NSMenu {
+        let menu = NSMenu(title: L10n.new)
+        for kind in NewItemKind.allCases where kind.isAvailable {
+            let item = makeMenuItem(title: kind.title, action: #selector(performNewItemActionInActivePane(_:)), keyEquivalent: "")
+            item.target = self
+            item.tag = kind.rawValue
+            if kind == .folder {
+                item.keyEquivalent = "n"
+                item.keyEquivalentModifierMask = [.command, .shift]
+            }
+            item.image = kind.appURL.map { AppIconProvider.menuFileImage($0.path, accessibilityDescription: kind.title) }
+                ?? AppIconProvider.menuImage(kind.symbol, accessibilityDescription: kind.title)
+            menu.addItem(item)
+        }
+        return menu
+    }
+
+    private func makeMenuItem(title: String, action: Selector?, keyEquivalent: String, target: AnyObject? = nil) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: action, keyEquivalent: keyEquivalent)
+        item.target = target
+        return item
     }
 
     @objc private func newWindow(_ sender: Any?) {
@@ -139,8 +173,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         keyWindowController?.createFolderInActivePane(sender)
     }
 
+    @objc private func createTextFileInActivePane(_ sender: Any?) {
+        keyWindowController?.createTextFileInActivePane(sender)
+    }
+
     @objc private func renameSelectedItemInActivePane(_ sender: Any?) {
         keyWindowController?.renameSelectedItemInActivePane(sender)
+    }
+
+    @objc private func performNewItemActionInActivePane(_ sender: NSMenuItem) {
+        keyWindowController?.performNewItemActionInActivePane(sender)
     }
 
     @objc private func copySelectedItemsInActivePane(_ sender: Any?) {
@@ -171,6 +213,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return controller
         }
         return windowControllers.last
+    }
+}
+
+extension AppDelegate: NSUserInterfaceValidations {
+    func validateUserInterfaceItem(_ item: any NSValidatedUserInterfaceItem) -> Bool {
+        switch item.action {
+        case #selector(changePaneLayout(_:)),
+             #selector(changeFileViewMode(_:)),
+             #selector(performNewItemActionInActivePane(_:)),
+             #selector(newWindow(_:)):
+            return true
+        default:
+            return keyWindowController?.validateUserInterfaceItem(item) ?? false
+        }
     }
 }
 
