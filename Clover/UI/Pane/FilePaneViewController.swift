@@ -46,6 +46,9 @@ final class FilePaneViewController: NSViewController {
             Logger.ui.debug("Pane onChange -> reload. mode=\(self.viewModel.viewMode.rawValue, privacy: .public) items=\(self.viewModel.items.count) rows=\(self.viewModel.listRows.count) pendingRename=\(self.pendingRenameURL?.path ?? "nil", privacy: .public)")
             self.reload()
         }
+        self.viewModel.onListMutation = { [weak self] mutation in
+            self?.applyListMutation(mutation)
+        }
         self.viewModel.onStatusChange = { [weak self] text in
             self?.statusChanged(text)
             self?.statusHandler?(text)
@@ -660,6 +663,9 @@ final class FilePaneViewController: NSViewController {
         switch viewModel.viewMode {
         case .list:
             tableView.editColumn(0, row: index, with: nil, select: true)
+            DispatchQueue.main.async { [weak self] in
+                self?.selectListEditingNameStem(at: index)
+            }
         case .grid:
             let indexPath = IndexPath(item: index, section: 0)
             guard let item = collectionView.item(at: indexPath) as? FileGridItem else { return }
@@ -809,6 +815,17 @@ final class FilePaneViewController: NSViewController {
                 self.removePendingItemFromVisibleView(at: placeholderURL)
                 self.rememberSelection(urls: [createdURL])
                 self.refresh()
+                if kind == .textFile || kind == .markdownFile {
+                    Task {
+                        do {
+                            try await self.viewModel.openItem(createdURL)
+                        } catch {
+                            await MainActor.run {
+                                self.showError(error)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -879,6 +896,14 @@ final class FilePaneViewController: NSViewController {
         updateCommandAvailability()
     }
 
+    private func selectListEditingNameStem(at row: Int) {
+        guard let item = viewModel.item(at: row),
+              let cell = tableView.view(atColumn: 0, row: row, makeIfNecessary: false) as? FileListNameCellView,
+              let textField = cell.textField,
+              let editor = textField.currentEditor() else { return }
+        editor.selectedRange = editableFileNameSelectionRange(for: item.name, isDirectory: item.isDirectory)
+    }
+
     private func removePendingItemFromVisibleView(at url: URL) {
         Logger.ui.debug("removePendingItemFromVisibleView url=\(url.path, privacy: .public) mode=\(self.viewModel.viewMode.rawValue, privacy: .public)")
         switch viewModel.viewMode {
@@ -887,6 +912,26 @@ final class FilePaneViewController: NSViewController {
         case .grid:
             collectionView.reloadData()
         }
+        updateCommandAvailability()
+    }
+
+    private func applyListMutation(_ mutation: FilePaneListMutation) {
+        guard viewModel.viewMode == .list else {
+            reload()
+            return
+        }
+        Logger.ui.debug("applyListMutation kind=\(String(describing: mutation.kind), privacy: .public) rows=\(mutation.rows.description, privacy: .public) reload=\(mutation.reloadedRows.description, privacy: .public)")
+        tableView.beginUpdates()
+        switch mutation.kind {
+        case .insert:
+            tableView.insertRows(at: mutation.rows, withAnimation: .effectGap)
+        case .remove:
+            tableView.removeRows(at: mutation.rows, withAnimation: .effectFade)
+        }
+        if !mutation.reloadedRows.isEmpty {
+            tableView.reloadData(forRowIndexes: mutation.reloadedRows, columnIndexes: IndexSet(integersIn: 0..<tableView.numberOfColumns))
+        }
+        tableView.endUpdates()
         updateCommandAvailability()
     }
 
@@ -1007,7 +1052,16 @@ final class FilePaneViewController: NSViewController {
     }
 
     @objc private func fileOperationCompleted(_ notification: Notification) {
-        refresh()
+        let affectedDirectories = notification.cloverAffectedDirectories
+        guard !affectedDirectories.isEmpty else {
+            refresh()
+            return
+        }
+        let relevantDirectories = viewModel.relevantDirectoryURLsForRefresh()
+        let shouldRefresh = affectedDirectories.contains { relevantDirectories.contains($0.standardizedFileURL) }
+        if shouldRefresh {
+            refresh()
+        }
     }
 
     func updateCommandAvailability() {

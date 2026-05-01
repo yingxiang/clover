@@ -7,6 +7,17 @@ struct FilePaneListRow {
     let isExpanded: Bool
 }
 
+struct FilePaneListMutation {
+    enum Kind {
+        case insert
+        case remove
+    }
+
+    let kind: Kind
+    let rows: IndexSet
+    let reloadedRows: IndexSet
+}
+
 @MainActor
 final class FilePaneViewModel {
     private let provider: any FileProvider
@@ -30,6 +41,7 @@ final class FilePaneViewModel {
     private var directoryChildren: [URL: [FileItem]] = [:]
 
     var onChange: (() -> Void)?
+    var onListMutation: ((FilePaneListMutation) -> Void)?
     var onStatusChange: ((String) -> Void)?
     var onError: ((Error) -> Void)?
 
@@ -65,12 +77,15 @@ final class FilePaneViewModel {
                 let sortedItems = FileSortService.sort(visibleItems, by: sort)
                 await MainActor.run {
                     guard let self else { return }
-                    if targetURL != previousURL {
+                    let isNavigatingToDifferentDirectory = targetURL.standardizedFileURL != previousURL.standardizedFileURL
+                    if isNavigatingToDifferentDirectory {
                         self.backHistory.append(previousURL)
                         self.forwardHistory.removeAll()
                     }
                     self.currentURL = targetURL
-                    self.resetListExpansion()
+                    if isNavigatingToDifferentDirectory {
+                        self.resetListExpansion()
+                    }
                     self.allItems = sortedItems
                     self.applyFilters()
                     self.onChange?()
@@ -213,76 +228,94 @@ final class FilePaneViewModel {
         return items.firstIndex { $0.url.standardizedFileURL == standardizedURL }
     }
 
+    func relevantDirectoryURLsForRefresh() -> Set<URL> {
+        var urls = Set([currentURL.standardizedFileURL])
+        urls.formUnion(expandedDirectoryURLs.map(\.standardizedFileURL))
+        return urls
+    }
+
     func renameItem(_ item: FileItem, to newName: String) async throws {
         onStatusChange?("Renaming \(item.name)...")
-        _ = try await fileOperationService.renameItem(at: item.url, to: newName)
+        let renamedURL = try await fileOperationService.renameItem(at: item.url, to: newName)
         onStatusChange?("Renamed \(item.name)")
-        refresh()
+        NotificationCenter.default.postCloverFileOperationCompleted(
+            affectedDirectories: [item.url.deletingLastPathComponent(), renamedURL.deletingLastPathComponent()]
+        )
     }
 
     func copyItems(_ items: [FileItem], to destinationURL: URL, conflictResolver: FileConflictResolver? = nil) async throws {
         guard !items.isEmpty else { return }
         onStatusChange?("Copying \(items.count) item\(items.count == 1 ? "" : "s")...")
+        let sourceDirectories = items.map { $0.url.deletingLastPathComponent() }
         try await fileOperationService.copyItems(items.map(\.url), to: destinationURL, conflictResolver: conflictResolver)
         onStatusChange?("Copied \(items.count) item\(items.count == 1 ? "" : "s")")
-        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
-        if destinationURL == currentURL {
-            refresh()
-        }
+        NotificationCenter.default.postCloverFileOperationCompleted(
+            affectedDirectories: sourceDirectories + [destinationURL]
+        )
     }
 
     func copyFileURLs(_ urls: [URL], to destinationURL: URL, conflictResolver: FileConflictResolver? = nil) async throws {
         guard !urls.isEmpty else { return }
         onStatusChange?("Copying \(urls.count) item\(urls.count == 1 ? "" : "s")...")
+        let sourceDirectories = urls.map { $0.deletingLastPathComponent() }
         try await fileOperationService.copyItems(urls, to: destinationURL, conflictResolver: conflictResolver)
         onStatusChange?("Copied \(urls.count) item\(urls.count == 1 ? "" : "s")")
-        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
-        if destinationURL == currentURL {
-            refresh()
-        }
+        NotificationCenter.default.postCloverFileOperationCompleted(
+            affectedDirectories: sourceDirectories + [destinationURL]
+        )
     }
 
     func moveItems(_ items: [FileItem], to destinationURL: URL, conflictResolver: FileConflictResolver? = nil) async throws {
         guard !items.isEmpty else { return }
         onStatusChange?("Moving \(items.count) item\(items.count == 1 ? "" : "s")...")
+        let sourceDirectories = items.map { $0.url.deletingLastPathComponent() }
         try await fileOperationService.moveItems(items.map(\.url), to: destinationURL, conflictResolver: conflictResolver)
         onStatusChange?("Moved \(items.count) item\(items.count == 1 ? "" : "s")")
-        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
-        refresh()
+        NotificationCenter.default.postCloverFileOperationCompleted(
+            affectedDirectories: sourceDirectories + [destinationURL]
+        )
     }
 
     func moveFileURLs(_ urls: [URL], to destinationURL: URL, conflictResolver: FileConflictResolver? = nil) async throws {
         guard !urls.isEmpty else { return }
         onStatusChange?("Moving \(urls.count) item\(urls.count == 1 ? "" : "s")...")
+        let sourceDirectories = urls.map { $0.deletingLastPathComponent() }
         try await fileOperationService.moveItems(urls, to: destinationURL, conflictResolver: conflictResolver)
         onStatusChange?("Moved \(urls.count) item\(urls.count == 1 ? "" : "s")")
-        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
-        refresh()
+        NotificationCenter.default.postCloverFileOperationCompleted(
+            affectedDirectories: sourceDirectories + [destinationURL]
+        )
     }
 
     func trashItems(_ items: [FileItem]) async throws {
         guard !items.isEmpty else { return }
         onStatusChange?("Moving \(items.count) item\(items.count == 1 ? "" : "s") to Trash...")
+        let affectedDirectories = items.map { $0.url.deletingLastPathComponent() }
         try await fileOperationService.trashItems(items.map(\.url))
         onStatusChange?("Moved to Trash")
-        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
-        refresh()
+        NotificationCenter.default.postCloverFileOperationCompleted(
+            affectedDirectories: affectedDirectories
+        )
     }
 
     func deleteItemsPermanently(_ items: [FileItem]) async throws {
         guard !items.isEmpty else { return }
         onStatusChange?("Deleting \(items.count) item\(items.count == 1 ? "" : "s")...")
+        let affectedDirectories = items.map { $0.url.deletingLastPathComponent() }
         try await fileOperationService.deleteItemsPermanently(items.map(\.url))
         onStatusChange?("Deleted \(items.count) item\(items.count == 1 ? "" : "s")")
-        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
-        refresh()
+        NotificationCenter.default.postCloverFileOperationCompleted(
+            affectedDirectories: affectedDirectories
+        )
     }
 
     func setLabelNumber(_ labelNumber: Int?, for items: [FileItem]) async throws {
         guard !items.isEmpty else { return }
         try await fileOperationService.setLabelNumber(labelNumber, for: items.map(\.url))
         onStatusChange?("Updated labels")
-        NotificationCenter.default.post(name: .cloverFileOperationCompleted, object: nil)
+        NotificationCenter.default.postCloverFileOperationCompleted(
+            affectedDirectories: items.map { $0.url.deletingLastPathComponent() }
+        )
     }
 
     func item(at index: Int) -> FileItem? {
@@ -321,8 +354,9 @@ final class FilePaneViewModel {
         if let children = directoryChildren[url] {
             expandedDirectoryURLs.insert(url)
             directoryChildren[url] = FileSortService.sort(children, by: sortOption)
-            rebuildListRows()
-            onChange?()
+            emitListMutation(beforeRows: listRows, afterMutationFor: url) {
+                self.rebuildListRows()
+            }
             return
         }
         Task { [weak self, provider] in
@@ -332,14 +366,13 @@ final class FilePaneViewModel {
                     guard let self else { return }
                     self.directoryChildren[url] = self.filteredSortedItems(loadedItems)
                     self.expandedDirectoryURLs.insert(url)
-                    self.rebuildListRows()
-                    self.onChange?()
+                    self.emitListMutation(beforeRows: self.listRows, afterMutationFor: url) {
+                        self.rebuildListRows()
+                    }
                 }
             } catch {
                 await MainActor.run {
                     guard let self else { return }
-                    self.rebuildListRows()
-                    self.onChange?()
                     self.onError?(error)
                 }
             }
@@ -398,13 +431,66 @@ final class FilePaneViewModel {
     }
 
     private func collapseListDirectory(_ url: URL) {
+        emitListMutation(beforeRows: listRows, afterMutationFor: url) {
+            self.collapseListDirectorySilently(url)
+        }
+    }
+
+    private func collapseListDirectorySilently(_ url: URL) {
         expandedDirectoryURLs.remove(url)
         let childURLs = directoryChildren[url]?.map(\.url) ?? []
         for childURL in childURLs {
-            collapseListDirectory(childURL)
+            collapseListDirectorySilently(childURL)
         }
         rebuildListRows()
-        onChange?()
+    }
+
+    private func emitListMutation(beforeRows: [FilePaneListRow], afterMutationFor toggledURL: URL, update: () -> Void) {
+        let beforeURLs = beforeRows.map { $0.item.url.standardizedFileURL }
+        update()
+        let afterURLs = listRows.map { $0.item.url.standardizedFileURL }
+        let changedRows = IndexSet(
+            listRows.enumerated().compactMap { index, row in
+                row.item.url.standardizedFileURL == toggledURL.standardizedFileURL ? index : nil
+            }
+        )
+        if afterURLs.count >= beforeURLs.count {
+            let insertedRows = insertedRowIndexes(from: beforeURLs, to: afterURLs)
+            onListMutation?(
+                FilePaneListMutation(kind: .insert, rows: insertedRows, reloadedRows: changedRows)
+            )
+        } else {
+            let removedRows = removedRowIndexes(from: beforeURLs, to: afterURLs)
+            onListMutation?(
+                FilePaneListMutation(kind: .remove, rows: removedRows, reloadedRows: changedRows)
+            )
+        }
+    }
+
+    private func insertedRowIndexes(from beforeURLs: [URL], to afterURLs: [URL]) -> IndexSet {
+        var beforeIndex = 0
+        var inserted = IndexSet()
+        for (afterIndex, url) in afterURLs.enumerated() {
+            if beforeIndex < beforeURLs.count, beforeURLs[beforeIndex] == url {
+                beforeIndex += 1
+            } else {
+                inserted.insert(afterIndex)
+            }
+        }
+        return inserted
+    }
+
+    private func removedRowIndexes(from beforeURLs: [URL], to afterURLs: [URL]) -> IndexSet {
+        var afterIndex = 0
+        var removed = IndexSet()
+        for (beforeIndex, url) in beforeURLs.enumerated() {
+            if afterIndex < afterURLs.count, afterURLs[afterIndex] == url {
+                afterIndex += 1
+            } else {
+                removed.insert(beforeIndex)
+            }
+        }
+        return removed
     }
 
     private func resetListExpansion() {
@@ -428,7 +514,9 @@ final class FilePaneViewModel {
                 await MainActor.run {
                     guard let self else { return }
                     self.currentURL = url
-                    self.resetListExpansion()
+                    if url.standardizedFileURL != self.currentURL.standardizedFileURL {
+                        self.resetListExpansion()
+                    }
                     self.allItems = sortedItems
                     self.applyFilters()
                     self.onChange?()

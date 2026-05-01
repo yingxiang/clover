@@ -12,6 +12,8 @@ final class FileGridItem: NSCollectionViewItem {
     private let nameField = GridNameTextField()
     private let detailField = NSTextField(labelWithString: "")
     private var representedURL: URL?
+    private var representedItemName = ""
+    private var representedItemIsDirectory = false
     private var thumbnailTask: Task<Void, Never>?
     private var detailTask: Task<Void, Never>?
 
@@ -107,6 +109,8 @@ final class FileGridItem: NSCollectionViewItem {
         thumbnailTask = nil
         detailTask = nil
         representedURL = nil
+        representedItemName = ""
+        representedItemIsDirectory = false
         iconView.image = nil
         nameField.stringValue = ""
         detailField.stringValue = ""
@@ -117,6 +121,8 @@ final class FileGridItem: NSCollectionViewItem {
         thumbnailTask?.cancel()
         detailTask?.cancel()
         representedURL = item.url
+        representedItemName = item.name
+        representedItemIsDirectory = item.isDirectory
         iconView.image = FileIconProvider.icon(for: item, size: 56)
         nameField.stringValue = item.name
         nameField.preferredMaxLayoutWidth = 88
@@ -145,7 +151,9 @@ final class FileGridItem: NSCollectionViewItem {
     func beginEditingName() {
         nameField.beginEditingMode()
         view.window?.makeFirstResponder(nameField)
-        nameField.currentEditor()?.selectAll(nil)
+        DispatchQueue.main.async { [weak self] in
+            self?.selectEditableNameStem()
+        }
     }
 
     var isEditingName: Bool {
@@ -161,6 +169,14 @@ final class FileGridItem: NSCollectionViewItem {
         nameSelectionView.layer?.backgroundColor = isSelected ? NSColor.selectedContentBackgroundColor.cgColor : NSColor.clear.cgColor
         nameField.textColor = isSelected ? .selectedTextColor : .labelColor
         nameField.drawsBackground = false
+    }
+
+    private func selectEditableNameStem() {
+        guard let editor = nameField.currentEditor() else { return }
+        editor.selectedRange = editableFileNameSelectionRange(
+            for: representedItemName,
+            isDirectory: representedItemIsDirectory
+        )
     }
 }
 

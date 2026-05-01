@@ -1,5 +1,18 @@
 import AppKit
 
+func editableFileNameSelectionRange(for name: String, isDirectory: Bool) -> NSRange {
+    guard !isDirectory else {
+        return NSRange(location: 0, length: (name as NSString).length)
+    }
+    let nsName = name as NSString
+    let pathExtension = nsName.pathExtension
+    guard !pathExtension.isEmpty else {
+        return NSRange(location: 0, length: nsName.length)
+    }
+    let stemLength = max(nsName.length - (pathExtension as NSString).length - 1, 0)
+    return NSRange(location: 0, length: stemLength)
+}
+
 final class FileTableHeaderView: NSTableHeaderView {
     var typeColumnClickHandler: ((NSTableColumn) -> Void)?
 
