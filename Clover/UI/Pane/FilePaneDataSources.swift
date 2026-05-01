@@ -101,7 +101,10 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
 
     func tableView(_ tableView: NSTableView, mouseDownInHeaderOf tableColumn: NSTableColumn) {
         guard tableColumn.identifier.rawValue == "type" else { return }
-        showTypeFilterMenu(for: tableColumn)
+        DispatchQueue.main.async { [weak self, weak tableColumn] in
+            guard let self, let tableColumn else { return }
+            self.showTypeFilterMenu(for: tableColumn)
+        }
     }
 
     func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> NSPasteboardWriting? {
@@ -204,6 +207,9 @@ extension FilePaneViewController {
         let headerRect = headerView.headerRect(ofColumn: columnIndex)
         let point = NSPoint(x: headerRect.minX, y: headerRect.maxY)
         menu.popUp(positioning: menu.items.first, at: point, in: headerView)
+        view.window?.makeFirstResponder(tableView)
+        headerView.window?.invalidateCursorRects(for: headerView)
+        NSCursor.arrow.set()
     }
 
     @objc private func selectTypeFilter(_ sender: NSMenuItem) {

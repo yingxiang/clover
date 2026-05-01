@@ -46,6 +46,7 @@ final class FileTableView: NSTableView {
 
 final class FileCollectionView: NSCollectionView {
     var activationHandler: (() -> Void)?
+    var rightClickHandler: ((Int?) -> Void)?
     var dropHandler: ((NSDraggingInfo, Int?) -> Bool)?
     var doubleClickHandler: ((Int) -> Void)?
     var keyHandler: ((NSEvent) -> Bool)?
@@ -62,6 +63,13 @@ final class FileCollectionView: NSCollectionView {
         guard event.clickCount == 2 else { return }
         guard let index = indexPathForItem(at: point)?.item else { return }
         doubleClickHandler?(index)
+    }
+
+    override func rightMouseDown(with event: NSEvent) {
+        activationHandler?()
+        let point = convert(event.locationInWindow, from: nil)
+        rightClickHandler?(indexPathForItem(at: point)?.item)
+        super.rightMouseDown(with: event)
     }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
@@ -86,6 +94,7 @@ final class FileCollectionView: NSCollectionView {
 
 final class FileDropScrollView: NSScrollView {
     var activationHandler: (() -> Void)?
+    var rightClickHandler: (() -> Void)?
     var dropHandler: ((NSDraggingInfo) -> Bool)?
 
     override var acceptsFirstResponder: Bool { true }
@@ -94,6 +103,12 @@ final class FileDropScrollView: NSScrollView {
         activationHandler?()
         window?.makeFirstResponder(self)
         super.mouseDown(with: event)
+    }
+
+    override func rightMouseDown(with event: NSEvent) {
+        activationHandler?()
+        rightClickHandler?()
+        super.rightMouseDown(with: event)
     }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {

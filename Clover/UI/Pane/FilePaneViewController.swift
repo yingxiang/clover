@@ -240,7 +240,7 @@ final class FilePaneViewController: NSViewController {
             self?.handlePaneKeyDown(event) ?? false
         }
         tableView.rightClickHandler = { [weak self] row in
-            self?.prepareContextSelection(for: row)
+            self?.prepareContextSelection(for: row >= 0 ? row : nil)
         }
         tableView.dropHandler = { [weak self] draggingInfo, row in
             self?.performMoveDrop(draggingInfo, itemIndex: row) ?? false
@@ -258,10 +258,12 @@ final class FilePaneViewController: NSViewController {
             guard let self else { return }
             self.activationHandler?(self)
         }
+        scrollView.rightClickHandler = { [weak self] in self?.prepareContextSelection(for: nil) }
         scrollView.dropHandler = { [weak self] draggingInfo in
             self?.performMoveDrop(draggingInfo, itemIndex: nil) ?? false
         }
         scrollView.registerForDraggedTypes([.fileURL])
+        scrollView.menu = contextMenu
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
 
@@ -329,6 +331,7 @@ final class FilePaneViewController: NSViewController {
         collectionView.doubleClickHandler = { [weak self] index in
             self?.openItem(at: index)
         }
+        collectionView.rightClickHandler = { [weak self] index in self?.prepareContextSelection(for: index) }
         collectionView.keyHandler = { [weak self] event in
             self?.handlePaneKeyDown(event) ?? false
         }
@@ -338,6 +341,7 @@ final class FilePaneViewController: NSViewController {
         collectionView.registerForDraggedTypes([.fileURL])
         collectionView.setDraggingSourceOperationMask(.move, forLocal: true)
         collectionView.setDraggingSourceOperationMask(.move, forLocal: false)
+        collectionView.menu = contextMenu
 
         collectionScrollView.documentView = collectionView
         collectionScrollView.hasVerticalScroller = true
@@ -346,10 +350,12 @@ final class FilePaneViewController: NSViewController {
             guard let self else { return }
             self.activationHandler?(self)
         }
+        collectionScrollView.rightClickHandler = { [weak self] in self?.prepareContextSelection(for: nil) }
         collectionScrollView.dropHandler = { [weak self] draggingInfo in
             self?.performMoveDrop(draggingInfo, itemIndex: nil) ?? false
         }
         collectionScrollView.registerForDraggedTypes([.fileURL])
+        collectionScrollView.menu = contextMenu
         collectionScrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(collectionScrollView)
 
@@ -452,14 +458,26 @@ final class FilePaneViewController: NSViewController {
         }
     }
 
-    private func prepareContextSelection(for row: Int) {
+    private func prepareContextSelection(for index: Int?) {
         activationHandler?(self)
-        guard row >= 0 else {
-            tableView.deselectAll(nil)
-            return
-        }
-        if !tableView.selectedRowIndexes.contains(row) {
-            tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+        switch viewModel.viewMode {
+        case .list:
+            guard let row = index, row >= 0 else {
+                tableView.deselectAll(nil)
+                return
+            }
+            if !tableView.selectedRowIndexes.contains(row) {
+                tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+            }
+        case .grid:
+            guard let item = index, item >= 0 else {
+                collectionView.deselectAll(nil)
+                return
+            }
+            let indexPath = IndexPath(item: item, section: 0)
+            if !collectionView.selectionIndexPaths.contains(indexPath) {
+                collectionView.selectItems(at: [indexPath], scrollPosition: [])
+            }
         }
     }
 
