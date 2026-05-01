@@ -1,6 +1,7 @@
 import AppKit
 
 final class FileTableView: NSTableView {
+    var activationHandler: (() -> Void)?
     var rightClickHandler: ((Int) -> Void)?
     var dropHandler: ((NSDraggingInfo, Int?) -> Bool)?
     var keyHandler: ((NSEvent) -> Bool)?
@@ -8,6 +9,7 @@ final class FileTableView: NSTableView {
     override var acceptsFirstResponder: Bool { true }
 
     override func mouseDown(with event: NSEvent) {
+        activationHandler?()
         let point = convert(event.locationInWindow, from: nil)
         if row(at: point) < 0 {
             window?.makeFirstResponder(self)
@@ -16,6 +18,7 @@ final class FileTableView: NSTableView {
     }
 
     override func rightMouseDown(with event: NSEvent) {
+        activationHandler?()
         let point = convert(event.locationInWindow, from: nil)
         rightClickHandler?(row(at: point))
         super.rightMouseDown(with: event)
@@ -42,6 +45,7 @@ final class FileTableView: NSTableView {
 }
 
 final class FileCollectionView: NSCollectionView {
+    var activationHandler: (() -> Void)?
     var dropHandler: ((NSDraggingInfo, Int?) -> Bool)?
     var doubleClickHandler: ((Int) -> Void)?
     var keyHandler: ((NSEvent) -> Bool)?
@@ -49,6 +53,7 @@ final class FileCollectionView: NSCollectionView {
     override var acceptsFirstResponder: Bool { true }
 
     override func mouseDown(with event: NSEvent) {
+        activationHandler?()
         let point = convert(event.locationInWindow, from: nil)
         if indexPathForItem(at: point) == nil {
             window?.makeFirstResponder(self)
@@ -80,11 +85,13 @@ final class FileCollectionView: NSCollectionView {
 }
 
 final class FileDropScrollView: NSScrollView {
+    var activationHandler: (() -> Void)?
     var dropHandler: ((NSDraggingInfo) -> Bool)?
 
     override var acceptsFirstResponder: Bool { true }
 
     override func mouseDown(with event: NSEvent) {
+        activationHandler?()
         window?.makeFirstResponder(self)
         super.mouseDown(with: event)
     }

@@ -5,14 +5,16 @@ final class FilePaneViewController: NSViewController {
     let viewModel: FilePaneViewModel
     var activationHandler: ((FilePaneViewController) -> Void)?
     var statusHandler: ((String) -> Void)?
+    var pathChangeHandler: ((FilePaneViewController) -> Void)?
 
     private let pathBarView = PathBarView()
-    private let tableView = FileTableView()
-    private let scrollView = NSScrollView()
-    private let collectionView = FileCollectionView()
+    private let backButton = NSButton()
+    private let forwardButton = NSButton()
+    let tableView = FileTableView()
+    private let scrollView = FileDropScrollView()
+    let collectionView = FileCollectionView()
     private let collectionScrollView = FileDropScrollView()
     private let searchField = NSSearchField()
-    private let typeFilterPopup = NSPopUpButton()
     private let loadingIndicator = NSProgressIndicator()
     private let contextMenu = NSMenu(title: "File Actions")
     var previewItems: [URL] = []
@@ -20,6 +22,7 @@ final class FilePaneViewController: NSViewController {
     var detailCache: [URL: String] = [:]
     private var previewKeyMonitor: EventMonitorToken?
     private var previewIndexObservation: NSKeyValueObservation?
+    var isUpdatingSortIndicators = false
     private var searchTask: Task<Void, Never>?
     static weak var previewOwner: FilePaneViewController?
     let dateFormatter: DateFormatter = {
@@ -63,7 +66,6 @@ final class FilePaneViewController: NSViewController {
         configurePathBar()
         configureSearchField()
         configureTableView()
-        configureTypeFilterPopup()
         configureCollectionView()
         configureLoadingIndicator()
         configurePreviewKeyMonitor()
@@ -87,6 +89,16 @@ final class FilePaneViewController: NSViewController {
 
     func open(_ url: URL) {
         viewModel.load(url: url)
+    }
+
+    @objc func goBack(_ sender: Any?) {
+        activationHandler?(self)
+        viewModel.goBack()
+    }
+
+    @objc func goForward(_ sender: Any?) {
+        activationHandler?(self)
+        viewModel.goForward()
     }
 
     func setViewMode(_ mode: FileViewMode) {
@@ -166,6 +178,11 @@ final class FilePaneViewController: NSViewController {
     }
 
     private func configurePathBar() {
+        configureNavigationButton(backButton, symbol: .back, action: #selector(goBack(_:)), toolTip: "Back")
+        configureNavigationButton(forwardButton, symbol: .forward, action: #selector(goForward(_:)), toolTip: "Forward")
+        view.addSubview(backButton)
+        view.addSubview(forwardButton)
+
         pathBarView.translatesAutoresizingMaskIntoConstraints = false
         pathBarView.navigationHandler = { [weak self] url in
             self?.viewModel.load(url: url)
@@ -176,10 +193,26 @@ final class FilePaneViewController: NSViewController {
         view.addSubview(pathBarView)
     }
 
+    private func configureNavigationButton(_ button: NSButton, symbol: AppSymbol, action: Selector, toolTip: String) {
+        button.image = AppIconProvider.image(symbol, accessibilityDescription: toolTip)
+        button.imagePosition = .imageOnly
+        button.imageScaling = .scaleProportionallyDown
+        button.bezelStyle = .texturedRounded
+        button.target = self
+        button.action = action
+        button.toolTip = toolTip
+        button.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: 28),
+            button.heightAnchor.constraint(equalToConstant: 24)
+        ])
+    }
+
     private func configureTableView() {
         let columns: [(String, String, CGFloat)] = [
             ("name", "Name", 280),
             ("size", "Size", 90),
+            ("type", "Type ▾", 130),
             ("modified", "Modified", 180)
         ]
 
@@ -187,6 +220,9 @@ final class FilePaneViewController: NSViewController {
             let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(identifier))
             column.title = title
             column.width = width
+            if let sortDescriptor = sortDescriptor(for: identifier, ascending: true) {
+                column.sortDescriptorPrototype = sortDescriptor
+            }
             tableView.addTableColumn(column)
         }
 
@@ -196,6 +232,10 @@ final class FilePaneViewController: NSViewController {
         tableView.dataSource = self
         tableView.target = self
         tableView.doubleAction = #selector(openSelectedItem)
+        tableView.activationHandler = { [weak self] in
+            guard let self else { return }
+            self.activationHandler?(self)
+        }
         tableView.keyHandler = { [weak self] event in
             self?.handlePaneKeyDown(event) ?? false
         }
@@ -214,11 +254,23 @@ final class FilePaneViewController: NSViewController {
         scrollView.documentView = tableView
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = true
+        scrollView.activationHandler = { [weak self] in
+            guard let self else { return }
+            self.activationHandler?(self)
+        }
+        scrollView.dropHandler = { [weak self] draggingInfo in
+            self?.performMoveDrop(draggingInfo, itemIndex: nil) ?? false
+        }
+        scrollView.registerForDraggedTypes([.fileURL])
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
 
         NSLayoutConstraint.activate([
-            pathBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            backButton.centerYAnchor.constraint(equalTo: pathBarView.centerYAnchor),
+            forwardButton.leadingAnchor.constraint(equalTo: backButton.trailingAnchor, constant: 4),
+            forwardButton.centerYAnchor.constraint(equalTo: pathBarView.centerYAnchor),
+            pathBarView.leadingAnchor.constraint(equalTo: forwardButton.trailingAnchor, constant: 8),
             pathBarView.trailingAnchor.constraint(equalTo: searchField.leadingAnchor, constant: -8),
             pathBarView.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
             pathBarView.heightAnchor.constraint(equalToConstant: 26),
@@ -227,6 +279,15 @@ final class FilePaneViewController: NSViewController {
             scrollView.topAnchor.constraint(equalTo: pathBarView.bottomAnchor, constant: 6),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+
+    private func sortDescriptor(for identifier: String, ascending: Bool) -> NSSortDescriptor? {
+        switch identifier {
+        case "name", "size", "modified":
+            return NSSortDescriptor(key: identifier, ascending: ascending)
+        default:
+            return nil
+        }
     }
 
     private func configureSearchField() {
@@ -246,20 +307,6 @@ final class FilePaneViewController: NSViewController {
         ])
     }
 
-    private func configureTypeFilterPopup() {
-        typeFilterPopup.translatesAutoresizingMaskIntoConstraints = false
-        typeFilterPopup.target = self
-        typeFilterPopup.action = #selector(typeFilterChanged(_:))
-        typeFilterPopup.controlSize = .small
-        view.addSubview(typeFilterPopup)
-
-        NSLayoutConstraint.activate([
-            typeFilterPopup.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -18),
-            typeFilterPopup.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 2),
-            typeFilterPopup.widthAnchor.constraint(equalToConstant: 150)
-        ])
-    }
-
     private func configureCollectionView() {
         let layout = NSCollectionViewFlowLayout()
         layout.itemSize = NSSize(width: 112, height: 116)
@@ -275,6 +322,10 @@ final class FilePaneViewController: NSViewController {
         collectionView.dataSource = self
         collectionView.isSelectable = true
         collectionView.allowsMultipleSelection = true
+        collectionView.activationHandler = { [weak self] in
+            guard let self else { return }
+            self.activationHandler?(self)
+        }
         collectionView.doubleClickHandler = { [weak self] index in
             self?.openItem(at: index)
         }
@@ -291,6 +342,10 @@ final class FilePaneViewController: NSViewController {
         collectionScrollView.documentView = collectionView
         collectionScrollView.hasVerticalScroller = true
         collectionScrollView.isHidden = true
+        collectionScrollView.activationHandler = { [weak self] in
+            guard let self else { return }
+            self.activationHandler?(self)
+        }
         collectionScrollView.dropHandler = { [weak self] draggingInfo in
             self?.performMoveDrop(draggingInfo, itemIndex: nil) ?? false
         }
@@ -330,13 +385,42 @@ final class FilePaneViewController: NSViewController {
         loadingIndicator.stopAnimation(nil)
         detailCache.removeAll()
         pathBarView.update(url: viewModel.currentURL)
-        updateTypeFilterPopup()
+        updateNavigationButtons()
+        updateSortIndicators()
         tableView.reloadData()
         collectionView.reloadData()
         let isList = viewModel.viewMode == .list
         scrollView.isHidden = !isList
         collectionScrollView.isHidden = isList
-        typeFilterPopup.isHidden = !isList
+        pathChangeHandler?(self)
+    }
+
+    private func updateNavigationButtons() {
+        backButton.isEnabled = viewModel.canGoBack
+        forwardButton.isEnabled = viewModel.canGoForward
+    }
+
+    private func updateSortIndicators() {
+        let descriptor: NSSortDescriptor?
+        switch viewModel.sortOption {
+        case .nameAscending:
+            descriptor = sortDescriptor(for: "name", ascending: true)
+        case .nameDescending:
+            descriptor = sortDescriptor(for: "name", ascending: false)
+        case .sizeAscending:
+            descriptor = sortDescriptor(for: "size", ascending: true)
+        case .sizeDescending:
+            descriptor = sortDescriptor(for: "size", ascending: false)
+        case .dateAscending:
+            descriptor = sortDescriptor(for: "modified", ascending: true)
+        case .dateDescending:
+            descriptor = sortDescriptor(for: "modified", ascending: false)
+        default:
+            descriptor = nil
+        }
+        isUpdatingSortIndicators = true
+        tableView.sortDescriptors = descriptor.map { [$0] } ?? []
+        isUpdatingSortIndicators = false
     }
 
     private func statusChanged(_ text: String) {
@@ -532,65 +616,6 @@ final class FilePaneViewController: NSViewController {
         }
     }
 
-    func previewSourceFrameOnScreen(for previewItem: QLPreviewItem) -> NSRect {
-        guard let url = previewItem.previewItemURL,
-              let index = previewItems.firstIndex(of: url) else {
-            return .zero
-        }
-
-        switch viewModel.viewMode {
-        case .list:
-            return listPreviewSourceFrameOnScreen(at: index)
-        case .grid:
-            return gridPreviewSourceFrameOnScreen(at: index)
-        }
-    }
-
-    private func listPreviewSourceFrameOnScreen(at index: Int) -> NSRect {
-        guard tableView.window != nil,
-              index >= 0,
-              index < tableView.numberOfRows else {
-            return .zero
-        }
-
-        tableView.scrollRowToVisible(index)
-        tableView.layoutSubtreeIfNeeded()
-        let cellFrame = tableView.frameOfCell(atColumn: 0, row: index)
-        let sourceFrame = cellFrame.isEmpty ? tableView.rect(ofRow: index) : cellFrame
-        return screenFrame(for: tableView, rect: sourceFrame.insetBy(dx: 2, dy: 2))
-    }
-
-    private func gridPreviewSourceFrameOnScreen(at index: Int) -> NSRect {
-        guard collectionView.window != nil,
-              index >= 0,
-              index < collectionView.numberOfItems(inSection: 0) else {
-            return .zero
-        }
-
-        let indexPath = IndexPath(item: index, section: 0)
-        collectionView.scrollToItems(at: [indexPath], scrollPosition: .centeredVertically)
-        collectionView.layoutSubtreeIfNeeded()
-
-        if let item = collectionView.item(at: indexPath) as? FileGridItem {
-            return item.view.window?.convertToScreen(item.previewSourceRect) ?? .zero
-        }
-
-        let itemFrame = collectionView.frameForItem(at: index)
-        guard !itemFrame.isEmpty else { return .zero }
-        let iconFrame = NSRect(
-            x: itemFrame.midX - 30,
-            y: itemFrame.maxY - 63,
-            width: 60,
-            height: 58
-        )
-        return screenFrame(for: collectionView, rect: iconFrame)
-    }
-
-    private func screenFrame(for view: NSView, rect: NSRect) -> NSRect {
-        guard let window = view.window else { return .zero }
-        return window.convertToScreen(view.convert(rect, to: nil))
-    }
-
     private func beginEditingSelectedItemName() {
         guard let index = selectedItemIndexes().first else { return }
         switch viewModel.viewMode {
@@ -727,11 +752,6 @@ final class FilePaneViewController: NSViewController {
         refresh()
     }
 
-    @objc private func typeFilterChanged(_ sender: NSPopUpButton) {
-        let selectedTitle = sender.titleOfSelectedItem
-        viewModel.setTypeFilter(selectedTitle == "All" ? nil : selectedTitle)
-    }
-
     @objc private func searchTextChanged(_ sender: NSSearchField) {
         searchTask?.cancel()
         let query = sender.stringValue
@@ -742,16 +762,6 @@ final class FilePaneViewController: NSViewController {
                 self?.viewModel.setSearchQuery(query)
             }
         }
-    }
-
-    private func updateTypeFilterPopup() {
-        let selectedFilter = viewModel.typeFilter
-        typeFilterPopup.removeAllItems()
-        typeFilterPopup.addItem(withTitle: "All")
-        for type in viewModel.availableTypeFilters {
-            typeFilterPopup.addItem(withTitle: type)
-        }
-        typeFilterPopup.selectItem(withTitle: selectedFilter ?? "All")
     }
 
     func detailValue(for item: FileItem, row: Int) -> String {

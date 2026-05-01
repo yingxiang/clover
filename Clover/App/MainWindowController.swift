@@ -27,6 +27,10 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         super.init(window: window)
         rootViewController.activePaneChangeHandler = { [weak self] in
             self?.updateViewModeButton()
+            self?.updateWindowTitle()
+        }
+        rootViewController.activePanePathChangeHandler = { [weak self] _ in
+            self?.updateWindowTitle()
         }
 
         let toolbar = NSToolbar(identifier: "CloverToolbar")
@@ -41,6 +45,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
                 window.setFrame(restoredFrame, display: false)
             }
         }
+        updateWindowTitle()
     }
 
     required init?(coder: NSCoder) {
@@ -164,6 +169,16 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate {
         viewModeToolbarButton?.image = viewModeImage
         viewModeToolbarButton?.toolTip = title
         viewModeToolbarButton?.setAccessibilityLabel(title)
+    }
+
+    private func updateWindowTitle() {
+        guard let window else { return }
+        guard let url = rootViewController.activePaneURL else {
+            window.title = "Clover"
+            return
+        }
+        let name = FileManager.default.displayName(atPath: url.path)
+        window.title = name.isEmpty ? url.lastPathComponent : name
     }
 
     private var viewModeImage: NSImage? {

@@ -2,6 +2,7 @@ import AppKit
 
 final class RootSplitViewController: NSSplitViewController {
     var activePaneChangeHandler: (() -> Void)?
+    var activePanePathChangeHandler: ((URL) -> Void)?
 
     private let sidebarViewController: SidebarViewController
     private let workspaceViewController: WorkspaceViewController
@@ -13,6 +14,9 @@ final class RootSplitViewController: NSSplitViewController {
         sidebarViewController.delegate = self
         workspaceViewController.activePaneChangeHandler = { [weak self] in
             self?.activePaneChangeHandler?()
+        }
+        workspaceViewController.activePanePathChangeHandler = { [weak self] url in
+            self?.activePanePathChangeHandler?(url)
         }
     }
 
@@ -98,6 +102,10 @@ final class RootSplitViewController: NSSplitViewController {
 
     var currentFileViewMode: FileViewMode {
         workspaceViewController.currentFileViewMode
+    }
+
+    var activePaneURL: URL? {
+        workspaceViewController.activePaneURL
     }
 
     func setFileViewModeInActivePane(_ mode: FileViewMode) {

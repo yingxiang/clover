@@ -33,7 +33,8 @@ final class PathBarView: NSView, NSTextFieldDelegate {
 
     override func mouseDown(with event: NSEvent) {
         let location = convert(event.locationInWindow, from: nil)
-        if !stackView.frame.contains(location), !pathField.frame.contains(location) {
+        let pathFieldContainsClick = !pathField.isHidden && pathField.frame.contains(location)
+        if !stackView.frame.contains(location), !pathFieldContainsClick {
             beginEditing()
             return
         }

@@ -3,6 +3,7 @@ import AppKit
 final class PaneLayoutController: NSViewController {
     var statusHandler: ((String) -> Void)?
     var activePaneChangeHandler: (() -> Void)?
+    var activePanePathChangeHandler: ((URL) -> Void)?
 
     private let environment: AppEnvironment
     private(set) var layout: PaneLayout = .single
@@ -23,6 +24,10 @@ final class PaneLayoutController: NSViewController {
 
     var currentFileViewMode: FileViewMode {
         activePane?.viewModel.viewMode ?? .list
+    }
+
+    var activePaneURL: URL? {
+        activePane?.viewModel.currentURL
     }
 
     init(environment: AppEnvironment) {
@@ -154,6 +159,10 @@ final class PaneLayoutController: NSViewController {
         pane.activationHandler = { [weak self] pane in
             self?.setActivePane(pane)
         }
+        pane.pathChangeHandler = { [weak self] pane in
+            guard self?.activePane === pane else { return }
+            self?.activePanePathChangeHandler?(pane.viewModel.currentURL)
+        }
         return pane
     }
 
@@ -207,6 +216,9 @@ final class PaneLayoutController: NSViewController {
         activePane = pane
         panes.forEach { $0.setActive($0 === pane) }
         activePaneChangeHandler?()
+        if let url = pane?.viewModel.currentURL {
+            activePanePathChangeHandler?(url)
+        }
     }
 
     private func paneCount(for layout: PaneLayout) -> Int {

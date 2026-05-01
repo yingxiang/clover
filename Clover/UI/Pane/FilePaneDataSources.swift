@@ -74,6 +74,8 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
             return item.name
         case "size":
             return detailValue(for: item, row: cellRow(for: item))
+        case "type":
+            return FileItemPresentation.typeName(for: item)
         case "modified":
             guard let date = item.modificationDate else { return "--" }
             return dateFormatter.string(from: date)
@@ -88,6 +90,18 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
 
     func tableViewSelectionDidChange(_ notification: Notification) {
         activationHandler?(self)
+    }
+
+    func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
+        guard !isUpdatingSortIndicators else { return }
+        guard let descriptor = tableView.sortDescriptors.first,
+              let key = descriptor.key else { return }
+        setSortOption(for: key, ascending: descriptor.ascending)
+    }
+
+    func tableView(_ tableView: NSTableView, mouseDownInHeaderOf tableColumn: NSTableColumn) {
+        guard tableColumn.identifier.rawValue == "type" else { return }
+        showTypeFilterMenu(for: tableColumn)
     }
 
     func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> NSPasteboardWriting? {
@@ -144,6 +158,56 @@ extension FilePaneViewController: NSCollectionViewDataSource, @preconcurrency NS
 
     func collectionView(_ collectionView: NSCollectionView, acceptDrop draggingInfo: NSDraggingInfo, indexPath: IndexPath, dropOperation: NSCollectionView.DropOperation) -> Bool {
         performMoveDrop(draggingInfo, itemIndex: indexPath.item)
+    }
+}
+
+extension FilePaneViewController {
+    func setSortOption(for key: String, ascending: Bool) {
+        let option: SortOption?
+        switch (key, ascending) {
+        case ("name", true):
+            option = .nameAscending
+        case ("name", false):
+            option = .nameDescending
+        case ("size", true):
+            option = .sizeAscending
+        case ("size", false):
+            option = .sizeDescending
+        case ("modified", true):
+            option = .dateAscending
+        case ("modified", false):
+            option = .dateDescending
+        default:
+            option = nil
+        }
+        guard let option else { return }
+        viewModel.setSortOption(option)
+    }
+
+    func showTypeFilterMenu(for tableColumn: NSTableColumn) {
+        guard let headerView = tableView.headerView else { return }
+        let menu = NSMenu(title: "Type")
+        let allItem = NSMenuItem(title: "All", action: #selector(selectTypeFilter(_:)), keyEquivalent: "")
+        allItem.target = self
+        allItem.state = viewModel.typeFilter == nil ? .on : .off
+        menu.addItem(allItem)
+
+        for type in viewModel.availableTypeFilters {
+            let item = NSMenuItem(title: type, action: #selector(selectTypeFilter(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = type
+            item.state = viewModel.typeFilter == type ? .on : .off
+            menu.addItem(item)
+        }
+
+        let columnIndex = tableView.column(withIdentifier: tableColumn.identifier)
+        let headerRect = headerView.headerRect(ofColumn: columnIndex)
+        let point = NSPoint(x: headerRect.minX, y: headerRect.maxY)
+        menu.popUp(positioning: menu.items.first, at: point, in: headerView)
+    }
+
+    @objc private func selectTypeFilter(_ sender: NSMenuItem) {
+        viewModel.setTypeFilter(sender.representedObject as? String)
     }
 }
 

@@ -2,6 +2,7 @@ import AppKit
 
 final class WorkspaceViewController: NSViewController {
     var activePaneChangeHandler: (() -> Void)?
+    var activePanePathChangeHandler: ((URL) -> Void)?
 
     private let paneController: PaneLayoutController
     private let statusBar = StatusBarView()
@@ -14,6 +15,9 @@ final class WorkspaceViewController: NSViewController {
         }
         paneController.activePaneChangeHandler = { [weak self] in
             self?.activePaneChangeHandler?()
+        }
+        paneController.activePanePathChangeHandler = { [weak self] url in
+            self?.activePanePathChangeHandler?(url)
         }
     }
 
@@ -90,6 +94,10 @@ final class WorkspaceViewController: NSViewController {
 
     var currentFileViewMode: FileViewMode {
         paneController.currentFileViewMode
+    }
+
+    var activePaneURL: URL? {
+        paneController.activePaneURL
     }
 
     func openInActivePane(_ url: URL) {

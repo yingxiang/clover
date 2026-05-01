@@ -60,8 +60,13 @@ Rules:
 - Keep file list state in `FilePaneViewModel`.
 - File rows should expose name, type, size, modification date, and directory state.
 - Sort and filter through view-model/domain behavior, not ad hoc table callbacks.
+- Prefer table-native affordances for list headers: use `NSTableColumn.sortDescriptorPrototype` and `tableView(_:sortDescriptorsDidChange:)` for sortable columns, and keep the header's sort indicator synchronized with `FilePaneViewModel.sortOption`.
+- Put type filtering in the table header or another non-overlapping control. Do not float a filter popup over the table header, because it can cover section/header UI.
+- If a table header column opens a menu rather than sorting, make that visible in the title (for example `Type ▾`) and keep the actual filter state in the view model.
 - Prefer SF Symbols or system icons through `AppIconProvider`; do not add third-party icon sets.
 - Keep context-menu setup, table delegate/data source behavior, and row interaction logic separable. If `FilePaneViewController` grows toward 800 lines, extract menu routing, table subclasses, or view construction into focused files.
+- Pane-local navigation controls belong with the pane path UI, not the global toolbar. Each pane should maintain its own back/forward history so multi-pane browsing remains independent.
+- Window title should follow the active pane's current folder display name. Propagate active pane path changes from `FilePaneViewController` through `PaneLayoutController`/workspace/root controllers to `MainWindowController`.
 
 ## Icons, Thumbnails, And Grid Details
 
@@ -78,7 +83,12 @@ Rules:
 - Pressing Return on a selected item begins inline rename.
 - Clicking the selected grid name again should begin inline rename.
 - Pressing Space previews the selected file with Quick Look.
-- When Quick Look is visible, arrow keys should move between previewable items in the current pane and keep the pane selection synchronized.
+- Pressing Space again while Clover owns a visible Quick Look panel should close the preview.
+- When Quick Look is visible, arrow keys should move between previewable items in the current pane and keep the pane selection synchronized. macOS arrow-key events often include the `.function` modifier flag, so navigation-key modifier filtering must subtract both `.numericPad` and `.function`.
+- Use `QLPreviewPanelDelegate.previewPanel(_:handle:)` plus a local key monitor when needed; Quick Look can own focus, and pane table/collection key handlers may not receive preview-window events.
+- Observe or otherwise synchronize `QLPreviewPanel.currentPreviewItemIndex` so system-handled navigation and Clover-handled navigation keep the list/grid selection aligned.
+- Implement `previewPanel(_:sourceFrameOnScreenFor:)` for Quick Look zoom animations. Return the list row/name-cell rect in list mode and the grid icon rect in grid mode; return `.zero` only when no visible source can be found.
+- Quick Look data source/delegate ownership should be cleaned up when the preview panel closes so stale pane controllers do not continue receiving panel callbacks.
 
 ## Menus And Shortcuts
 
@@ -86,6 +96,8 @@ Rules:
 - Add commands incrementally and route them to the active pane or selected file items.
 - Keep command handlers separate from direct filesystem operations.
 - Menu entries that depend on a selected file or folder should be built from the current selection context, not from hard-coded global availability.
+- Context menus and table header menus should live in focused extension files where possible. Avoid letting `FilePaneViewController` absorb menu-building, sorting, preview, and navigation details once it approaches the 800-line warning threshold.
+- Do not implement Finder-like expandable folder rows in the list with ad hoc nested menus or table-row hacks. If multi-level in-place folder expansion is required, plan it as an `NSOutlineView`/tree-model feature.
 
 ## Drag And Drop
 
