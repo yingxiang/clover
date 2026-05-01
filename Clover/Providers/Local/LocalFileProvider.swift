@@ -36,10 +36,10 @@ final class LocalFileProvider: FileProvider {
             return childURLs.compactMap { childURL in
                 do {
                     let values = try childURL.resourceValues(forKeys: keys)
-                    let name = values.name ?? childURL.lastPathComponent
                     let isDirectory = values.isDirectory ?? false
                     let isPackage = values.isPackage ?? false
                     let isApplication = values.contentType?.conforms(to: .application) == true
+                    let name = self.displayName(for: childURL, fallbackName: values.name ?? childURL.lastPathComponent, isApplication: isApplication)
                     let size: Int64? = if isDirectory {
                         nil
                     } else {
@@ -58,10 +58,10 @@ final class LocalFileProvider: FileProvider {
                         isApplication: isApplication
                     )
                 } catch {
-                    let name = childURL.lastPathComponent
                     var isDirectory: ObjCBool = false
                     _ = fileManager.fileExists(atPath: childURL.path, isDirectory: &isDirectory)
                     let isApplication = childURL.pathExtension.localizedCaseInsensitiveCompare("app") == .orderedSame
+                    let name = self.displayName(for: childURL, fallbackName: childURL.lastPathComponent, isApplication: isApplication)
                     return FileItem(
                         url: childURL,
                         name: name,
@@ -209,6 +209,12 @@ final class LocalFileProvider: FileProvider {
         await MainActor.run {
             _ = NSWorkspace.shared.open(url)
         }
+    }
+
+    private func displayName(for url: URL, fallbackName: String, isApplication: Bool) -> String {
+        guard isApplication else { return fallbackName }
+        let displayName = FileManager.default.displayName(atPath: url.path)
+        return displayName.isEmpty ? fallbackName : displayName
     }
 }
 

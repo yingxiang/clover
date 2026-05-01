@@ -126,7 +126,17 @@ extension FilePaneViewController: NSCollectionViewDataSource, @preconcurrency NS
     func collectionView(_ collectionView: NSCollectionView, itemForRepresentedObjectAt indexPath: IndexPath) -> NSCollectionViewItem {
         let item = collectionView.makeItem(withIdentifier: FileGridItem.identifier, for: indexPath)
         if let gridItem = item as? FileGridItem, let fileItem = viewModel.item(at: indexPath.item) {
-            gridItem.configure(with: fileItem)
+            gridItem.configure(
+                with: fileItem,
+                detail: detailPlaceholderValue(for: fileItem),
+                loadDetailIfNeeded: { [weak self, weak collectionView, weak gridItem] completion in
+                    self?.loadDetailIfNeeded(for: fileItem, tableRow: nil, collectionIndex: indexPath.item) { detail in
+                        guard let collectionView, let gridItem else { return }
+                        guard collectionView.indexPath(for: gridItem)?.item == indexPath.item else { return }
+                        completion(detail)
+                    }
+                }
+            )
             gridItem.renameHandler = { [weak self, weak collectionView] gridItem, newName, didCancel, movement in
                 guard let collectionView,
                       let indexPath = collectionView.indexPath(for: gridItem) else { return }
@@ -186,6 +196,19 @@ extension FilePaneViewController {
         viewModel.setSortOption(option)
     }
 
+    func currentTypeColumnTitle() -> String {
+        if let typeFilter = viewModel.typeFilter {
+            return FileItemPresentation.localizedTypeName(for: typeFilter)
+        }
+        return L10n.type
+    }
+
+    func updateTypeColumnTitle() {
+        guard let column = tableView.tableColumn(withIdentifier: NSUserInterfaceItemIdentifier("type")) else { return }
+        column.title = "\(currentTypeColumnTitle()) ▾"
+        tableView.headerView?.needsDisplay = true
+    }
+
     func showTypeFilterMenu(for tableColumn: NSTableColumn) {
         guard let headerView = tableView.headerView else { return }
         let menu = NSMenu(title: L10n.type)
@@ -195,7 +218,7 @@ extension FilePaneViewController {
         menu.addItem(allItem)
 
         for type in viewModel.availableTypeFilters {
-            let item = NSMenuItem(title: type, action: #selector(selectTypeFilter(_:)), keyEquivalent: "")
+            let item = NSMenuItem(title: FileItemPresentation.localizedTypeName(for: type), action: #selector(selectTypeFilter(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = type
             item.state = viewModel.typeFilter == type ? .on : .off
@@ -213,6 +236,7 @@ extension FilePaneViewController {
 
     @objc private func selectTypeFilter(_ sender: NSMenuItem) {
         viewModel.setTypeFilter(sender.representedObject as? String)
+        updateTypeColumnTitle()
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.view.window?.makeFirstResponder(self.tableView)

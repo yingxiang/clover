@@ -3,6 +3,10 @@ import Foundation
 enum L10n {
     static let refresh = String(localized: "refresh", defaultValue: "Refresh")
     static let layout = String(localized: "layout", defaultValue: "Layout")
+    static let search = String(localized: "search", defaultValue: "Search")
+    static let name = String(localized: "name", defaultValue: "Name")
+    static let size = String(localized: "size", defaultValue: "Size")
+    static let modified = String(localized: "modified", defaultValue: "Modified")
     static let viewModeList = String(localized: "view_mode_list", defaultValue: "List")
     static let viewModeGrid = String(localized: "view_mode_grid", defaultValue: "Grid")
     static let newWindow = String(localized: "new_window", defaultValue: "New Window")
@@ -42,6 +46,9 @@ enum L10n {
     static let tagOrange = String(localized: "tag_orange", defaultValue: "Orange")
     static let all = String(localized: "all", defaultValue: "All")
     static let type = String(localized: "type", defaultValue: "Type")
+    static let typeFolder = String(localized: "type_folder", defaultValue: "Folder")
+    static let typeApplication = String(localized: "type_application", defaultValue: "Application")
+    static let typeFile = String(localized: "type_file", defaultValue: "File")
     static let cancel = String(localized: "cancel", defaultValue: "Cancel")
     static let deleteImmediatelyPrompt = String(localized: "delete_immediately_prompt", defaultValue: "Delete Immediately?")
     static let deleteImmediatelyMessage = String(localized: "delete_immediately_message", defaultValue: "Permanently delete %lld selected items. This action cannot be undone.")
@@ -70,4 +77,20 @@ enum L10n {
     static let otherApplication = String(localized: "other_application", defaultValue: "Other...")
     static let chooseApplication = String(localized: "choose_application", defaultValue: "Choose Application")
     static let choose = String(localized: "choose", defaultValue: "Choose")
+    static let sidebarHome = String(localized: "sidebar_home", defaultValue: "Home")
+    static let sidebarDesktop = String(localized: "sidebar_desktop", defaultValue: "Desktop")
+    static let sidebarDocuments = String(localized: "sidebar_documents", defaultValue: "Documents")
+    static let sidebarDownloads = String(localized: "sidebar_downloads", defaultValue: "Downloads")
+    static let sidebarApplications = String(localized: "sidebar_applications", defaultValue: "Applications")
+    static let sidebarMovies = String(localized: "sidebar_movies", defaultValue: "Movies")
+    static let sidebarMusic = String(localized: "sidebar_music", defaultValue: "Music")
+    static let sidebarPictures = String(localized: "sidebar_pictures", defaultValue: "Pictures")
+    static let sidebarVolumes = String(localized: "sidebar_volumes", defaultValue: "Volumes")
+
+    static func itemCount(_ count: Int) -> String {
+        let format = count == 1
+            ? String(localized: "item_count_single", defaultValue: "%lld item")
+            : String(localized: "item_count_plural", defaultValue: "%lld items")
+        return String(format: format, locale: .current, count)
+    }
 }

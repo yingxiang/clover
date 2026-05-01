@@ -37,6 +37,14 @@ Use this reference before changing shared models, providers, file operations, wo
 - UI updates must return to the main actor.
 - Large-directory behavior should have loading/error state and must remain cancellable or replaceable by a newer navigation request.
 
+## Refresh And Notifications
+
+- Distinguish full directory navigation from local UI mutations. Opening a different folder can reload pane contents; expanding/collapsing an already-visible list subtree should not.
+- Cross-window file-operation notifications should carry enough context, such as affected directories, so panes can ignore unrelated changes instead of all refreshing globally.
+- Prefer scoped refresh decisions based on the pane's current directory and any visible expanded child directories.
+- Cache already loaded expanded child directories within a pane session and invalidate them deliberately, not by default on every refresh path.
+- Treat pane-visible derived metadata such as directory item counts, package sizes, image dimensions, and similar detail strings as pane state, not as view-specific state. List and grid surfaces should read from the same cache so view-mode switches stay presentational rather than triggering new filesystem work.
+
 ## Workspace State
 
 - Persist layouts through codable domain state, not view-controller state.

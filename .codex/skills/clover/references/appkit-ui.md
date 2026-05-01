@@ -67,11 +67,16 @@ Rules:
 - Keep context-menu setup, table delegate/data source behavior, and row interaction logic separable. If `FilePaneViewController` grows toward 800 lines, extract menu routing, table subclasses, or view construction into focused files.
 - Pane-local navigation controls belong with the pane path UI, not the global toolbar. Each pane should maintain its own back/forward history so multi-pane browsing remains independent.
 - Window title should follow the active pane's current folder display name. Propagate active pane path changes from `FilePaneViewController` through `PaneLayoutController`/workspace/root controllers to `MainWindowController`.
+- In list mode, expanding or collapsing a directory should update only the affected rows. Do not rebuild or reload the entire table view for a local tree toggle.
+- List-mode directory expansion should feel animated. Prefer row insertion/removal animations over abrupt whole-table redraws.
+- Re-expanding a previously loaded child directory in the same pane should reuse cached children when possible instead of reloading from disk immediately.
 
 ## Icons, Thumbnails, And Grid Details
 
 - Show a system/file icon immediately, then replace it asynchronously with a Quick Look thumbnail when available.
 - Use the same thumbnail policy in list and grid views. Images, text, documents, and other Quick Look-supported files should show thumbnails; folders keep folder icons unless a provider-specific folder thumbnail is added later.
+- List and grid views should share the same pane-local detail metadata cache. If one view has already resolved item count, package size, dimensions, or other visible detail text for an item, switching view modes must reuse that result instead of recalculating it.
+- In-flight detail loads should also be shared per item within a pane so switching between list and grid while metadata is still computing does not launch duplicate work.
 - Preserve thumbnail aspect ratio. Do not force `NSImage.size` to a square after Quick Look returns the image.
 - Grid names are maximum two lines, not forced two lines. The name selection background should shrink to one line when the name fits.
 - Grid detail text belongs below the name and is not part of selection highlighting. Follow Finder-like detail semantics: image dimensions, folder item count, otherwise formatted file size.
@@ -82,6 +87,8 @@ Rules:
 - Rename should edit the selected filename inline in the list/grid view instead of using a separate modal rename prompt.
 - Pressing Return on a selected item begins inline rename.
 - Clicking the selected grid name again should begin inline rename.
+- Inline rename should preselect only the editable filename stem for files, leaving the extension unselected by default. Folders should still select the full name.
+- The filename-stem selection rule should be shared between list/grid and new-item/existing-item rename paths, not reimplemented differently in each surface.
 - New Folder, New Text File, and New Markdown File should insert a visible pending item into the current list/grid and immediately enter inline rename.
 - Pending new items should not create the real file/folder on disk until the user explicitly commits the rename. Esc/cancel should remove the pending item without touching disk.
 - Starting inline rename for a pending item must not trigger a full pane reload or retry loop that steals focus and ends editing immediately.

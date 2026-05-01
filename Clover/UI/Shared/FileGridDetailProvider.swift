@@ -6,7 +6,7 @@ enum FileGridDetailProvider {
     static func detail(for item: FileItem) async -> String {
         if item.isBrowsableDirectory {
             let count = await directoryItemCount(at: item.url)
-            return "\(count) items"
+            return L10n.itemCount(count)
         }
 
         if let dimensions = imageDimensions(for: item) {

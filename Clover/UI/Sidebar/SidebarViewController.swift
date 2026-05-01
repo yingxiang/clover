@@ -60,15 +60,15 @@ final class SidebarViewController: NSViewController {
     private static func defaultItems() -> [SidebarItem] {
         let home = FileManager.default.homeDirectoryForCurrentUser
         return [
-            SidebarItem(title: "Home", url: home, systemIconName: AppSymbol.home.rawValue),
-            SidebarItem(title: "Desktop", url: home.appendingPathComponent("Desktop"), systemIconName: AppSymbol.desktop.rawValue),
-            SidebarItem(title: "Documents", url: home.appendingPathComponent("Documents"), systemIconName: AppSymbol.documents.rawValue),
-            SidebarItem(title: "Downloads", url: home.appendingPathComponent("Downloads"), systemIconName: AppSymbol.downloads.rawValue),
-            SidebarItem(title: "Applications", url: URL(fileURLWithPath: "/Applications"), systemIconName: AppSymbol.applications.rawValue),
-            SidebarItem(title: "Movies", url: home.appendingPathComponent("Movies"), systemIconName: "movieclapper"),
-            SidebarItem(title: "Music", url: home.appendingPathComponent("Music"), systemIconName: "music.note"),
-            SidebarItem(title: "Pictures", url: home.appendingPathComponent("Pictures"), systemIconName: "photo"),
-            SidebarItem(title: "Volumes", url: URL(fileURLWithPath: "/Volumes"), systemIconName: "externaldrive")
+            SidebarItem(title: L10n.sidebarHome, url: home, systemIconName: AppSymbol.home.rawValue),
+            SidebarItem(title: L10n.sidebarDesktop, url: home.appendingPathComponent("Desktop"), systemIconName: AppSymbol.desktop.rawValue),
+            SidebarItem(title: L10n.sidebarDocuments, url: home.appendingPathComponent("Documents"), systemIconName: AppSymbol.documents.rawValue),
+            SidebarItem(title: L10n.sidebarDownloads, url: home.appendingPathComponent("Downloads"), systemIconName: AppSymbol.downloads.rawValue),
+            SidebarItem(title: L10n.sidebarApplications, url: URL(fileURLWithPath: "/Applications"), systemIconName: AppSymbol.applications.rawValue),
+            SidebarItem(title: L10n.sidebarMovies, url: home.appendingPathComponent("Movies"), systemIconName: "movieclapper"),
+            SidebarItem(title: L10n.sidebarMusic, url: home.appendingPathComponent("Music"), systemIconName: "music.note"),
+            SidebarItem(title: L10n.sidebarPictures, url: home.appendingPathComponent("Pictures"), systemIconName: "photo"),
+            SidebarItem(title: L10n.sidebarVolumes, url: URL(fileURLWithPath: "/Volumes"), systemIconName: "externaldrive")
         ]
     }
 }

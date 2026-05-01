@@ -50,17 +50,63 @@ enum SortOption: String, Codable {
 }
 
 enum FileItemPresentation {
-    static func typeName(for item: FileItem) -> String {
+    static func typeKey(for item: FileItem) -> String {
         if item.isApplication {
-            return "Application"
+            return "application"
         }
         if item.isBrowsableDirectory {
-            return "Folder"
+            return "folder"
+        }
+        if let identifier = item.typeIdentifier,
+           let type = UTType(identifier) {
+            return "uti:\(type.identifier)"
+        }
+        if item.url.pathExtension.isEmpty {
+            return "file"
+        }
+        return "ext:\(item.url.pathExtension.lowercased())"
+    }
+
+    static func typeName(for item: FileItem) -> String {
+        localizedTypeName(for: typeKey(for: item), fallbackName: fallbackTypeName(for: item))
+    }
+
+    static func localizedTypeName(for key: String, fallbackName: String? = nil) -> String {
+        switch key {
+        case "application":
+            return L10n.typeApplication
+        case "folder":
+            return L10n.typeFolder
+        case "file":
+            return L10n.typeFile
+        default:
+            if let fallbackName, !fallbackName.isEmpty {
+                return fallbackName
+            }
+            if let identifier = key.split(separator: ":", maxSplits: 1).last,
+               key.hasPrefix("uti:"),
+               let type = UTType(String(identifier)) {
+                return type.localizedDescription ?? String(identifier)
+            }
+            if let ext = key.split(separator: ":", maxSplits: 1).last,
+               key.hasPrefix("ext:") {
+                return ext.uppercased()
+            }
+            return key
+        }
+    }
+
+    private static func fallbackTypeName(for item: FileItem) -> String {
+        if item.isApplication {
+            return L10n.typeApplication
+        }
+        if item.isBrowsableDirectory {
+            return L10n.typeFolder
         }
         if let identifier = item.typeIdentifier,
            let type = UTType(identifier) {
             return type.localizedDescription ?? identifier
         }
-        return item.url.pathExtension.isEmpty ? "File" : item.url.pathExtension.uppercased()
+        return item.url.pathExtension.isEmpty ? L10n.typeFile : item.url.pathExtension.uppercased()
     }
 }

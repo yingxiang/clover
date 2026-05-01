@@ -41,6 +41,7 @@ final class FilePaneViewModel {
     private var directoryChildren: [URL: [FileItem]] = [:]
 
     var onChange: (() -> Void)?
+    var onViewModeChange: ((FileViewMode) -> Void)?
     var onListMutation: ((FilePaneListMutation) -> Void)?
     var onStatusChange: ((String) -> Void)?
     var onError: ((Error) -> Void)?
@@ -84,6 +85,7 @@ final class FilePaneViewModel {
                     }
                     self.currentURL = targetURL
                     if isNavigatingToDifferentDirectory {
+                        self.typeFilter = nil
                         self.resetListExpansion()
                     }
                     self.allItems = sortedItems
@@ -134,7 +136,7 @@ final class FilePaneViewModel {
     func setViewMode(_ mode: FileViewMode) {
         guard viewMode != mode else { return }
         viewMode = mode
-        onChange?()
+        onViewModeChange?(mode)
     }
 
     func restoreState(currentURL: URL, viewMode: FileViewMode, sortOption: SortOption) {
@@ -160,8 +162,10 @@ final class FilePaneViewModel {
     }
 
     var availableTypeFilters: [String] {
-        Array(Set(allItems.map { FileItemPresentation.typeName(for: $0) })).sorted {
-            $0.localizedStandardCompare($1) == .orderedAscending
+        Array(Set(allItems.map { FileItemPresentation.typeKey(for: $0) })).sorted {
+            FileItemPresentation.localizedTypeName(for: $0).localizedStandardCompare(
+                FileItemPresentation.localizedTypeName(for: $1)
+            ) == .orderedAscending
         }
     }
 
@@ -380,9 +384,13 @@ final class FilePaneViewModel {
     }
 
     private func applyFilters() {
+        if let typeFilter,
+           !Set(allItems.map({ FileItemPresentation.typeKey(for: $0) })).contains(typeFilter) {
+            self.typeFilter = nil
+        }
         var filteredItems = allItems
         if let typeFilter {
-            filteredItems = filteredItems.filter { FileItemPresentation.typeName(for: $0) == typeFilter }
+            filteredItems = filteredItems.filter { FileItemPresentation.typeKey(for: $0) == typeFilter }
         }
         if !searchQuery.isEmpty {
             filteredItems = filteredItems.filter { FileSearchMatcher.matches($0, query: searchQuery, caseSensitive: searchCaseSensitive) }
@@ -422,7 +430,7 @@ final class FilePaneViewModel {
     private func filteredChildren(_ children: [FileItem]) -> [FileItem] {
         var filteredItems = children
         if let typeFilter {
-            filteredItems = filteredItems.filter { FileItemPresentation.typeName(for: $0) == typeFilter }
+            filteredItems = filteredItems.filter { FileItemPresentation.typeKey(for: $0) == typeFilter }
         }
         if !searchQuery.isEmpty {
             filteredItems = filteredItems.filter { FileSearchMatcher.matches($0, query: searchQuery, caseSensitive: searchCaseSensitive) }
@@ -513,8 +521,10 @@ final class FilePaneViewModel {
                 let sortedItems = FileSortService.sort(visibleItems, by: sort)
                 await MainActor.run {
                     guard let self else { return }
+                    let isNavigatingToDifferentDirectory = url.standardizedFileURL != self.currentURL.standardizedFileURL
                     self.currentURL = url
-                    if url.standardizedFileURL != self.currentURL.standardizedFileURL {
+                    if isNavigatingToDifferentDirectory {
+                        self.typeFilter = nil
                         self.resetListExpansion()
                     }
                     self.allItems = sortedItems

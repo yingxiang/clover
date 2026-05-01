@@ -15,7 +15,6 @@ final class FileGridItem: NSCollectionViewItem {
     private var representedItemName = ""
     private var representedItemIsDirectory = false
     private var thumbnailTask: Task<Void, Never>?
-    private var detailTask: Task<Void, Never>?
 
     override func loadView() {
         view = NSView()
@@ -105,9 +104,7 @@ final class FileGridItem: NSCollectionViewItem {
     override func prepareForReuse() {
         super.prepareForReuse()
         thumbnailTask?.cancel()
-        detailTask?.cancel()
         thumbnailTask = nil
-        detailTask = nil
         representedURL = nil
         representedItemName = ""
         representedItemIsDirectory = false
@@ -117,16 +114,19 @@ final class FileGridItem: NSCollectionViewItem {
         nameField.endEditingMode()
     }
 
-    func configure(with item: FileItem) {
+    func configure(
+        with item: FileItem,
+        detail: String,
+        loadDetailIfNeeded: ((@escaping (String) -> Void) -> Void)? = nil
+    ) {
         thumbnailTask?.cancel()
-        detailTask?.cancel()
         representedURL = item.url
         representedItemName = item.name
         representedItemIsDirectory = item.isDirectory
         iconView.image = FileIconProvider.icon(for: item, size: 56)
         nameField.stringValue = item.name
         nameField.preferredMaxLayoutWidth = 88
-        detailField.stringValue = ""
+        detailField.stringValue = detail
         view.toolTip = item.name
         updateSelectionAppearance()
 
@@ -138,13 +138,9 @@ final class FileGridItem: NSCollectionViewItem {
             }
         }
 
-        detailTask = Task { [weak self] in
-            let detail = await FileGridDetailProvider.detail(for: item)
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                guard self?.representedURL == item.url else { return }
-                self?.detailField.stringValue = detail
-            }
+        loadDetailIfNeeded? { [weak self] resolvedDetail in
+            guard self?.representedURL == item.url else { return }
+            self?.detailField.stringValue = resolvedDetail
         }
     }
 
@@ -162,6 +158,10 @@ final class FileGridItem: NSCollectionViewItem {
 
     var previewSourceRect: NSRect {
         view.convert(iconSelectionView.frame, to: nil)
+    }
+
+    func setDetail(_ detail: String) {
+        detailField.stringValue = detail
     }
 
     private func updateSelectionAppearance() {

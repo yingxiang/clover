@@ -22,6 +22,7 @@ final class FilePaneViewController: NSViewController {
     var previewItems: [URL] = []
     private(set) var currentPreviewIndex: Int = 0
     var detailCache: [URL: String] = [:]
+    private var pendingDetailCallbacks: [URL: [(String) -> Void]] = [:]
     private var previewKeyMonitor: EventMonitorToken?
     private var previewIndexObservation: NSKeyValueObservation?
     var isUpdatingSortIndicators = false
@@ -45,6 +46,9 @@ final class FilePaneViewController: NSViewController {
             guard let self else { return }
             Logger.ui.debug("Pane onChange -> reload. mode=\(self.viewModel.viewMode.rawValue, privacy: .public) items=\(self.viewModel.items.count) rows=\(self.viewModel.listRows.count) pendingRename=\(self.pendingRenameURL?.path ?? "nil", privacy: .public)")
             self.reload()
+        }
+        self.viewModel.onViewModeChange = { [weak self] mode in
+            self?.applyViewModeChange(mode)
         }
         self.viewModel.onListMutation = { [weak self] mutation in
             self?.applyListMutation(mutation)
@@ -245,10 +249,10 @@ final class FilePaneViewController: NSViewController {
 
     private func configureTableView() {
         let columns: [(String, String, CGFloat)] = [
-            ("name", "Name", 280),
-            ("size", "Size", 90),
-            ("type", "Type ▾", 130),
-            ("modified", "Modified", 180)
+            ("name", L10n.name, 280),
+            ("size", L10n.size, 90),
+            ("type", "\(currentTypeColumnTitle()) ▾", 130),
+            ("modified", L10n.modified, 180)
         ]
 
         for (identifier, title, width) in columns {
@@ -335,7 +339,7 @@ final class FilePaneViewController: NSViewController {
 
     private func configureSearchField() {
         searchField.translatesAutoresizingMaskIntoConstraints = false
-        searchField.placeholderString = "Search"
+        searchField.placeholderString = L10n.search
         searchField.controlSize = .small
         searchField.target = self
         searchField.action = #selector(searchTextChanged(_:))
@@ -435,6 +439,7 @@ final class FilePaneViewController: NSViewController {
         pathBarView.update(url: viewModel.currentURL)
         updateNavigationButtons()
         updateSortIndicators()
+        updateTypeColumnTitle()
         tableView.reloadData()
         collectionView.reloadData()
         restorePendingSelectionIfNeeded()
@@ -935,6 +940,18 @@ final class FilePaneViewController: NSViewController {
         updateCommandAvailability()
     }
 
+    private func applyViewModeChange(_ mode: FileViewMode) {
+        let isList = mode == .list
+        scrollView.isHidden = !isList
+        collectionScrollView.isHidden = isList
+        if isList {
+            updateTypeColumnTitle()
+        }
+        restorePendingSelectionIfNeeded()
+        updateCommandAvailability()
+        pathChangeHandler?(self)
+    }
+
     private func dropDestinationURL(itemIndex: Int?) -> URL {
         guard let itemIndex, let item = viewModel.item(at: itemIndex), item.isBrowsableDirectory else {
             return viewModel.currentURL
@@ -1081,17 +1098,56 @@ final class FilePaneViewController: NSViewController {
     }
 
     func detailValue(for item: FileItem, row: Int) -> String {
+        let placeholder = detailPlaceholderValue(for: item)
+        loadDetailIfNeeded(for: item, tableRow: row, collectionIndex: nil, completion: nil)
+        return placeholder
+    }
+
+    func detailPlaceholderValue(for item: FileItem) -> String {
         if let cachedDetail = detailCache[item.url] {
             return cachedDetail
         }
+        return item.isBrowsableDirectory ? "--" : (item.size.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) } ?? "--")
+    }
+
+    func loadDetailIfNeeded(
+        for item: FileItem,
+        tableRow: Int?,
+        collectionIndex: Int?,
+        completion: ((String) -> Void)?
+    ) {
+        let url = item.url
+        if let cachedDetail = detailCache[url] {
+            completion?(cachedDetail)
+            return
+        }
+
+        if var callbacks = pendingDetailCallbacks[url] {
+            if let completion {
+                callbacks.append(completion)
+            }
+            pendingDetailCallbacks[url] = callbacks
+            return
+        }
+
+        pendingDetailCallbacks[url] = completion.map { [$0] } ?? []
+
         Task { [weak self] in
             let detail = await FileGridDetailProvider.detail(for: item)
             await MainActor.run {
-                guard let self, self.viewModel.item(at: row)?.url == item.url else { return }
-                self.detailCache[item.url] = detail
-                self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integer: 1))
+                guard let self else { return }
+                self.detailCache[url] = detail
+                let callbacks = self.pendingDetailCallbacks.removeValue(forKey: url) ?? []
+                if let tableRow, self.viewModel.item(at: tableRow)?.url == item.url {
+                    self.tableView.reloadData(forRowIndexes: IndexSet(integer: tableRow), columnIndexes: IndexSet(integer: 1))
+                }
+                if let collectionIndex,
+                   self.viewModel.item(at: collectionIndex)?.url == item.url,
+                   let gridItem = self.collectionView.item(at: collectionIndex) as? FileGridItem {
+                    gridItem.setDetail(detail)
+                }
+                callbacks.forEach { $0(detail) }
             }
         }
-        return item.isBrowsableDirectory ? "--" : (item.size.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) } ?? "--")
     }
 }

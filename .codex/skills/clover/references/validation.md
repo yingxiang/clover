@@ -57,11 +57,15 @@ When changing AppKit interactions, manually reason through or test the matching 
 - List/grid parity: operations available in list mode should also work in grid mode unless explicitly scoped.
 - Drag/drop: verify list-to-list, list-to-grid, grid-to-list, and grid-to-grid paths when drag/drop code changes. Include dropping onto blank grid space.
 - Thumbnails: list and grid cells should first show an icon, then replace it with a non-distorted Quick Look thumbnail when available.
+- Detail reuse: if list or grid has already shown a file's derived detail text such as package size or folder item count, switching to the other view mode should reuse it immediately instead of recalculating it once per surface.
 - Quick Look: Space opens preview for the selected item; arrow keys move through pane items while preview is visible.
 - Quick Look animation: in list mode, the zoom should start from the left file icon area; closing should zoom back and crossfade instead of hard-disappearing.
 - Inline rename: Return and selected-name click should edit the visible filename in place.
+- Inline rename selection: files should preselect only the basename and leave the extension unselected; folders should select the full name.
 - New item rename flow: New Folder / Text / Markdown should insert a pending row/item immediately, enter inline rename without a full pane refresh, and only create the real filesystem item after the rename is confirmed.
 - Pending item cancel: Esc or cancel on a pending new item should remove the placeholder and leave no file/folder created on disk.
+- List subtree toggles: expanding/collapsing a directory in list mode should not visibly flash or rebuild the whole pane; it should animate as a local row insertion/removal.
+- Cross-window operations: modifying files in one window should not make unrelated directories in other windows refresh or blink.
 
 ## Manual Review
 
