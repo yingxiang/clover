@@ -1,5 +1,7 @@
 import AppKit
+import OSLog
 import Quartz
+import UniformTypeIdentifiers
 
 final class FilePaneViewController: NSViewController {
     let viewModel: FilePaneViewModel
@@ -26,7 +28,8 @@ final class FilePaneViewController: NSViewController {
     private var searchTask: Task<Void, Never>?
     var pendingSelectionURLs: [URL] = []
     private var pendingRenameURL: URL?
-    private var pendingRenameAttemptCount = 0
+    private var pendingRenameStartDate: Date?
+    private var pendingCreationKinds: [URL: NewItemKind] = [:]
     static weak var previewOwner: FilePaneViewController?
     let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -38,7 +41,11 @@ final class FilePaneViewController: NSViewController {
     init(viewModel: FilePaneViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
-        self.viewModel.onChange = { [weak self] in self?.reload() }
+        self.viewModel.onChange = { [weak self] in
+            guard let self else { return }
+            Logger.ui.debug("Pane onChange -> reload. mode=\(self.viewModel.viewMode.rawValue, privacy: .public) items=\(self.viewModel.items.count) rows=\(self.viewModel.listRows.count) pendingRename=\(self.pendingRenameURL?.path ?? "nil", privacy: .public)")
+            self.reload()
+        }
         self.viewModel.onStatusChange = { [weak self] text in
             self?.statusChanged(text)
             self?.statusHandler?(text)
@@ -110,35 +117,17 @@ final class FilePaneViewController: NSViewController {
 
     @objc func createFolder(_ sender: Any?) {
         activationHandler?(self)
-        runOperation {
-            let createdURL = try await self.viewModel.createFolder(named: L10n.untitledFolder)
-            await MainActor.run {
-                self.rememberCreatedItemForRenaming(at: createdURL)
-                self.viewModel.insertCreatedItem(at: createdURL, isDirectory: true)
-            }
-        }
+        beginPendingCreation(of: .folder)
     }
 
     @objc func createTextFile(_ sender: Any?) {
         activationHandler?(self)
-        runOperation {
-            let createdURL = try await self.viewModel.createTextFile(named: L10n.untitledTextFile)
-            await MainActor.run {
-                self.rememberCreatedItemForRenaming(at: createdURL)
-                self.viewModel.insertCreatedItem(at: createdURL, isDirectory: false)
-            }
-        }
+        beginPendingCreation(of: .textFile)
     }
 
     @objc func createMarkdownFile(_ sender: Any?) {
         activationHandler?(self)
-        runOperation {
-            let createdURL = try await self.viewModel.createTextFile(named: L10n.untitledMarkdownFile)
-            await MainActor.run {
-                self.rememberCreatedItemForRenaming(at: createdURL)
-                self.viewModel.insertCreatedItem(at: createdURL, isDirectory: false)
-            }
-        }
+        beginPendingCreation(of: .markdownFile)
     }
 
     @objc func performNewItemAction(_ sender: NSMenuItem) {
@@ -437,6 +426,7 @@ final class FilePaneViewController: NSViewController {
     }
 
     private func reload() {
+        Logger.ui.debug("reload begin. mode=\(self.viewModel.viewMode.rawValue, privacy: .public) items=\(self.viewModel.items.count) rows=\(self.viewModel.listRows.count) selectionCount=\(self.selectedItems().count) pendingRename=\(self.pendingRenameURL?.path ?? "nil", privacy: .public)")
         loadingIndicator.stopAnimation(nil)
         detailCache.removeAll()
         pathBarView.update(url: viewModel.currentURL)
@@ -451,6 +441,7 @@ final class FilePaneViewController: NSViewController {
         collectionScrollView.isHidden = isList
         updateCommandAvailability()
         pathChangeHandler?(self)
+        Logger.ui.debug("reload end. mode=\(self.viewModel.viewMode.rawValue, privacy: .public) items=\(self.viewModel.items.count) rows=\(self.viewModel.listRows.count) selectedIndexes=\(self.selectedItemIndexes().description, privacy: .public)")
     }
 
     private func updateNavigationButtons() {
@@ -665,6 +656,7 @@ final class FilePaneViewController: NSViewController {
 
     private func beginEditingSelectedItemName() {
         guard let index = selectedItemIndexes().first else { return }
+        Logger.ui.debug("beginEditingSelectedItemName index=\(index) mode=\(self.viewModel.viewMode.rawValue, privacy: .public)")
         switch viewModel.viewMode {
         case .list:
             tableView.editColumn(0, row: index, with: nil, select: true)
@@ -678,55 +670,40 @@ final class FilePaneViewController: NSViewController {
     private func rememberCreatedItemForRenaming(at url: URL) {
         let standardizedURL = url.standardizedFileURL
         pendingRenameURL = standardizedURL
-        pendingRenameAttemptCount = 0
+        pendingRenameStartDate = nil
         rememberSelection(urls: [standardizedURL])
+        Logger.ui.debug("rememberCreatedItemForRenaming url=\(standardizedURL.path, privacy: .public)")
     }
 
     private func beginPendingRenameIfNeeded() {
         guard let pendingRenameURL else { return }
         let selectedURLs = Set(selectedItems().map { $0.url.standardizedFileURL })
         guard selectedURLs.contains(pendingRenameURL) else { return }
-        schedulePendingRenameAttempt()
-    }
-
-    private func schedulePendingRenameAttempt() {
-        guard pendingRenameURL != nil else { return }
-        pendingRenameAttemptCount += 1
-        let attempt = pendingRenameAttemptCount
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
+        Logger.ui.debug("beginPendingRenameIfNeeded matched url=\(pendingRenameURL.path, privacy: .public)")
+        guard pendingRenameStartDate == nil else { return }
+        pendingRenameStartDate = Date()
+        DispatchQueue.main.async { [weak self] in
             guard let self, self.pendingRenameURL != nil else { return }
             self.beginEditingSelectedItemName()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                guard let self, self.pendingRenameURL != nil else { return }
-                if self.isEditingSelectedItemName {
-                    self.pendingRenameURL = nil
-                    self.pendingRenameAttemptCount = 0
-                    return
-                }
-                guard attempt < 4 else {
-                    self.pendingRenameURL = nil
-                    self.pendingRenameAttemptCount = 0
-                    return
-                }
-                self.schedulePendingRenameAttempt()
-            }
         }
     }
 
-    private var isEditingSelectedItemName: Bool {
-        guard let index = selectedItemIndexes().first else { return false }
-        switch viewModel.viewMode {
-        case .list:
-            return tableView.editedRow == index && tableView.editedColumn == 0
-        case .grid:
-            let indexPath = IndexPath(item: index, section: 0)
-            guard let item = collectionView.item(at: indexPath) as? FileGridItem else { return false }
-            return item.isEditingName
-        }
-    }
+    func renameItem(at index: Int, to newName: String, didCancel: Bool = false, textMovement: Int? = nil) {
+        guard let item = viewModel.item(at: index) else { return }
+        let standardizedURL = item.url.standardizedFileURL
 
-    func renameItem(at index: Int, to newName: String) {
-        guard let item = viewModel.item(at: index), !newName.isEmpty, newName != item.name else {
+        if let kind = pendingCreationKinds[standardizedURL] {
+            handlePendingCreationRename(
+                for: item,
+                kind: kind,
+                newName: newName,
+                didCancel: didCancel,
+                textMovement: textMovement
+            )
+            return
+        }
+
+        guard !newName.isEmpty, newName != item.name else {
             if let item = viewModel.item(at: index) {
                 rememberSelection(urls: [item.url])
             }
@@ -738,6 +715,179 @@ final class FilePaneViewController: NSViewController {
         runOperation {
             try await self.viewModel.renameItem(item, to: newName)
         }
+    }
+
+    private func beginPendingCreation(of kind: NewItemKind) {
+        let placeholderItem = makePendingPlaceholderItem(for: kind)
+        pendingCreationKinds[placeholderItem.url.standardizedFileURL] = kind
+        Logger.ui.debug("beginPendingCreation kind=\(String(describing: kind), privacy: .public) placeholder=\(placeholderItem.url.path, privacy: .public) name=\(placeholderItem.name, privacy: .public)")
+        rememberCreatedItemForRenaming(at: placeholderItem.url)
+        viewModel.insertItem(placeholderItem, notify: false)
+        insertPendingItemIntoVisibleView(at: placeholderItem.url)
+    }
+
+    private func makePendingPlaceholderItem(for kind: NewItemKind) -> FileItem {
+        let isDirectory = kind == .folder
+        let placeholderURL = viewModel.currentURL.appendingPathComponent(".clover-pending-\(UUID().uuidString)", isDirectory: isDirectory)
+        return FileItem(
+            url: placeholderURL,
+            name: kind.defaultName,
+            isDirectory: isDirectory,
+            size: isDirectory ? nil : 0,
+            modificationDate: Date(),
+            creationDate: Date(),
+            typeIdentifier: placeholderTypeIdentifier(for: kind),
+            isHidden: false
+        )
+    }
+
+    private func placeholderTypeIdentifier(for kind: NewItemKind) -> String? {
+        switch kind {
+        case .folder:
+            return UTType.folder.identifier
+        case .textFile:
+            return UTType.plainText.identifier
+        case .markdownFile:
+            return UTType(filenameExtension: "md")?.identifier
+        default:
+            return nil
+        }
+    }
+
+    private func handlePendingCreationRename(
+        for item: FileItem,
+        kind: NewItemKind,
+        newName: String,
+        didCancel: Bool,
+        textMovement: Int?
+    ) {
+        let placeholderURL = item.url.standardizedFileURL
+        Logger.ui.debug("handlePendingCreationRename kind=\(String(describing: kind), privacy: .public) placeholder=\(placeholderURL.path, privacy: .public) newName=\(newName, privacy: .public) didCancel=\(didCancel) movement=\(textMovement ?? -1)")
+
+        if shouldIgnoreTransientPendingRenameEnd(
+            for: item,
+            newName: newName,
+            didCancel: didCancel,
+            textMovement: textMovement
+        ) {
+            Logger.ui.debug("pending creation ignored transient end-edit placeholder=\(placeholderURL.path, privacy: .public)")
+            DispatchQueue.main.async { [weak self] in
+                guard let self,
+                      self.pendingCreationKinds[placeholderURL] != nil else { return }
+                self.rememberSelection(urls: [placeholderURL])
+                self.beginEditingSelectedItemName()
+            }
+            return
+        }
+
+        if didCancel || newName.isEmpty {
+            pendingCreationKinds.removeValue(forKey: placeholderURL)
+            pendingRenameURL = nil
+            pendingRenameStartDate = nil
+            viewModel.removeItem(with: placeholderURL, notify: false)
+            removePendingItemFromVisibleView(at: placeholderURL)
+            return
+        }
+
+        let finalName = resolvedPendingCreationName(for: kind, enteredName: newName)
+        pendingCreationKinds.removeValue(forKey: placeholderURL)
+        pendingRenameURL = nil
+        pendingRenameStartDate = nil
+        runOperation {
+            let createdURL: URL
+            switch kind {
+            case .folder:
+                createdURL = try await self.viewModel.createFolder(named: finalName)
+            case .textFile, .markdownFile:
+                createdURL = try await self.viewModel.createTextFile(named: finalName)
+            default:
+                throw CloverError.unsupportedOperation
+            }
+            await MainActor.run {
+                Logger.ui.debug("pending creation committed placeholder=\(placeholderURL.path, privacy: .public) created=\(createdURL.path, privacy: .public)")
+                self.viewModel.removeItem(with: placeholderURL, notify: false)
+                self.removePendingItemFromVisibleView(at: placeholderURL)
+                self.rememberSelection(urls: [createdURL])
+                self.refresh()
+            }
+        }
+    }
+
+    private func shouldIgnoreTransientPendingRenameEnd(
+        for item: FileItem,
+        newName: String,
+        didCancel: Bool,
+        textMovement: Int?
+    ) -> Bool {
+        guard !didCancel,
+              newName == item.name,
+              !isExplicitPendingRenameCommitMovement(textMovement) else {
+            return false
+        }
+        guard let pendingRenameURL,
+              pendingRenameURL == item.url.standardizedFileURL,
+              let pendingRenameStartDate else {
+            return false
+        }
+        return Date().timeIntervalSince(pendingRenameStartDate) < 0.75
+    }
+
+    private func isExplicitPendingRenameCommitMovement(_ textMovement: Int?) -> Bool {
+        guard let textMovement else { return false }
+        return textMovement == NSReturnTextMovement
+            || textMovement == NSTabTextMovement
+            || textMovement == NSBacktabTextMovement
+    }
+
+    private func resolvedPendingCreationName(for kind: NewItemKind, enteredName: String) -> String {
+        switch kind {
+        case .textFile:
+            return enteredName.contains(".") ? enteredName : "\(enteredName).txt"
+        case .markdownFile:
+            return enteredName.contains(".") ? enteredName : "\(enteredName).md"
+        default:
+            return enteredName
+        }
+    }
+
+    private func insertPendingItemIntoVisibleView(at url: URL) {
+        Logger.ui.debug("insertPendingItemIntoVisibleView url=\(url.path, privacy: .public) mode=\(self.viewModel.viewMode.rawValue, privacy: .public)")
+        switch viewModel.viewMode {
+        case .list:
+            guard let row = viewModel.listRowIndex(for: url) else {
+                Logger.ui.error("insertPendingItemIntoVisibleView fallback reload list url=\(url.path, privacy: .public)")
+                reload()
+                return
+            }
+            Logger.ui.debug("insertPendingItemIntoVisibleView list row=\(row)")
+            tableView.beginUpdates()
+            tableView.insertRows(at: IndexSet(integer: row), withAnimation: [])
+            tableView.endUpdates()
+        case .grid:
+            guard let item = viewModel.gridItemIndex(for: url) else {
+                Logger.ui.error("insertPendingItemIntoVisibleView fallback reload grid url=\(url.path, privacy: .public)")
+                reload()
+                return
+            }
+            Logger.ui.debug("insertPendingItemIntoVisibleView grid item=\(item)")
+            collectionView.performBatchUpdates({
+                collectionView.insertItems(at: [IndexPath(item: item, section: 0)])
+            })
+        }
+        restorePendingSelectionIfNeeded()
+        beginPendingRenameIfNeeded()
+        updateCommandAvailability()
+    }
+
+    private func removePendingItemFromVisibleView(at url: URL) {
+        Logger.ui.debug("removePendingItemFromVisibleView url=\(url.path, privacy: .public) mode=\(self.viewModel.viewMode.rawValue, privacy: .public)")
+        switch viewModel.viewMode {
+        case .list:
+            tableView.reloadData()
+        case .grid:
+            collectionView.reloadData()
+        }
+        updateCommandAvailability()
     }
 
     private func dropDestinationURL(itemIndex: Int?) -> URL {

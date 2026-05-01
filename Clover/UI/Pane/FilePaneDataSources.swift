@@ -1,4 +1,5 @@
 import AppKit
+import OSLog
 
 extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTableViewDelegate {
     func numberOfRows(in tableView: NSTableView) -> Int {
@@ -126,10 +127,10 @@ extension FilePaneViewController: NSCollectionViewDataSource, @preconcurrency NS
         let item = collectionView.makeItem(withIdentifier: FileGridItem.identifier, for: indexPath)
         if let gridItem = item as? FileGridItem, let fileItem = viewModel.item(at: indexPath.item) {
             gridItem.configure(with: fileItem)
-            gridItem.renameHandler = { [weak self, weak collectionView] gridItem, newName in
+            gridItem.renameHandler = { [weak self, weak collectionView] gridItem, newName, didCancel, movement in
                 guard let collectionView,
                       let indexPath = collectionView.indexPath(for: gridItem) else { return }
-                self?.renameItem(at: indexPath.item, to: newName)
+                self?.renameItem(at: indexPath.item, to: newName, didCancel: didCancel, textMovement: movement)
             }
         }
         return item
@@ -224,6 +225,14 @@ extension FilePaneViewController: NSTextFieldDelegate {
     func controlTextDidEndEditing(_ notification: Notification) {
         guard let textField = notification.object as? NSTextField,
               textField.identifier?.rawValue == "FileNameEditor" else { return }
-        renameItem(at: textField.tag, to: textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines))
+        let movement = notification.userInfo?["NSTextMovement"] as? Int
+        let didCancel = movement == NSCancelTextMovement
+        Logger.ui.debug("list controlTextDidEndEditing row=\(textField.tag) value=\(textField.stringValue, privacy: .public) didCancel=\(didCancel) movement=\(movement ?? -1)")
+        renameItem(
+            at: textField.tag,
+            to: textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines),
+            didCancel: didCancel,
+            textMovement: movement
+        )
     }
 }

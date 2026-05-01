@@ -82,6 +82,9 @@ Rules:
 - Rename should edit the selected filename inline in the list/grid view instead of using a separate modal rename prompt.
 - Pressing Return on a selected item begins inline rename.
 - Clicking the selected grid name again should begin inline rename.
+- New Folder, New Text File, and New Markdown File should insert a visible pending item into the current list/grid and immediately enter inline rename.
+- Pending new items should not create the real file/folder on disk until the user explicitly commits the rename. Esc/cancel should remove the pending item without touching disk.
+- Starting inline rename for a pending item must not trigger a full pane reload or retry loop that steals focus and ends editing immediately.
 - Pressing Space previews the selected file with Quick Look.
 - Pressing Space again while Clover owns a visible Quick Look panel should close the preview.
 - When Quick Look is visible, arrow keys should move between previewable items in the current pane and keep the pane selection synchronized. macOS arrow-key events often include the `.function` modifier flag, so navigation-key modifier filtering must subtract both `.numericPad` and `.function`.

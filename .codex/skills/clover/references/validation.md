@@ -60,6 +60,8 @@ When changing AppKit interactions, manually reason through or test the matching 
 - Quick Look: Space opens preview for the selected item; arrow keys move through pane items while preview is visible.
 - Quick Look animation: in list mode, the zoom should start from the left file icon area; closing should zoom back and crossfade instead of hard-disappearing.
 - Inline rename: Return and selected-name click should edit the visible filename in place.
+- New item rename flow: New Folder / Text / Markdown should insert a pending row/item immediately, enter inline rename without a full pane refresh, and only create the real filesystem item after the rename is confirmed.
+- Pending item cancel: Esc or cancel on a pending new item should remove the placeholder and leave no file/folder created on disk.
 
 ## Manual Review
 

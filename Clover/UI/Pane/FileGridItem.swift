@@ -1,9 +1,10 @@
 import AppKit
+import OSLog
 
 final class FileGridItem: NSCollectionViewItem {
     static let identifier = NSUserInterfaceItemIdentifier("FileGridItem")
 
-    var renameHandler: ((FileGridItem, String) -> Void)?
+    var renameHandler: ((FileGridItem, String, Bool, Int?) -> Void)?
 
     private let iconSelectionView = NSView()
     private let iconView = NSImageView()
@@ -165,11 +166,13 @@ final class FileGridItem: NSCollectionViewItem {
 
 extension FileGridItem: NSTextFieldDelegate {
     func controlTextDidEndEditing(_ notification: Notification) {
+        let movement = notification.userInfo?["NSTextMovement"] as? Int
+        let didCancel = movement == NSCancelTextMovement
         let newName = nameField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        Logger.ui.debug("grid controlTextDidEndEditing value=\(newName, privacy: .public) didCancel=\(didCancel) movement=\(movement ?? -1)")
         nameField.endEditingMode()
         updateSelectionAppearance()
-        guard !newName.isEmpty else { return }
-        renameHandler?(self, newName)
+        renameHandler?(self, newName, didCancel, movement)
     }
 }
 

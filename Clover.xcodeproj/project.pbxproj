@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -30,13 +30,13 @@
 		9A1037452CEC70B93AEB41FEEB8A8D25 /* PaneLayoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C80CBA01EFF570C3954937C2ED33F639 /* PaneLayoutController.swift */; };
 		9EBEF5FD75D6B3983ABE9D0AAE112FA5 /* FileGridDetailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 182C4A8CD037BD81B43F6432EC7FA5D6 /* FileGridDetailProvider.swift */; };
 		ACA56E3B716C5637A42F5A24539C99D8 /* FileGridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 236747207772FEFB695BD2E22339D4CD /* FileGridItem.swift */; };
+		B4E21223B928071A3907A07D62330FB6 /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E79C8B115EC90E3EB7847A11233A94 /* Workspace.swift */; };
+		B7E7D69B7A3D47A3B4F0C001 /* WorkspaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E7D69B7A3D47A3B4F0C000 /* WorkspaceStore.swift */; };
+		B7E7D69B7A3D47A3B4F0C003 /* WorkspaceStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E7D69B7A3D47A3B4F0C002 /* WorkspaceStoreTests.swift */; };
 		B7E7D69B7A3D47A3B4F0C005 /* FilePaneContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E7D69B7A3D47A3B4F0C009 /* FilePaneContextMenu.swift */; };
 		B7E7D69B7A3D47A3B4F0C006 /* FilePaneDataSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E7D69B7A3D47A3B4F0C00A /* FilePaneDataSources.swift */; };
 		B7E7D69B7A3D47A3B4F0C007 /* FilePaneInternalViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E7D69B7A3D47A3B4F0C00B /* FilePaneInternalViews.swift */; };
 		B7E7D69B7A3D47A3B4F0C008 /* FilePanePreviewPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E7D69B7A3D47A3B4F0C00C /* FilePanePreviewPanel.swift */; };
-		B4E21223B928071A3907A07D62330FB6 /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E79C8B115EC90E3EB7847A11233A94 /* Workspace.swift */; };
-		B7E7D69B7A3D47A3B4F0C001 /* WorkspaceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E7D69B7A3D47A3B4F0C000 /* WorkspaceStore.swift */; };
-		B7E7D69B7A3D47A3B4F0C003 /* WorkspaceStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E7D69B7A3D47A3B4F0C002 /* WorkspaceStoreTests.swift */; };
 		BE8CBD60485B27E580321907C2A63947 /* FileOperationNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9228904DB68AB8A3A470396154A083FA /* FileOperationNotifications.swift */; };
 		C58011295A78F0B6B0CBE8D21F67131B /* FileOperationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0D4AE91D19658592830143B13D0A1D /* FileOperationServiceTests.swift */; };
 		CE4463E06D4260368EF2038FF258C4CE /* SidebarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C26D40858E1FB3DAF6558DA7B15374B /* SidebarViewController.swift */; };
@@ -68,7 +68,7 @@
 		12C52E595F2E188272B6FA731672F6B8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		182C4A8CD037BD81B43F6432EC7FA5D6 /* FileGridDetailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileGridDetailProvider.swift; sourceTree = "<group>"; };
 		1D0D4AE91D19658592830143B13D0A1D /* FileOperationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOperationServiceTests.swift; sourceTree = "<group>"; };
-		22C5B4267D233F3000441EEB4C8911B6 /* Localizable.xcstrings */ = {isa = PBXFileReference; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		22C5B4267D233F3000441EEB4C8911B6 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		236747207772FEFB695BD2E22339D4CD /* FileGridItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileGridItem.swift; sourceTree = "<group>"; };
 		29BB0C3BB9CFAE82C1C6D9E7896DC434 /* FileProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileProvider.swift; sourceTree = "<group>"; };
 		2BFF4D7788A080F55551F7F62546A68D /* LocalFileProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileProvider.swift; sourceTree = "<group>"; };
@@ -92,12 +92,12 @@
 		AEF09417931684114E50B8D622BE91A1 /* FilePaneViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePaneViewModel.swift; sourceTree = "<group>"; };
 		AF8BF7DB6E22896AA2FC8A5002208566 /* Clover.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clover.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AFD69DF177BD7F0451B6359DFA7D2FB7 /* LocalFileProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileProviderTests.swift; sourceTree = "<group>"; };
+		B7E7D69B7A3D47A3B4F0C000 /* WorkspaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStore.swift; sourceTree = "<group>"; };
+		B7E7D69B7A3D47A3B4F0C002 /* WorkspaceStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStoreTests.swift; sourceTree = "<group>"; };
 		B7E7D69B7A3D47A3B4F0C009 /* FilePaneContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePaneContextMenu.swift; sourceTree = "<group>"; };
 		B7E7D69B7A3D47A3B4F0C00A /* FilePaneDataSources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePaneDataSources.swift; sourceTree = "<group>"; };
 		B7E7D69B7A3D47A3B4F0C00B /* FilePaneInternalViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePaneInternalViews.swift; sourceTree = "<group>"; };
 		B7E7D69B7A3D47A3B4F0C00C /* FilePanePreviewPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePanePreviewPanel.swift; sourceTree = "<group>"; };
-		B7E7D69B7A3D47A3B4F0C000 /* WorkspaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStore.swift; sourceTree = "<group>"; };
-		B7E7D69B7A3D47A3B4F0C002 /* WorkspaceStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStoreTests.swift; sourceTree = "<group>"; };
 		BE24ADF9B430F10A1F8C25E46980C4D5 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		BFACA9DFBC871F5278FFBFAFB44F9EFD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C427080944D958076079D8A2630919CE /* PathBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathBarView.swift; sourceTree = "<group>"; };
@@ -375,7 +375,8 @@
 		61CF81BA6AB0806E78D313444D64A538 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1000;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					DA5988DB3BA36F080AB79615FD4EB8C6 = {
 						DevelopmentTeam = GBJH26W27R;
@@ -485,8 +486,10 @@
 		26AD663983A435E8E45CD7146AB39BC1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = GBJH26W27R;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = GBJH26W27R;
 				INFOPLIST_FILE = Clover/Resources/Info.plist;
@@ -501,11 +504,41 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
@@ -516,11 +549,41 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
@@ -531,6 +594,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				DEAD_CODE_STRIPPING = YES;
 				INFOPLIST_FILE = Tests/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lingchen.cloverTests;
 				PRODUCT_NAME = CloverTests;
@@ -544,6 +609,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				DEAD_CODE_STRIPPING = YES;
 				INFOPLIST_FILE = Tests/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lingchen.cloverTests;
 				PRODUCT_NAME = CloverTests;
@@ -556,8 +623,10 @@
 		F6869040DF3C57F382E547F4BE244E01 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = GBJH26W27R;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = GBJH26W27R;
 				INFOPLIST_FILE = Clover/Resources/Info.plist;

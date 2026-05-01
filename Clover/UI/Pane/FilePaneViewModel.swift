@@ -182,22 +182,35 @@ final class FilePaneViewModel {
         return createdURL
     }
 
-    func insertCreatedItem(at url: URL, isDirectory: Bool) {
-        let item = FileItem(
-            url: url,
-            name: url.lastPathComponent,
-            isDirectory: isDirectory,
-            size: isDirectory ? nil : 0,
-            modificationDate: Date(),
-            creationDate: Date(),
-            typeIdentifier: inferredTypeIdentifier(for: url, isDirectory: isDirectory),
-            isHidden: url.lastPathComponent.hasPrefix(".")
-        )
+    func insertItem(_ item: FileItem, notify: Bool = true) {
+        let url = item.url
         allItems.removeAll { $0.url.standardizedFileURL == url.standardizedFileURL }
         allItems.append(item)
         allItems = FileSortService.sort(allItems, by: sortOption)
         applyFilters()
-        onChange?()
+        if notify {
+            onChange?()
+        }
+    }
+
+    func removeItem(with url: URL, notify: Bool = true) {
+        let standardizedURL = url.standardizedFileURL
+        allItems.removeAll { $0.url.standardizedFileURL == standardizedURL }
+        items.removeAll { $0.url.standardizedFileURL == standardizedURL }
+        listRows.removeAll { $0.item.url.standardizedFileURL == standardizedURL }
+        if notify {
+            onChange?()
+        }
+    }
+
+    func listRowIndex(for url: URL) -> Int? {
+        let standardizedURL = url.standardizedFileURL
+        return listRows.firstIndex { $0.item.url.standardizedFileURL == standardizedURL }
+    }
+
+    func gridItemIndex(for url: URL) -> Int? {
+        let standardizedURL = url.standardizedFileURL
+        return items.firstIndex { $0.url.standardizedFileURL == standardizedURL }
     }
 
     func renameItem(_ item: FileItem, to newName: String) async throws {
