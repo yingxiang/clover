@@ -79,7 +79,6 @@ final class FilePaneViewController: NSViewController {
         view.wantsLayer = true
         view.layer?.cornerRadius = 8
         view.layer?.masksToBounds = true
-        view.layer?.backgroundColor = NSColor.clear.cgColor
     }
 
     override func viewDidLoad() {
@@ -269,10 +268,9 @@ final class FilePaneViewController: NSViewController {
             tableView.addTableColumn(column)
         }
 
-        tableView.usesAlternatingRowBackgroundColors = false
+        tableView.usesAlternatingRowBackgroundColors = true
         tableView.rowSizeStyle = .medium
         tableView.allowsMultipleSelection = true
-        tableView.backgroundColor = .clear
         tableView.delegate = self
         tableView.dataSource = self
         tableView.target = self
@@ -304,7 +302,6 @@ final class FilePaneViewController: NSViewController {
         scrollView.documentView = tableView
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = true
-        scrollView.drawsBackground = false
         scrollView.activationHandler = { [weak self] in
             guard let self else { return }
             self.activationHandler?(self)
@@ -347,9 +344,6 @@ final class FilePaneViewController: NSViewController {
         searchField.translatesAutoresizingMaskIntoConstraints = false
         searchField.placeholderString = L10n.search
         searchField.controlSize = .small
-        searchField.drawsBackground = false
-        searchField.isBordered = false
-        searchField.focusRingType = .none
         searchField.target = self
         searchField.action = #selector(searchTextChanged(_:))
         searchField.sendsSearchStringImmediately = true
@@ -378,7 +372,6 @@ final class FilePaneViewController: NSViewController {
         collectionView.dataSource = self
         collectionView.isSelectable = true
         collectionView.allowsMultipleSelection = true
-        collectionView.backgroundColors = [.clear]
         collectionView.activationHandler = { [weak self] in
             guard let self else { return }
             self.activationHandler?(self)
@@ -400,7 +393,6 @@ final class FilePaneViewController: NSViewController {
 
         collectionScrollView.documentView = collectionView
         collectionScrollView.hasVerticalScroller = true
-        collectionScrollView.drawsBackground = false
         collectionScrollView.isHidden = true
         collectionScrollView.activationHandler = { [weak self] in
             guard let self else { return }

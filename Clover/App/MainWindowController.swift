@@ -6,52 +6,6 @@ private final class ToolbarContextMenuButton: NSButton {
     }
 }
 
-private final class GlassContainerViewController: NSViewController {
-    private let contentViewController: NSViewController
-
-    init(contentViewController: NSViewController) {
-        self.contentViewController = contentViewController
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func loadView() {
-        let effectView: NSView
-        if #available(macOS 26.0, *) {
-            let background = NSGlassEffectView()
-            background.cornerRadius = 10
-            effectView = background
-        } else {
-            let background = NSVisualEffectView()
-            background.material = .hudWindow
-            background.state = .active
-            background.blendingMode = .withinWindow
-            effectView = background
-        }
-
-        effectView.translatesAutoresizingMaskIntoConstraints = false
-        view = effectView
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        addChild(contentViewController)
-        let contentView = contentViewController.view
-        contentView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(contentView)
-
-        NSLayoutConstraint.activate([
-            contentView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            contentView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            contentView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-    }
-}
-
 @MainActor
 final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserInterfaceValidations {
     private let rootViewController: RootSplitViewController
@@ -74,21 +28,16 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         rootViewController = RootSplitViewController(environment: environment)
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1100, height: 720),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.title = L10n.appName
-        window.titleVisibility = .visible
         window.center()
         window.minSize = NSSize(width: 760, height: 480)
         window.isReleasedWhenClosed = false
         window.isRestorable = false
-        window.isOpaque = false
-        window.backgroundColor = .clear
-        window.titlebarAppearsTransparent = true
-        window.toolbarStyle = .unified
-        window.contentViewController = GlassContainerViewController(contentViewController: rootViewController)
+        window.contentViewController = rootViewController
         super.init(window: window)
         rootViewController.activePaneChangeHandler = { [weak self] in
             self?.updateViewModeButton()
