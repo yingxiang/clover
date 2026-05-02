@@ -23,6 +23,12 @@ final class PathBarView: NSView, NSTextFieldDelegate {
         rebuildBreadcrumbs(for: url)
     }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        updateAppearance()
+        rebuildBreadcrumbs(for: currentURL)
+    }
+
     func beginEditing() {
         pathField.stringValue = displayPath(for: currentURL)
         stackView.isHidden = true
@@ -56,9 +62,6 @@ final class PathBarView: NSView, NSTextFieldDelegate {
     }
 
     private func configureViews() {
-        wantsLayer = true
-        layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
-
         stackView.orientation = .horizontal
         stackView.alignment = .centerY
         stackView.spacing = 2
@@ -82,6 +85,8 @@ final class PathBarView: NSView, NSTextFieldDelegate {
             pathField.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -28),
             pathField.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
+
+        updateAppearance()
     }
 
     private func rebuildBreadcrumbs(for url: URL) {
@@ -116,6 +121,11 @@ final class PathBarView: NSView, NSTextFieldDelegate {
     private func finishEditing() {
         pathField.isHidden = true
         stackView.isHidden = false
+    }
+
+    private func updateAppearance() {
+        pathField.textColor = .labelColor
+        pathField.backgroundColor = .textBackgroundColor
     }
 
     private func breadcrumbs(for url: URL) -> [(title: String, url: URL)] {

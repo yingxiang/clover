@@ -3,21 +3,21 @@ import AppKit
 final class WorkspaceViewController: NSViewController {
     var activePaneChangeHandler: (() -> Void)?
     var activePanePathChangeHandler: ((URL) -> Void)?
+    var commandAvailabilityChangeHandler: (() -> Void)?
 
     private let paneController: PaneLayoutController
-    private let statusBar = StatusBarView()
 
     init(environment: AppEnvironment) {
         paneController = PaneLayoutController(environment: environment)
         super.init(nibName: nil, bundle: nil)
-        paneController.statusHandler = { [weak self] text in
-            self?.statusBar.setText(text)
-        }
         paneController.activePaneChangeHandler = { [weak self] in
             self?.activePaneChangeHandler?()
         }
         paneController.activePanePathChangeHandler = { [weak self] url in
             self?.activePanePathChangeHandler?(url)
+        }
+        paneController.commandAvailabilityChangeHandler = { [weak self] in
+            self?.commandAvailabilityChangeHandler?()
         }
     }
 
@@ -33,18 +33,13 @@ final class WorkspaceViewController: NSViewController {
         super.viewDidLoad()
         addChild(paneController)
         paneController.view.translatesAutoresizingMaskIntoConstraints = false
-        statusBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(paneController.view)
-        view.addSubview(statusBar)
 
         NSLayoutConstraint.activate([
             paneController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             paneController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             paneController.view.topAnchor.constraint(equalTo: view.topAnchor),
-            paneController.view.bottomAnchor.constraint(equalTo: statusBar.topAnchor),
-            statusBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            statusBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            statusBar.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            paneController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
 

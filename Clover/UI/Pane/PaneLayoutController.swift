@@ -4,6 +4,7 @@ final class PaneLayoutController: NSViewController {
     var statusHandler: ((String) -> Void)?
     var activePaneChangeHandler: (() -> Void)?
     var activePanePathChangeHandler: ((URL) -> Void)?
+    var commandAvailabilityChangeHandler: (() -> Void)?
 
     private let environment: AppEnvironment
     private(set) var layout: PaneLayout = .single
@@ -217,6 +218,10 @@ final class PaneLayoutController: NSViewController {
             guard self?.activePane === pane else { return }
             self?.activePanePathChangeHandler?(pane.viewModel.currentURL)
         }
+        pane.commandAvailabilityHandler = { [weak self] pane in
+            guard self?.activePane === pane else { return }
+            self?.commandAvailabilityChangeHandler?()
+        }
         return pane
     }
 
@@ -270,6 +275,7 @@ final class PaneLayoutController: NSViewController {
         activePane = pane
         panes.forEach { $0.setActive($0 === pane) }
         activePaneChangeHandler?()
+        commandAvailabilityChangeHandler?()
         if let url = pane?.viewModel.currentURL {
             activePanePathChangeHandler?(url)
         }

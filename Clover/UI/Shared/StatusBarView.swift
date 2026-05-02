@@ -6,9 +6,7 @@ final class StatusBarView: NSView {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
-        layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
         label.font = .systemFont(ofSize: 11)
-        label.textColor = .secondaryLabelColor
         label.translatesAutoresizingMaskIntoConstraints = false
         addSubview(label)
 
@@ -17,13 +15,25 @@ final class StatusBarView: NSView {
             label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
             label.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
+
+        updateAppearance()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        updateAppearance()
+    }
+
     func setText(_ text: String) {
         label.stringValue = text
+    }
+
+    private func updateAppearance() {
+        layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        label.textColor = .secondaryLabelColor
     }
 }

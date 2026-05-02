@@ -8,6 +8,7 @@ final class FilePaneViewController: NSViewController {
     var activationHandler: ((FilePaneViewController) -> Void)?
     var statusHandler: ((String) -> Void)?
     var pathChangeHandler: ((FilePaneViewController) -> Void)?
+    var commandAvailabilityHandler: ((FilePaneViewController) -> Void)?
 
     private let pathBarView = PathBarView()
     private let backButton = NSButton()
@@ -1083,6 +1084,7 @@ final class FilePaneViewController: NSViewController {
 
     func updateCommandAvailability() {
         view.window?.toolbar?.validateVisibleItems()
+        commandAvailabilityHandler?(self)
     }
 
     @objc private func searchTextChanged(_ sender: NSSearchField) {

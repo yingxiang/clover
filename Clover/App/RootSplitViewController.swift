@@ -3,6 +3,7 @@ import AppKit
 final class RootSplitViewController: NSSplitViewController {
     var activePaneChangeHandler: (() -> Void)?
     var activePanePathChangeHandler: ((URL) -> Void)?
+    var commandAvailabilityChangeHandler: (() -> Void)?
 
     private let sidebarViewController: SidebarViewController
     private let workspaceViewController: WorkspaceViewController
@@ -17,6 +18,9 @@ final class RootSplitViewController: NSSplitViewController {
         }
         workspaceViewController.activePanePathChangeHandler = { [weak self] url in
             self?.activePanePathChangeHandler?(url)
+        }
+        workspaceViewController.commandAvailabilityChangeHandler = { [weak self] in
+            self?.commandAvailabilityChangeHandler?()
         }
     }
 

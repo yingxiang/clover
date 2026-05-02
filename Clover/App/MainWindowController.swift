@@ -13,6 +13,12 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     private weak var layoutToolbarButton: NSButton?
     private weak var viewModeToolbarItem: NSToolbarItem?
     private weak var viewModeToolbarButton: NSButton?
+    private weak var airDropToolbarButton: NSButton?
+    private weak var shareToolbarButton: NSButton?
+    private weak var infoToolbarButton: NSButton?
+    private weak var airDropToolbarItem: NSToolbarItem?
+    private weak var shareToolbarItem: NSToolbarItem?
+    private weak var infoToolbarItem: NSToolbarItem?
     private var layoutPopover: NSPopover?
     private var toolbarContextMenuMonitor: Any?
     private let environment: AppEnvironment
@@ -40,6 +46,9 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         rootViewController.activePanePathChangeHandler = { [weak self] _ in
             self?.updateWindowTitle()
         }
+        rootViewController.commandAvailabilityChangeHandler = { [weak self] in
+            self?.updateToolbarButtonAvailability()
+        }
 
         let toolbar = NSToolbar(identifier: "CloverToolbar")
         toolbar.delegate = self
@@ -60,6 +69,9 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
             if !restoredFrame.isEmpty {
                 window.setFrame(restoredFrame, display: false)
             }
+            updateLayoutButton()
+            updateViewModeButton()
+            updateToolbarButtonAvailability()
         }
         updateWindowTitle()
     }
@@ -164,6 +176,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     func setPaneLayout(_ layout: PaneLayout) {
         rootViewController.setPaneLayout(layout)
         updateLayoutButton()
+        updateToolbarButtonAvailability()
     }
 
     func setFileViewMode(_ mode: FileViewMode) {
@@ -315,6 +328,20 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         item.view = button
         item.target = self
         item.action = action
+        switch identifier {
+        case .airDrop:
+            airDropToolbarItem = item
+            airDropToolbarButton = button
+        case .share:
+            shareToolbarItem = item
+            shareToolbarButton = button
+        case .info:
+            infoToolbarItem = item
+            infoToolbarButton = button
+        default:
+            break
+        }
+        updateToolbarButtonAvailability()
         return item
     }
 
@@ -339,6 +366,20 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         viewModeToolbarButton?.image = viewModeImage
         viewModeToolbarButton?.toolTip = title
         viewModeToolbarButton?.setAccessibilityLabel(title)
+    }
+
+    private func updateToolbarButtonAvailability() {
+        let airDropEnabled = rootViewController.canPerformFileAction(#selector(FilePaneViewController.sendSelectedItemsViaAirDrop(_:)))
+        airDropToolbarItem?.isEnabled = airDropEnabled
+        airDropToolbarButton?.isEnabled = airDropEnabled
+
+        let shareEnabled = rootViewController.canPerformFileAction(#selector(FilePaneViewController.showShareMenuProxy(_:)))
+        shareToolbarItem?.isEnabled = shareEnabled
+        shareToolbarButton?.isEnabled = shareEnabled
+
+        let infoEnabled = rootViewController.canPerformFileAction(#selector(FilePaneViewController.showSelectedItemsInfo(_:)))
+        infoToolbarItem?.isEnabled = infoEnabled
+        infoToolbarButton?.isEnabled = infoEnabled
     }
 
     private func updateWindowTitle() {
