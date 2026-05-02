@@ -72,6 +72,7 @@ When changing AppKit interactions, manually reason through or test the matching 
 Before final response:
 
 - Search for direct UI-layer `FileManager` usage when touching file operations.
+- Scan edited AppKit code for newly introduced deprecation warnings. Prefer replacing deprecated Cocoa APIs during the task instead of leaving warning debt behind, especially for `NSWorkspace` lookup helpers and sharing/menu APIs.
 - Search for list/grid asymmetry when changing file interactions:
 
 ```bash
@@ -86,4 +87,5 @@ find Clover Tests -name '*.swift' -print0 | xargs -0 wc -l | sort -nr | head
 
 - Inspect files at or above 800 lines and split any project-owned file that exceeds 1000 lines unless the user explicitly accepts a temporary exception.
 - Confirm `project.yml` and generated Xcode settings do not undo user-provided bundle ID, team ID, or signing choices.
+- When a build warning/error comes from Swift 6 actor isolation around Cocoa delegates, document the narrow compatibility approach used and verify it does not broaden isolation beyond the affected conformance.
 - Mention unimplemented execution-plan phases plainly.

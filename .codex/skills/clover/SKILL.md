@@ -26,6 +26,8 @@ Use this skill for development inside the Clover repository.
 ## Core Rules
 
 - Use Swift + AppKit. Do not introduce SwiftUI unless the user explicitly asks.
+- Prefer current AppKit/Foundation APIs over deprecated compatibility helpers. When looking up applications, prefer `NSWorkspace.urlForApplication(...)` APIs; when exposing share actions, prefer `NSSharingServicePicker` over deprecated manual service enumeration.
+- Swift 6 actor isolation applies to AppKit/Objective-C delegate conformances in this project. When an older Cocoa delegate/protocol crosses actor boundaries, prefer a small `@preconcurrency` conformance or another narrow compatibility fix instead of weakening isolation more broadly.
 - UI code must not perform direct file operations with `FileManager`; route file reads/writes through `FileProvider` and `FileOperationService`.
 - Disk work must be asynchronous and must not block the main thread.
 - Directory listing must return quickly. Do not perform recursive size, thumbnail, image metadata, package inspection, or other expensive per-item work while opening a folder; load that data asynchronously or lazily after the directory contents are visible.

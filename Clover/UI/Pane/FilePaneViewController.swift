@@ -77,6 +77,8 @@ final class FilePaneViewController: NSViewController {
     override func loadView() {
         view = NSView()
         view.wantsLayer = true
+        view.layer?.cornerRadius = 8
+        view.layer?.masksToBounds = true
     }
 
     override func viewDidLoad() {
@@ -97,7 +99,7 @@ final class FilePaneViewController: NSViewController {
     }
 
     func setActive(_ isActive: Bool) {
-        view.layer?.borderWidth = isActive ? 2 : 1
+        view.layer?.borderWidth = isActive ? 1.25 : 0.75
         view.layer?.borderColor = (isActive ? NSColor.controlAccentColor : NSColor.separatorColor).cgColor
     }
 

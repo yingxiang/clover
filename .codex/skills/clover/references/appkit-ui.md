@@ -17,7 +17,6 @@ MainWindowController
 │       ├── PaneLayoutController
 │       │   ├── FilePaneViewController
 │       │   └── FilePaneViewController ...
-│       └── StatusBarView
 ```
 
 Window lifecycle rules:
@@ -27,6 +26,7 @@ Window lifecycle rules:
 - On launch and app reopen, call `showWindow`, `makeKeyAndOrderFront`, and activate the app.
 - Avoid relying on state restoration for the initial shell unless restoration has explicit tests.
 - Keep window controllers focused on composition and command routing. Move popovers, menu builders, toolbar controls, drawing helpers, and complex child views into separate files before the controller approaches 800 lines.
+- When restoring a workspace, immediately resynchronize toolbar state such as layout/view-mode buttons and command availability. Do not assume restoring pane state will automatically refresh toolbar visuals.
 
 ## Toolbar And Popovers
 
@@ -35,6 +35,9 @@ Window lifecycle rules:
 - Anchor popovers to the actual toolbar control view whenever possible. Use content-view fallback anchors only as a last resort.
 - Layout picker toolbar UI should show the current layout icon plus a dropdown indicator; avoid replacing the button label with verbose layout names.
 - Keep layout picker popover content icon-only with tooltips/accessibility labels for specific layout names.
+- If toolbar buttons use custom views, keep `NSButton.isEnabled` and `NSToolbarItem.isEnabled` synchronized. Updating only the button can leave the toolbar label in the wrong enabled/disabled color.
+- When a toolbar action depends on selection state, propagate command-availability changes from the active pane back to the window controller so custom toolbar items update immediately instead of waiting for focus changes.
+- If the toolbar right-click menu is customized, limit display-mode choices to product-approved options and prefer window/titlebar-level interception when button-level menus are insufficient.
 
 ## Pane Layouts
 
@@ -67,6 +70,7 @@ Rules:
 - Keep context-menu setup, table delegate/data source behavior, and row interaction logic separable. If `FilePaneViewController` grows toward 800 lines, extract menu routing, table subclasses, or view construction into focused files.
 - Pane-local navigation controls belong with the pane path UI, not the global toolbar. Each pane should maintain its own back/forward history so multi-pane browsing remains independent.
 - Window title should follow the active pane's current folder display name. Propagate active pane path changes from `FilePaneViewController` through `PaneLayoutController`/workspace/root controllers to `MainWindowController`.
+- If no file is selected, actions like Open in Terminal should fall back to the active pane's current folder instead of silently doing nothing.
 - In list mode, expanding or collapsing a directory should update only the affected rows. Do not rebuild or reload the entire table view for a local tree toggle.
 - List-mode directory expansion should feel animated. Prefer row insertion/removal animations over abrupt whole-table redraws.
 - Re-expanding a previously loaded child directory in the same pane should reuse cached children when possible instead of reloading from disk immediately.
@@ -107,8 +111,17 @@ Rules:
 - Add commands incrementally and route them to the active pane or selected file items.
 - Keep command handlers separate from direct filesystem operations.
 - Menu entries that depend on a selected file or folder should be built from the current selection context, not from hard-coded global availability.
+- Prefer system-provided menu/picker surfaces for share flows. On modern macOS, use `NSSharingServicePicker` and its standard share menu item instead of deprecated `NSSharingService.sharingServices(forItems:)` enumeration.
 - Context menus and table header menus should live in focused extension files where possible. Avoid letting `FilePaneViewController` absorb menu-building, sorting, preview, and navigation details once it approaches the 800-line warning threshold.
 - Do not implement Finder-like expandable folder rows in the list with ad hoc nested menus or table-row hacks. If multi-level in-place folder expansion is required, plan it as an `NSOutlineView`/tree-model feature.
+- If a legacy Objective-C delegate such as a sharing picker delegate triggers Swift 6 isolation warnings, keep the fix local to that conformance. Prefer `@preconcurrency` or another narrow bridge over broad actor annotations that can hide unrelated threading issues.
+
+## Appearance And Chrome
+
+- Do not add a persistent bottom status bar unless it carries critical, action-worthy information. Default to giving pane content the full vertical space.
+- Path bars and similar top chrome should usually inherit the window background rather than painting a custom solid background. Extra background layers tend to drift out of sync during macOS appearance changes.
+- If a view must still use layer-backed colors, refresh them in `viewDidChangeEffectiveAppearance()` instead of relying on a one-time `cgColor` assignment during initialization.
+- Active pane highlighting should be subtle: prefer a thin accent border plus a modest corner radius over a heavy outline.
 
 ## Drag And Drop
 
