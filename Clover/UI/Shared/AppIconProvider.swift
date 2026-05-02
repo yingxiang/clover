@@ -83,6 +83,27 @@ enum NewItemKind: Int, CaseIterable {
         }
     }
 
+    var applicationNames: [String] {
+        switch self {
+        case .folder, .textFile, .markdownFile:
+            return []
+        case .word:
+            return ["Microsoft Word", "Word"]
+        case .excel:
+            return ["Microsoft Excel", "Excel"]
+        case .powerPoint:
+            return ["Microsoft PowerPoint", "PowerPoint"]
+        case .keynote:
+            return ["Keynote"]
+        case .pages:
+            return ["Pages"]
+        case .numbers:
+            return ["Numbers"]
+        case .wps:
+            return ["WPS Office", "WPS"]
+        }
+    }
+
     var defaultName: String {
         switch self {
         case .folder:
@@ -123,6 +144,11 @@ enum NewItemKind: Int, CaseIterable {
         for bundleIdentifier in bundleIdentifiers {
             if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) {
                 return url
+            }
+        }
+        for applicationName in applicationNames {
+            if let path = NSWorkspace.shared.fullPath(forApplication: applicationName) {
+                return URL(fileURLWithPath: path)
             }
         }
         return nil

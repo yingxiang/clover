@@ -100,7 +100,7 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
     }
 
     func tableView(_ tableView: NSTableView, writeRowsWith rowIndexes: IndexSet, to pasteboard: NSPasteboard) -> Bool {
-        writeDraggedItems(at: Array(rowIndexes), to: pasteboard)
+        return writeDraggedItems(at: Array(rowIndexes), to: pasteboard)
     }
 
     func tableView(_ tableView: NSTableView, validateDrop info: NSDraggingInfo, proposedRow row: Int, proposedDropOperation dropOperation: NSTableView.DropOperation) -> NSDragOperation {

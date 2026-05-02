@@ -59,8 +59,9 @@ final class SidebarViewController: NSViewController {
 
     private static func defaultItems() -> [SidebarItem] {
         let home = FileManager.default.homeDirectoryForCurrentUser
+        let userName = NSUserName()
         return [
-            SidebarItem(title: L10n.sidebarHome, url: home, systemIconName: AppSymbol.home.rawValue),
+            SidebarItem(title: userName.isEmpty ? L10n.sidebarHome : userName, url: home, systemIconName: AppSymbol.home.rawValue),
             SidebarItem(title: L10n.sidebarDesktop, url: home.appendingPathComponent("Desktop"), systemIconName: AppSymbol.desktop.rawValue),
             SidebarItem(title: L10n.sidebarDocuments, url: home.appendingPathComponent("Documents"), systemIconName: AppSymbol.documents.rawValue),
             SidebarItem(title: L10n.sidebarDownloads, url: home.appendingPathComponent("Downloads"), systemIconName: AppSymbol.downloads.rawValue),
