@@ -18,7 +18,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
             backing: .buffered,
             defer: false
         )
-        window.title = "Clover"
+        window.title = L10n.appName
         window.center()
         window.minSize = NSSize(width: 760, height: 480)
         window.isReleasedWhenClosed = false
@@ -149,11 +149,11 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     }
 
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.refresh, .airDrop, .share, .info, .viewMode, .paneLayout, .flexibleSpace]
+        [.refresh, .terminal, .airDrop, .share, .info, .viewMode, .paneLayout, .flexibleSpace]
     }
 
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.refresh, .airDrop, .share, .info, .flexibleSpace, .viewMode, .paneLayout]
+        [.refresh, .terminal, .airDrop, .share, .info, .flexibleSpace, .viewMode, .paneLayout]
     }
 
     func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
@@ -169,6 +169,14 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
                 label: L10n.airDrop,
                 image: AppIconProvider.image(.airDrop, accessibilityDescription: L10n.airDrop),
                 action: #selector(sendSelectedItemsViaAirDropInActivePane(_:))
+            )
+        }
+        if itemIdentifier == .terminal {
+            return makeActionToolbarItem(
+                identifier: itemIdentifier,
+                label: L10n.openInTerminal,
+                image: AppIconProvider.image(.terminal, accessibilityDescription: L10n.openInTerminal),
+                action: #selector(openSelectedItemsInTerminalInActivePane(_:))
             )
         }
         if itemIdentifier == .share {
@@ -305,7 +313,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     private func updateWindowTitle() {
         guard let window else { return }
         guard let url = rootViewController.activePaneURL else {
-            window.title = "Clover"
+            window.title = L10n.appName
             return
         }
         let name = FileManager.default.displayName(atPath: url.path)
@@ -356,6 +364,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
 
 private extension NSToolbarItem.Identifier {
     static let refresh = NSToolbarItem.Identifier("CloverToolbar.Refresh")
+    static let terminal = NSToolbarItem.Identifier("CloverToolbar.Terminal")
     static let airDrop = NSToolbarItem.Identifier("CloverToolbar.AirDrop")
     static let share = NSToolbarItem.Identifier("CloverToolbar.Share")
     static let info = NSToolbarItem.Identifier("CloverToolbar.Info")
@@ -367,13 +376,13 @@ private extension PaneLayout {
     var displayName: String {
         switch self {
         case .single:
-            return "Single Pane"
+            return L10n.singlePane
         case .twoVertical:
-            return "Two Panes Vertical"
+            return L10n.twoPanesVertical
         case .twoHorizontal:
-            return "Two Panes Horizontal"
+            return L10n.twoPanesHorizontal
         case .fourGrid:
-            return "Four Panes"
+            return L10n.fourPanes
         }
     }
 

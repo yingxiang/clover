@@ -136,7 +136,7 @@ final class PaneLayoutController: NSViewController {
 
     func setFileViewModeInActivePane(_ mode: FileViewMode) {
         activePane?.setViewMode(mode)
-        statusHandler?(mode == .list ? "View: List" : "View: Grid")
+        statusHandler?(L10n.viewStatus(mode == .list ? L10n.viewModeList : L10n.viewModeGrid))
     }
 
     func activatePane(at index: Int) {
@@ -166,7 +166,7 @@ final class PaneLayoutController: NSViewController {
         } else {
             setActivePane(panes.first)
         }
-        statusHandler?("Layout: \(displayName(for: newLayout))")
+        statusHandler?(L10n.layoutStatus(displayName(for: newLayout)))
     }
 
     func restore(from workspace: Workspace) {
@@ -178,7 +178,7 @@ final class PaneLayoutController: NSViewController {
         }
         rebuildLayout()
         setActivePane(panes.first)
-        statusHandler?("Restored workspace")
+        statusHandler?(L10n.restoredWorkspace)
     }
 
     func workspaceState(using store: WorkspaceStore) -> (layout: PaneLayout, panes: [PaneState]) {
@@ -289,13 +289,13 @@ final class PaneLayoutController: NSViewController {
     private func displayName(for layout: PaneLayout) -> String {
         switch layout {
         case .single:
-            return "Single"
+            return L10n.single
         case .twoVertical:
-            return "Two Vertical"
+            return L10n.twoVertical
         case .twoHorizontal:
-            return "Two Horizontal"
+            return L10n.twoHorizontal
         case .fourGrid:
-            return "Four Grid"
+            return L10n.fourGrid
         }
     }
 }

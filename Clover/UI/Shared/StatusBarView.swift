@@ -1,7 +1,7 @@
 import AppKit
 
 final class StatusBarView: NSView {
-    private let label = NSTextField(labelWithString: "Ready")
+    private let label = NSTextField(labelWithString: L10n.ready)
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

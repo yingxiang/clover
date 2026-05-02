@@ -26,7 +26,7 @@ final class SidebarViewController: NSViewController {
 
     private func configureOutlineView() {
         let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("SidebarColumn"))
-        column.title = "Locations"
+        column.title = L10n.sidebarLocations
         outlineView.addTableColumn(column)
         outlineView.outlineTableColumn = column
         outlineView.headerView = nil

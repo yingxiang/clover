@@ -965,8 +965,8 @@ final class FilePaneViewController: NSViewController {
                 try await operation()
             } catch CloverError.operationCancelled {
                 await MainActor.run {
-                    statusChanged("Operation cancelled")
-                    statusHandler?("Operation cancelled")
+                    statusChanged(L10n.operationCancelled)
+                    statusHandler?(L10n.operationCancelled)
                 }
             } catch {
                 await MainActor.run { showError(error) }
@@ -989,10 +989,10 @@ final class FilePaneViewController: NSViewController {
     private func confirmTrash(count: Int) -> Bool {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "Move to Trash?"
-        alert.informativeText = "Move \(count) selected item\(count == 1 ? "" : "s") to the Trash."
-        alert.addButton(withTitle: "Move to Trash")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText = L10n.moveToTrashPrompt
+        alert.informativeText = L10n.moveItemsToTrashMessage(count)
+        alert.addButton(withTitle: L10n.moveToTrashAction)
+        alert.addButton(withTitle: L10n.cancel)
         return alert.runModal() == .alertFirstButtonReturn
     }
 
@@ -1000,12 +1000,12 @@ final class FilePaneViewController: NSViewController {
     func resolveConflict(_ conflict: FileConflict) async -> FileConflictResolution {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "An item named \"\(conflict.destinationURL.lastPathComponent)\" already exists."
-        alert.informativeText = "Choose how Clover should handle the conflict."
-        alert.addButton(withTitle: "Replace")
-        alert.addButton(withTitle: "Skip")
-        alert.addButton(withTitle: "Keep Both")
-        alert.addButton(withTitle: "Cancel")
+        alert.messageText = L10n.conflictExists(conflict.destinationURL.lastPathComponent)
+        alert.informativeText = L10n.conflictChoice
+        alert.addButton(withTitle: L10n.replace)
+        alert.addButton(withTitle: L10n.skip)
+        alert.addButton(withTitle: L10n.keepBoth)
+        alert.addButton(withTitle: L10n.cancel)
 
         switch alert.runModal() {
         case .alertFirstButtonReturn:

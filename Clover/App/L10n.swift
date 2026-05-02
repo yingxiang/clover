@@ -1,6 +1,7 @@
 import Foundation
 
 enum L10n {
+    static let appName = String(localized: "app_name", defaultValue: "Clover")
     static let refresh = String(localized: "refresh", defaultValue: "Refresh")
     static let layout = String(localized: "layout", defaultValue: "Layout")
     static let search = String(localized: "search", defaultValue: "Search")
@@ -86,11 +87,91 @@ enum L10n {
     static let sidebarMusic = String(localized: "sidebar_music", defaultValue: "Music")
     static let sidebarPictures = String(localized: "sidebar_pictures", defaultValue: "Pictures")
     static let sidebarVolumes = String(localized: "sidebar_volumes", defaultValue: "Volumes")
+    static let sidebarLocations = String(localized: "sidebar_locations", defaultValue: "Locations")
+    static let ready = String(localized: "ready", defaultValue: "Ready")
+    static let loading = String(localized: "loading", defaultValue: "Loading")
+    static let cancelled = String(localized: "cancelled", defaultValue: "Cancelled")
+    static let unableToLoadFolder = String(localized: "unable_to_load_folder", defaultValue: "Unable to load folder")
+    static let creatingFolder = String(localized: "creating_folder", defaultValue: "Creating folder...")
+    static let folderCreated = String(localized: "folder_created", defaultValue: "Folder created")
+    static let creatingFile = String(localized: "creating_file", defaultValue: "Creating file...")
+    static let fileCreated = String(localized: "file_created", defaultValue: "File created")
+    static let movedToTrashStatus = String(localized: "moved_to_trash_status", defaultValue: "Moved to Trash")
+    static let updatedLabels = String(localized: "updated_labels", defaultValue: "Updated labels")
+    static let operationCancelled = String(localized: "operation_cancelled", defaultValue: "Operation cancelled")
+    static let moveToTrashPrompt = String(localized: "move_to_trash_prompt", defaultValue: "Move to Trash?")
+    static let moveToTrashAction = String(localized: "move_to_trash_action", defaultValue: "Move to Trash")
+    static let conflictExistsFormat = String(localized: "conflict_exists_format", defaultValue: "An item named \"%@\" already exists.")
+    static let conflictChoice = String(localized: "conflict_choice", defaultValue: "Choose how Clover should handle the conflict.")
+    static let replace = String(localized: "replace", defaultValue: "Replace")
+    static let skip = String(localized: "skip", defaultValue: "Skip")
+    static let keepBoth = String(localized: "keep_both", defaultValue: "Keep Both")
+    static let restoredWorkspace = String(localized: "restored_workspace", defaultValue: "Restored workspace")
+    static let single = String(localized: "single", defaultValue: "Single")
+    static let twoVertical = String(localized: "two_vertical", defaultValue: "Two Vertical")
+    static let twoHorizontal = String(localized: "two_horizontal", defaultValue: "Two Horizontal")
+    static let fourGrid = String(localized: "four_grid", defaultValue: "Four Grid")
 
     static func itemCount(_ count: Int) -> String {
         let format = count == 1
             ? String(localized: "item_count_single", defaultValue: "%lld item")
             : String(localized: "item_count_plural", defaultValue: "%lld items")
         return String(format: format, locale: .current, count)
+    }
+
+    static func loadingFolder(_ name: String) -> String {
+        String(format: String(localized: "loading_folder_format", defaultValue: "Loading %@..."), locale: .current, name)
+    }
+
+    static func renamingItem(_ name: String) -> String {
+        String(format: String(localized: "renaming_item_format", defaultValue: "Renaming %@..."), locale: .current, name)
+    }
+
+    static func renamedItem(_ name: String) -> String {
+        String(format: String(localized: "renamed_item_format", defaultValue: "Renamed %@"), locale: .current, name)
+    }
+
+    static func copyingItems(_ count: Int) -> String {
+        String(format: String(localized: "copying_items_format", defaultValue: "Copying %lld items..."), locale: .current, count)
+    }
+
+    static func copiedItems(_ count: Int) -> String {
+        String(format: String(localized: "copied_items_format", defaultValue: "Copied %lld items"), locale: .current, count)
+    }
+
+    static func movingItems(_ count: Int) -> String {
+        String(format: String(localized: "moving_items_format", defaultValue: "Moving %lld items..."), locale: .current, count)
+    }
+
+    static func movedItems(_ count: Int) -> String {
+        String(format: String(localized: "moved_items_format", defaultValue: "Moved %lld items"), locale: .current, count)
+    }
+
+    static func movingItemsToTrash(_ count: Int) -> String {
+        String(format: String(localized: "moving_items_to_trash_format", defaultValue: "Moving %lld items to Trash..."), locale: .current, count)
+    }
+
+    static func deletingItems(_ count: Int) -> String {
+        String(format: String(localized: "deleting_items_format", defaultValue: "Deleting %lld items..."), locale: .current, count)
+    }
+
+    static func deletedItems(_ count: Int) -> String {
+        String(format: String(localized: "deleted_items_format", defaultValue: "Deleted %lld items"), locale: .current, count)
+    }
+
+    static func viewStatus(_ mode: String) -> String {
+        String(format: String(localized: "view_status_format", defaultValue: "View: %@"), locale: .current, mode)
+    }
+
+    static func layoutStatus(_ layout: String) -> String {
+        String(format: String(localized: "layout_status_format", defaultValue: "Layout: %@"), locale: .current, layout)
+    }
+
+    static func moveItemsToTrashMessage(_ count: Int) -> String {
+        String(format: String(localized: "move_items_to_trash_message_format", defaultValue: "Move %lld selected items to the Trash."), locale: .current, count)
+    }
+
+    static func conflictExists(_ name: String) -> String {
+        String(format: conflictExistsFormat, locale: .current, name)
     }
 }
