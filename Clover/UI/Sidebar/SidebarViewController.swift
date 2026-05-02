@@ -14,8 +14,6 @@ final class SidebarViewController: NSViewController {
 
     override func loadView() {
         view = NSView()
-        view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
     }
 
     override func viewDidLoad() {
@@ -31,6 +29,7 @@ final class SidebarViewController: NSViewController {
         outlineView.outlineTableColumn = column
         outlineView.headerView = nil
         outlineView.rowSizeStyle = .medium
+        outlineView.backgroundColor = .clear
         outlineView.delegate = self
         outlineView.dataSource = self
         outlineView.target = self
@@ -38,6 +37,7 @@ final class SidebarViewController: NSViewController {
 
         scrollView.documentView = outlineView
         scrollView.hasVerticalScroller = true
+        scrollView.drawsBackground = false
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
 

@@ -125,7 +125,6 @@ final class PathBarView: NSView, NSTextFieldDelegate {
 
     private func updateAppearance() {
         pathField.textColor = .labelColor
-        pathField.backgroundColor = .textBackgroundColor
     }
 
     private func breadcrumbs(for url: URL) -> [(title: String, url: URL)] {
