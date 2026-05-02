@@ -1,5 +1,12 @@
 import AppKit
 
+private final class ToolbarContextMenuButton: NSButton {
+    override func menu(for event: NSEvent) -> NSMenu? {
+        menu
+    }
+}
+
+@MainActor
 final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserInterfaceValidations {
     private let rootViewController: RootSplitViewController
     private weak var layoutToolbarItem: NSToolbarItem?
@@ -7,6 +14,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     private weak var viewModeToolbarItem: NSToolbarItem?
     private weak var viewModeToolbarButton: NSButton?
     private var layoutPopover: NSPopover?
+    private var toolbarContextMenuMonitor: Any?
     private let environment: AppEnvironment
 
     init(environment: AppEnvironment, restoredWorkspace: Workspace? = nil) {
@@ -35,7 +43,15 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
 
         let toolbar = NSToolbar(identifier: "CloverToolbar")
         toolbar.delegate = self
+        toolbar.displayMode = .iconAndLabel
         window.toolbar = toolbar
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleWindowWillClose(_:)),
+            name: NSWindow.willCloseNotification,
+            object: window
+        )
+        installToolbarContextMenuMonitor()
 
         if let restoredWorkspace {
             rootViewController.loadViewIfNeeded()
@@ -54,6 +70,14 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
 
     @objc func refreshActivePane(_ sender: Any?) {
         rootViewController.refreshActivePane()
+    }
+
+    @objc private func handleWindowWillClose(_ notification: Notification) {
+        if let toolbarContextMenuMonitor {
+            NSEvent.removeMonitor(toolbarContextMenuMonitor)
+            self.toolbarContextMenuMonitor = nil
+        }
+        NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: notification.object)
     }
 
     @objc func focusActivePathInput(_ sender: Any?) {
@@ -129,6 +153,14 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         rootViewController.showShareMenuInActivePane(relativeTo: sender as? NSView)
     }
 
+    @objc func setToolbarDisplayModeIconAndLabel(_ sender: Any?) {
+        window?.toolbar?.displayMode = .iconAndLabel
+    }
+
+    @objc func setToolbarDisplayModeIconOnly(_ sender: Any?) {
+        window?.toolbar?.displayMode = .iconOnly
+    }
+
     func setPaneLayout(_ layout: PaneLayout) {
         rootViewController.setPaneLayout(layout)
         updateLayoutButton()
@@ -196,13 +228,12 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
             )
         }
         guard itemIdentifier == .refresh else { return nil }
-        let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-        item.label = L10n.refresh
-        item.paletteLabel = L10n.refresh
-        item.image = AppIconProvider.image(.refresh, accessibilityDescription: L10n.refresh)
-        item.target = self
-        item.action = #selector(refreshActivePane(_:))
-        return item
+        return makeActionToolbarItem(
+            identifier: itemIdentifier,
+            label: L10n.refresh,
+            image: AppIconProvider.image(.refresh, accessibilityDescription: L10n.refresh),
+            action: #selector(refreshActivePane(_:))
+        )
     }
 
     func validateUserInterfaceItem(_ item: any NSValidatedUserInterfaceItem) -> Bool {
@@ -331,16 +362,76 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     }
 
     private func makeToolbarIconButton(action: Selector) -> NSButton {
-        let button = NSButton(image: NSImage(), target: self, action: action)
+        let button = ToolbarContextMenuButton(image: NSImage(), target: self, action: action)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.bezelStyle = .texturedRounded
         button.imagePosition = .imageOnly
         button.imageScaling = .scaleProportionallyDown
+        button.menu = makeToolbarDisplayModeMenu()
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: 32),
             button.heightAnchor.constraint(equalToConstant: 28)
         ])
         return button
+    }
+
+    private func makeToolbarDisplayModeMenu() -> NSMenu {
+        let menu = NSMenu(title: L10n.toolbarDisplayModeMenu)
+
+        let iconAndLabelItem = NSMenuItem(
+            title: L10n.toolbarDisplayModeIconAndLabel,
+            action: #selector(setToolbarDisplayModeIconAndLabel(_:)),
+            keyEquivalent: ""
+        )
+        iconAndLabelItem.target = self
+        iconAndLabelItem.state = window?.toolbar?.displayMode == .iconAndLabel ? .on : .off
+        menu.addItem(iconAndLabelItem)
+
+        let iconOnlyItem = NSMenuItem(
+            title: L10n.toolbarDisplayModeIconOnly,
+            action: #selector(setToolbarDisplayModeIconOnly(_:)),
+            keyEquivalent: ""
+        )
+        iconOnlyItem.target = self
+        iconOnlyItem.state = window?.toolbar?.displayMode == .iconOnly ? .on : .off
+        menu.addItem(iconOnlyItem)
+
+        return menu
+    }
+
+    private func installToolbarContextMenuMonitor() {
+        toolbarContextMenuMonitor = NSEvent.addLocalMonitorForEvents(matching: [.rightMouseDown, .leftMouseDown]) { [weak self] event in
+            guard let self else { return event }
+            guard event.type == .rightMouseDown || (event.type == .leftMouseDown && event.modifierFlags.contains(.control)) else {
+                return event
+            }
+            guard let window = self.window, event.window === window else {
+                return event
+            }
+            guard self.toolbarContains(event.locationInWindow) else {
+                return event
+            }
+
+            let menu = self.makeToolbarDisplayModeMenu()
+            NSMenu.popUpContextMenu(menu, with: event, for: window.contentView ?? NSView())
+            return nil
+        }
+    }
+
+    private func toolbarContains(_ pointInWindow: NSPoint) -> Bool {
+        guard let window, window.toolbar != nil else { return false }
+
+        let toolbarMinY = window.contentLayoutRect.maxY
+        let toolbarHeight = max(0, window.frame.height - toolbarMinY)
+        guard toolbarHeight > 0 else { return false }
+
+        let toolbarRect = NSRect(
+            x: 0,
+            y: toolbarMinY,
+            width: window.frame.width,
+            height: toolbarHeight
+        )
+        return toolbarRect.contains(pointInWindow)
     }
 
     @objc private func showLayoutPicker(_ sender: Any?) {

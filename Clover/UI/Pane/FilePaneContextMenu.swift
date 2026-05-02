@@ -1,7 +1,7 @@
 import AppKit
 import UniformTypeIdentifiers
 
-extension FilePaneViewController: NSMenuDelegate {
+extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServicePickerDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
@@ -13,6 +13,7 @@ extension FilePaneViewController: NSMenuDelegate {
             if let pasteTitle {
                 addMenuItem(pasteTitle, action: #selector(pasteFromPasteboard(_:)), to: menu, symbol: .paste)
             }
+            addMenuItem(L10n.openInTerminal, action: #selector(openSelectedItemsInTerminal(_:)), to: menu, symbol: .terminal)
             addMenuItem(L10n.refresh, action: #selector(refreshFromContextMenu(_:)), to: menu, symbol: .refresh)
             return
         }
@@ -26,8 +27,8 @@ extension FilePaneViewController: NSMenuDelegate {
         }
         addMenuItem(L10n.openInTerminal, action: #selector(openSelectedItemsInTerminal(_:)), to: menu, enabled: selectedCount == 1, symbol: .terminal)
         menu.addItem(.separator())
-        if let shareMenu = shareMenu() {
-            addSubmenuItem(L10n.share, submenu: shareMenu, to: menu, symbol: .share)
+        if let shareItem = shareMenuItem() {
+            menu.addItem(shareItem)
         }
         addMenuItem(L10n.airDrop, action: #selector(sendSelectedItemsViaAirDrop(_:)), to: menu, enabled: canPerformFileAction(#selector(sendSelectedItemsViaAirDrop(_:))), symbol: .airDrop)
         addMenuItem(L10n.showInfo, action: #selector(showSelectedItemsInfo(_:)), to: menu, symbol: .info)
@@ -59,9 +60,10 @@ extension FilePaneViewController: NSMenuDelegate {
              #selector(goForward(_:)),
              #selector(focusPathInput(_:)):
             return true
-        case #selector(renameSelectedItem(_:)),
-             #selector(openSelectedItemsInTerminal(_:)):
+        case #selector(renameSelectedItem(_:)):
             return selectedItems().count == 1
+        case #selector(openSelectedItemsInTerminal(_:)):
+            return true
         case #selector(copySelectionToPasteboard(_:)),
              #selector(copySelectedItems(_:)),
              #selector(moveSelectedItems(_:)),
@@ -76,7 +78,7 @@ extension FilePaneViewController: NSMenuDelegate {
         case #selector(selectAllItems(_:)):
             return viewModel.viewMode == .list ? tableView.numberOfRows > 0 : collectionView.numberOfItems(inSection: 0) > 0
         case #selector(showShareMenuProxy(_:)):
-            return shareMenu() != nil
+            return sharePicker() != nil
         case #selector(sendSelectedItemsViaAirDrop(_:)):
             guard let airDropService = airDropSharingService() else { return false }
             return airDropService.canPerform(withItems: selectedFileURLs())
@@ -150,9 +152,13 @@ extension FilePaneViewController: NSMenuDelegate {
 
     @objc func openSelectedItemsInTerminal(_ sender: Any?) {
         activationHandler?(self)
-        guard let item = selectedItems().first else { return }
         guard let terminalURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.Terminal") else { return }
-        let targetURL = item.isBrowsableDirectory ? item.url : item.url.deletingLastPathComponent()
+        let targetURL: URL
+        if let item = selectedItems().first {
+            targetURL = item.isBrowsableDirectory ? item.url : item.url.deletingLastPathComponent()
+        } else {
+            targetURL = viewModel.currentURL
+        }
         NSWorkspace.shared.open(
             [targetURL],
             withApplicationAt: terminalURL,
@@ -199,9 +205,9 @@ extension FilePaneViewController: NSMenuDelegate {
     }
 
     func showShareMenu(relativeTo view: NSView?) {
-        guard let menu = shareMenu() else { return }
+        guard let picker = sharePicker() else { return }
         let anchorView = view ?? self.view
-        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: anchorView.bounds.height), in: anchorView)
+        picker.show(relativeTo: anchorView.bounds, of: anchorView, preferredEdge: .minY)
     }
 
     @objc func openSelectedItemsWithApp(_ sender: NSMenuItem) {
@@ -423,23 +429,20 @@ extension FilePaneViewController: NSMenuDelegate {
         menu.addItem(item)
     }
 
-    private func shareMenu() -> NSMenu? {
+    private func shareMenuItem() -> NSMenuItem? {
+        guard let picker = sharePicker() else { return nil }
+        let item = picker.standardShareMenuItem
+        item.title = L10n.share
+        item.image = AppIconProvider.menuImage(.share, accessibilityDescription: L10n.share)
+        return item
+    }
+
+    private func sharePicker() -> NSSharingServicePicker? {
         let urls = selectedFileURLs()
         guard !urls.isEmpty else { return nil }
-        let services = NSSharingService.sharingServices(forItems: urls).filter { service in
-            service.menuItemTitle != airDropSharingService()?.menuItemTitle
-        }
-        guard !services.isEmpty else { return nil }
-
-        let menu = NSMenu(title: L10n.share)
-        for service in services where service.canPerform(withItems: urls) {
-            let item = NSMenuItem(title: service.menuItemTitle, action: #selector(performSharingService(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = service
-            item.image = AppIconProvider.menuImage(from: service.image, accessibilityDescription: item.title)
-            menu.addItem(item)
-        }
-        return menu.items.isEmpty ? nil : menu
+        let picker = NSSharingServicePicker(items: urls)
+        picker.delegate = self
+        return picker
     }
 
     private func tagsMenu() -> NSMenu {
@@ -479,11 +482,17 @@ extension FilePaneViewController: NSMenuDelegate {
     private func appStoreSearchQuery() -> String? {
         guard let item = selectedItems().first, !item.isDirectory else { return nil }
         let url = item.url
+        if !url.pathExtension.isEmpty {
+            return url.pathExtension
+        }
         if let typeIdentifier = item.typeIdentifier,
            let type = UTType(typeIdentifier) {
-            return type.localizedDescription ?? url.pathExtension
+            if let preferredExtension = type.preferredFilenameExtension, !preferredExtension.isEmpty {
+                return preferredExtension
+            }
+            return type.identifier
         }
-        return url.pathExtension.isEmpty ? url.lastPathComponent : url.pathExtension
+        return url.lastPathComponent
     }
 
     private func newItemMenuImage(for kind: NewItemKind) -> NSImage? {
@@ -512,6 +521,13 @@ extension FilePaneViewController: NSMenuDelegate {
 
     private func airDropSharingService() -> NSSharingService? {
         NSSharingService(named: .sendViaAirDrop)
+    }
+
+    func sharingServicePicker(_ sharingServicePicker: NSSharingServicePicker, sharingServicesForItems items: [Any], proposedSharingServices proposedServices: [NSSharingService]) -> [NSSharingService] {
+        let airDropTitle = airDropSharingService()?.menuItemTitle
+        return proposedServices.filter { service in
+            service.menuItemTitle != airDropTitle
+        }
     }
 
     private func confirmPermanentDelete(count: Int) -> Bool {

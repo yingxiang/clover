@@ -147,8 +147,25 @@ enum NewItemKind: Int, CaseIterable {
             }
         }
         for applicationName in applicationNames {
-            if let path = NSWorkspace.shared.fullPath(forApplication: applicationName) {
-                return URL(fileURLWithPath: path)
+            if let url = Self.applicationURL(named: applicationName) {
+                return url
+            }
+        }
+        return nil
+    }
+
+    private static func applicationURL(named applicationName: String) -> URL? {
+        let fileManager = FileManager.default
+        let candidateDirectories = [
+            URL(fileURLWithPath: "/Applications", isDirectory: true),
+            URL(fileURLWithPath: "/System/Applications", isDirectory: true),
+            fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Applications", isDirectory: true)
+        ]
+
+        for directory in candidateDirectories {
+            let url = directory.appendingPathComponent("\(applicationName).app", isDirectory: true)
+            if fileManager.fileExists(atPath: url.path) {
+                return url
             }
         }
         return nil
