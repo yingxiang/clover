@@ -524,7 +524,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				INFOPLIST_FILE = Clover/Resources/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				MARKETING_VERSION = 26.5.1;
+				MARKETING_VERSION = 26.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lingchen.clover;
 				PRODUCT_NAME = Clover;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -690,7 +690,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				INFOPLIST_FILE = Clover/Resources/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				MARKETING_VERSION = 26.5.1;
+				MARKETING_VERSION = 26.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lingchen.clover;
 				PRODUCT_NAME = Clover;
 				PROVISIONING_PROFILE_SPECIFIER = "";
