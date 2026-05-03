@@ -26,13 +26,13 @@ enum FileGridDetailProvider {
     }
 
     private static func directoryItemCount(at url: URL) async -> Int {
-        await Task.detached(priority: .utility) {
+        await Task.detached(priority: .userInitiated) {
             (try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]).count) ?? 0
         }.value
     }
 
     private static func packageDirectorySize(at url: URL) async -> Int64? {
-        await Task.detached(priority: .utility) {
+        await Task.detached(priority: .userInitiated) {
             packageDirectorySizeSync(at: url)
         }.value
     }

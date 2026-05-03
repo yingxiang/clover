@@ -1285,7 +1285,7 @@ final class FilePaneViewController: NSViewController {
 
         pendingDetailCallbacks[url] = completion.map { [$0] } ?? []
 
-        Task { [weak self] in
+        Task(priority: .userInitiated) { [weak self] in
             let detail = await FileGridDetailProvider.detail(for: item)
             await MainActor.run {
                 guard let self else { return }

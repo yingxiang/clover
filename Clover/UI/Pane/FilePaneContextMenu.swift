@@ -1,6 +1,32 @@
 import AppKit
 import UniformTypeIdentifiers
 
+private enum ApplicationMenuIconLoader {
+    nonisolated(unsafe) private static let cache = NSCache<NSURL, NSImage>()
+
+    static func cachedIcon(for appURL: URL) -> NSImage? {
+        cache.object(forKey: appURL as NSURL)
+    }
+
+    static func loadIcon(for appURL: URL, accessibilityDescription: String?, completion: @escaping @Sendable (NSImage?) -> Void) {
+        let cacheKey = appURL as NSURL
+        if let cached = cache.object(forKey: cacheKey) {
+            completion(cached)
+            return
+        }
+
+        DispatchQueue.global(qos: .utility).async {
+            let image = AppIconProvider.menuFileImage(appURL.path, accessibilityDescription: accessibilityDescription)
+            if let image {
+                cache.setObject(image, forKey: cacheKey)
+            }
+            DispatchQueue.main.async {
+                completion(image)
+            }
+        }
+    }
+}
+
 extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServicePickerDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
@@ -78,10 +104,9 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
         case #selector(selectAllItems(_:)):
             return viewModel.viewMode == .list ? tableView.numberOfRows > 0 : collectionView.numberOfItems(inSection: 0) > 0
         case #selector(showShareMenuProxy(_:)):
-            return sharePicker() != nil
+            return !selectedFileURLs().isEmpty
         case #selector(sendSelectedItemsViaAirDrop(_:)):
-            guard let airDropService = airDropSharingService() else { return false }
-            return airDropService.canPerform(withItems: selectedFileURLs())
+            return airDropSharingService() != nil && !selectedFileURLs().isEmpty
         case #selector(openSelectedItem):
             return selectedItems().count == 1
         default:
@@ -186,17 +211,19 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
     @objc func sendSelectedItemsViaAirDrop(_ sender: Any?) {
         activationHandler?(self)
         guard let service = airDropSharingService() else { return }
-        let urls = selectedFileURLs()
-        guard service.canPerform(withItems: urls) else { return }
-        service.perform(withItems: urls)
+        withSelectedFileSecurityScopes { urls in
+            guard service.canPerform(withItems: urls) else { return }
+            service.perform(withItems: urls)
+        }
     }
 
     @objc func performSharingService(_ sender: NSMenuItem) {
         activationHandler?(self)
         guard let service = sender.representedObject as? NSSharingService else { return }
-        let urls = selectedFileURLs()
-        guard service.canPerform(withItems: urls) else { return }
-        service.perform(withItems: urls)
+        withSelectedFileSecurityScopes { urls in
+            guard service.canPerform(withItems: urls) else { return }
+            service.perform(withItems: urls)
+        }
     }
 
     @objc func showShareMenuProxy(_ sender: Any?) {
@@ -416,11 +443,21 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
     }
 
     private func makeApplicationMenuItem(appURL: URL) -> NSMenuItem {
-        let item = NSMenuItem(title: FileManager.default.displayName(atPath: appURL.path), action: #selector(openSelectedItemsWithApp(_:)), keyEquivalent: "")
+        let item = NSMenuItem(title: applicationMenuTitle(for: appURL), action: #selector(openSelectedItemsWithApp(_:)), keyEquivalent: "")
         item.target = self
         item.representedObject = appURL
-        item.image = AppIconProvider.menuFileImage(appURL.path, accessibilityDescription: item.title)
+        item.image = ApplicationMenuIconLoader.cachedIcon(for: appURL)
+            ?? AppIconProvider.menuImage(.applications, accessibilityDescription: item.title)
+        ApplicationMenuIconLoader.loadIcon(for: appURL, accessibilityDescription: item.title) { [weak item] image in
+            guard let item, item.representedObject as? URL == appURL, let image else { return }
+            item.image = image
+        }
         return item
+    }
+
+    private func applicationMenuTitle(for appURL: URL) -> String {
+        let title = appURL.deletingPathExtension().lastPathComponent
+        return title.isEmpty ? appURL.lastPathComponent : title
     }
 
     private func addMenuSectionHeader(_ title: String, to menu: NSMenu) {
@@ -438,11 +475,11 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
     }
 
     private func sharePicker() -> NSSharingServicePicker? {
-        let urls = selectedFileURLs()
-        guard !urls.isEmpty else { return nil }
-        let picker = NSSharingServicePicker(items: urls)
-        picker.delegate = self
-        return picker
+        withSelectedFileSecurityScopes { urls in
+            let picker = NSSharingServicePicker(items: urls)
+            picker.delegate = self
+            return picker
+        }
     }
 
     private func tagsMenu() -> NSMenu {
@@ -505,6 +542,30 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
 
     private func selectedFileURLs() -> [URL] {
         selectedItems().map(\.url)
+    }
+
+    private func withSelectedFileSecurityScopes<T>(_ body: ([URL]) -> T) -> T? {
+        let urls = selectedFileURLs()
+        guard !urls.isEmpty else { return nil }
+        let scopes = startSecurityScopes(for: urls)
+        defer { stopSecurityScopes(scopes) }
+        return body(urls)
+    }
+
+    private func startSecurityScopes(for urls: [URL]) -> [(url: URL, didStartAccessing: Bool)] {
+        var scopedPaths: Set<String> = []
+        return urls.compactMap { url in
+            guard let securityScopeURL = directoryAccessStore.securityScopeURL(for: url) else { return nil }
+            let path = securityScopeURL.path
+            guard scopedPaths.insert(path).inserted else { return nil }
+            return (url: securityScopeURL, didStartAccessing: securityScopeURL.startAccessingSecurityScopedResource())
+        }
+    }
+
+    private func stopSecurityScopes(_ scopes: [(url: URL, didStartAccessing: Bool)]) {
+        for scope in scopes where scope.didStartAccessing {
+            scope.url.stopAccessingSecurityScopedResource()
+        }
     }
 
     private func selectedItemsLabelNumber() -> Int? {
