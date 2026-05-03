@@ -236,6 +236,7 @@ extension FilePaneViewController {
     }
 
     @objc private func selectTypeFilter(_ sender: NSMenuItem) {
+        pendingSelectionURLs = selectedItems().map(\.url)
         viewModel.setTypeFilter(sender.representedObject as? String)
         updateTypeColumnTitle()
         DispatchQueue.main.async { [weak self] in

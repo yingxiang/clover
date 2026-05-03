@@ -122,6 +122,56 @@ final class FilePaneViewModelTests: XCTestCase {
         XCTAssertEqual(provider.listedURLs, [root])
     }
 
+    func testTypeFilterUsesLoadedItemsWithoutReloadingDirectory() async throws {
+        let root = URL(fileURLWithPath: "/tmp/CloverPane")
+        let provider = MockFileProvider(itemsByURL: [
+            root: [
+                makeItem(name: "Notes.txt", parent: root, typeIdentifier: "public.plain-text"),
+                makeItem(name: "Archive.zip", parent: root, typeIdentifier: "public.zip-archive"),
+                makeItem(name: "Images", parent: root, isDirectory: true)
+            ]
+        ])
+        let viewModel = FilePaneViewModel(currentURL: root, provider: provider)
+        var fullReloadCount = 0
+        var visibleItemsChangeCount = 0
+        viewModel.onChange = {
+            fullReloadCount += 1
+        }
+        viewModel.onVisibleItemsChange = {
+            visibleItemsChangeCount += 1
+        }
+
+        viewModel.load()
+        try await waitForItems(in: viewModel, count: 3)
+        viewModel.setTypeFilter("uti:public.plain-text")
+
+        XCTAssertEqual(viewModel.items.map(\.name), ["Notes.txt"])
+        XCTAssertEqual(provider.listedURLs, [root])
+        XCTAssertEqual(fullReloadCount, 1)
+        XCTAssertEqual(visibleItemsChangeCount, 1)
+    }
+
+    func testClearingTypeFilterRestoresLoadedItemsWithoutReloadingDirectory() async throws {
+        let root = URL(fileURLWithPath: "/tmp/CloverPane")
+        let provider = MockFileProvider(itemsByURL: [
+            root: [
+                makeItem(name: "Notes.txt", parent: root, typeIdentifier: "public.plain-text"),
+                makeItem(name: "Archive.zip", parent: root, typeIdentifier: "public.zip-archive")
+            ]
+        ])
+        let viewModel = FilePaneViewModel(currentURL: root, provider: provider)
+
+        viewModel.load()
+        try await waitForItems(in: viewModel, count: 2)
+        viewModel.setTypeFilter("uti:public.plain-text")
+        XCTAssertEqual(viewModel.items.map(\.name), ["Notes.txt"])
+
+        viewModel.setTypeFilter(nil)
+
+        XCTAssertEqual(viewModel.items.map(\.name), ["Archive.zip", "Notes.txt"])
+        XCTAssertEqual(provider.listedURLs, [root])
+    }
+
     func testSearchMatchesChineseNameByFullPinyinAndInitials() async throws {
         let root = URL(fileURLWithPath: "/tmp/CloverPane")
         let provider = MockFileProvider(itemsByURL: [
@@ -164,7 +214,13 @@ final class FilePaneViewModelTests: XCTestCase {
         }
     }
 
-    private func makeItem(name: String, parent: URL, isDirectory: Bool = false, isHidden: Bool = false) -> FileItem {
+    private func makeItem(
+        name: String,
+        parent: URL,
+        isDirectory: Bool = false,
+        isHidden: Bool = false,
+        typeIdentifier: String? = nil
+    ) -> FileItem {
         FileItem(
             url: parent.appendingPathComponent(name, isDirectory: isDirectory),
             name: name,
@@ -172,7 +228,7 @@ final class FilePaneViewModelTests: XCTestCase {
             size: isDirectory ? nil : 10,
             modificationDate: nil,
             creationDate: nil,
-            typeIdentifier: isDirectory ? "public.folder" : "public.data",
+            typeIdentifier: typeIdentifier ?? (isDirectory ? "public.folder" : "public.data"),
             isHidden: isHidden
         )
     }

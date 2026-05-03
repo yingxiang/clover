@@ -52,6 +52,9 @@ final class FilePaneViewController: NSViewController {
             Logger.ui.debug("Pane onChange -> reload. mode=\(self.viewModel.viewMode.rawValue, privacy: .public) items=\(self.viewModel.items.count) rows=\(self.viewModel.listRows.count) pendingRename=\(self.pendingRenameURL?.path ?? "nil", privacy: .public)")
             self.reload()
         }
+        self.viewModel.onVisibleItemsChange = { [weak self] in
+            self?.applyVisibleItemsChange()
+        }
         self.viewModel.onViewModeChange = { [weak self] mode in
             self?.applyViewModeChange(mode)
         }
@@ -462,6 +465,19 @@ final class FilePaneViewController: NSViewController {
         updateCommandAvailability()
         pathChangeHandler?(self)
         Logger.ui.debug("reload end. mode=\(self.viewModel.viewMode.rawValue, privacy: .public) items=\(self.viewModel.items.count) rows=\(self.viewModel.listRows.count) selectedIndexes=\(self.selectedItemIndexes().description, privacy: .public)")
+    }
+
+    private func applyVisibleItemsChange() {
+        Logger.ui.debug("visible items changed. mode=\(self.viewModel.viewMode.rawValue, privacy: .public) items=\(self.viewModel.items.count) rows=\(self.viewModel.listRows.count)")
+        updateTypeColumnTitle()
+        switch viewModel.viewMode {
+        case .list:
+            tableView.reloadData()
+        case .grid:
+            collectionView.reloadData()
+        }
+        restorePendingSelectionIfNeeded()
+        updateCommandAvailability()
     }
 
     private func updateNavigationButtons() {

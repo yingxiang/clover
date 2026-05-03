@@ -41,6 +41,7 @@ final class FilePaneViewModel {
     private var directoryChildren: [URL: [FileItem]] = [:]
 
     var onChange: (() -> Void)?
+    var onVisibleItemsChange: (() -> Void)?
     var onViewModeChange: ((FileViewMode) -> Void)?
     var onListMutation: ((FilePaneListMutation) -> Void)?
     var onStatusChange: ((String) -> Void)?
@@ -170,9 +171,10 @@ final class FilePaneViewModel {
     }
 
     func setTypeFilter(_ typeFilter: String?) {
+        guard self.typeFilter != typeFilter else { return }
         self.typeFilter = typeFilter
         applyFilters()
-        onChange?()
+        onVisibleItemsChange?()
         onStatusChange?("\(items.count) items")
     }
 
