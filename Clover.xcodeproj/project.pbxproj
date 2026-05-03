@@ -71,7 +71,7 @@
 		12C52E595F2E188272B6FA731672F6B8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		182C4A8CD037BD81B43F6432EC7FA5D6 /* FileGridDetailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileGridDetailProvider.swift; sourceTree = "<group>"; };
 		1D0D4AE91D19658592830143B13D0A1D /* FileOperationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOperationServiceTests.swift; sourceTree = "<group>"; };
-		22C5B4267D233F3000441EEB4C8911B6 /* Localizable.xcstrings */ = {isa = PBXFileReference; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		22C5B4267D233F3000441EEB4C8911B6 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		236747207772FEFB695BD2E22339D4CD /* FileGridItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileGridItem.swift; sourceTree = "<group>"; };
 		29BB0C3BB9CFAE82C1C6D9E7896DC434 /* FileProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileProvider.swift; sourceTree = "<group>"; };
 		2BFF4D7788A080F55551F7F62546A68D /* LocalFileProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileProvider.swift; sourceTree = "<group>"; };
@@ -385,10 +385,6 @@
 			attributes = {
 				LastUpgradeCheck = 1000;
 				TargetAttributes = {
-					DA5988DB3BA36F080AB79615FD4EB8C6 = {
-						DevelopmentTeam = GBJH26W27R;
-						ProvisioningStyle = Automatic;
-					};
 					F1897C3578C0E316456FD5E034F91911 = {
 						TestTargetID = DA5988DB3BA36F080AB79615FD4EB8C6;
 					};
@@ -496,16 +492,32 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Clover/Clover.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
+				CODE_SIGN_STYLE = Manual;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = GBJH26W27R;
+				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = GBJH26W27R;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_FILE_ACCESS_MOVIES_FOLDER = readwrite;
+				ENABLE_FILE_ACCESS_MUSIC_FOLDER = readwrite;
+				ENABLE_FILE_ACCESS_PICTURE_FOLDER = readwrite;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				INFOPLIST_FILE = Clover/Resources/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				PRODUCT_BUNDLE_IDENTIFIER = com.lingchen.clover;
 				PRODUCT_NAME = Clover;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = clover_debug;
 				STRIP_INSTALLED_PRODUCT = NO;
 				SWIFT_MODULE_NAME = Clover;
 			};
