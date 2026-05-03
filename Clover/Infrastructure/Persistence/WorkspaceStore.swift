@@ -77,7 +77,7 @@ final class WorkspaceStore {
             return url
         }
 
-        return fileManager.homeDirectoryForCurrentUser
+        return UserDirectories.homeURL
     }
 
     private func directoryExists(at url: URL) -> Bool {

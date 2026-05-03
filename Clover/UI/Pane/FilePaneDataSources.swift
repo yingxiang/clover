@@ -27,7 +27,7 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
                 isExpanded: viewModel.listRowIsExpanded(at: row)
             )
             Task { [weak imageView = cell.imageView] in
-                guard let thumbnail = await FileThumbnailProvider.thumbnail(for: item, size: 18) else { return }
+                guard let thumbnail = await FileThumbnailProvider.thumbnail(for: item, size: 18, directoryAccessStore: directoryAccessStore) else { return }
                 await MainActor.run {
                     guard imageView?.toolTip == item.url.absoluteString else { return }
                     imageView?.image = thumbnail
@@ -129,6 +129,7 @@ extension FilePaneViewController: NSCollectionViewDataSource, @preconcurrency NS
             gridItem.configure(
                 with: fileItem,
                 detail: detailPlaceholderValue(for: fileItem),
+                directoryAccessStore: directoryAccessStore,
                 loadDetailIfNeeded: { [weak self, weak collectionView, weak gridItem] completion in
                     self?.loadDetailIfNeeded(for: fileItem, tableRow: nil, collectionIndex: indexPath.item) { detail in
                         guard let collectionView, let gridItem else { return }

@@ -16,6 +16,7 @@
 		41E79972483B49ADB6E8E605DC03D258 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 22C5B4267D233F3000441EEB4C8911B6 /* Localizable.xcstrings */; };
 		43F13BAD9E217E4223FB44501698DA2C /* PathBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C427080944D958076079D8A2630919CE /* PathBarView.swift */; };
 		44B4C66F81F828C32A4A98205A3C119E /* PaneLayoutControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8F9925126EB6F83676A96DF920460D /* PaneLayoutControllerTests.swift */; };
+		4AB5F1C94D2E4A8B9C3D7E01 /* DirectoryAccessStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B2D8F0E91A34C5BA7D6E2F3 /* DirectoryAccessStoreTests.swift */; };
 		50BC3E096E6677189DE412ED596C498E /* RootSplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75594AF8983889F186AA0422731168C /* RootSplitViewController.swift */; };
 		5301A043C5464227552C15A084BE6EA9 /* FileSortServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 459639B48F030FC3E6767565C49712B9 /* FileSortServiceTests.swift */; };
 		544ABD8EAF04C6032626D5ED20CC4A0B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFACA9DFBC871F5278FFBFAFB44F9EFD /* AppDelegate.swift */; };
@@ -87,6 +88,7 @@
 		560526E24535B79A4868A1CEA9BB538B /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
 		5DEFF10CDFF338362FD6AD57C74C2497 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		5FF67561190C5B111ED2C9480AD27945 /* FileSortService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSortService.swift; sourceTree = "<group>"; };
+		6B2D8F0E91A34C5BA7D6E2F3 /* DirectoryAccessStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryAccessStoreTests.swift; sourceTree = "<group>"; };
 		6C26D40858E1FB3DAF6558DA7B15374B /* SidebarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarViewController.swift; sourceTree = "<group>"; };
 		731A911A9436021A67F9CFD4FEDDDFEF /* CloverTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CloverTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7714B83ECFBB8A78FD7BF902226484FB /* WorkspaceStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStoreTests.swift; sourceTree = "<group>"; };
@@ -139,6 +141,7 @@
 		27C4A59F10E80A2E1D6195C0DA0340E9 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				6B2D8F0E91A34C5BA7D6E2F3 /* DirectoryAccessStoreTests.swift */,
 				1D0D4AE91D19658592830143B13D0A1D /* FileOperationServiceTests.swift */,
 				ADF037061F931775A0EDC975B818010B /* FilePaneViewModelTests.swift */,
 				459639B48F030FC3E6767565C49712B9 /* FileSortServiceTests.swift */,
@@ -467,6 +470,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4AB5F1C94D2E4A8B9C3D7E01 /* DirectoryAccessStoreTests.swift in Sources */,
 				C58011295A78F0B6B0CBE8D21F67131B /* FileOperationServiceTests.swift in Sources */,
 				F325566F33E948576C19979F248D6ECD /* FilePaneViewModelTests.swift in Sources */,
 				5301A043C5464227552C15A084BE6EA9 /* FileSortServiceTests.swift in Sources */,

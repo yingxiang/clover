@@ -6,7 +6,7 @@ final class PathBarView: NSView, NSTextFieldDelegate {
 
     private let stackView = NSStackView()
     private let pathField = NSTextField()
-    private var currentURL = FileManager.default.homeDirectoryForCurrentUser
+    private var currentURL = UserDirectories.homeURL
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -153,7 +153,7 @@ final class PathBarView: NSView, NSTextFieldDelegate {
 
     private func displayPath(for url: URL) -> String {
         let path = url.standardizedFileURL.path
-        let home = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL.path
+        let home = UserDirectories.homeURL.standardizedFileURL.path
         if path == home {
             return "~"
         }

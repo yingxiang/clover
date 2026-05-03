@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 final class DirectoryAccessStore {
     private let fileManager: FileManager
@@ -31,11 +32,16 @@ final class DirectoryAccessStore {
 
     func resolvedURL(for url: URL) -> URL? {
         let standardizedURL = url.standardizedFileURL
-        guard let data = bookmarks()[standardizedURL.path] else { return nil }
+
+        guard let match = bookmarkMatch(for: standardizedURL) else {
+            return nil
+        }
         do {
-            return try bookmarkStore.resolveBookmark(data)
+            let resolvedBookmarkURL = try bookmarkStore.resolveBookmark(match.data)
+            return resolvedURL(for: standardizedURL, from: resolvedBookmarkURL, bookmarkPath: match.path)
         } catch {
-            removeBookmark(for: standardizedURL)
+            Logger.security.error("Directory access bookmark failed requested=\(standardizedURL.path, privacy: .public) granted=\(match.path, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
+            removeBookmark(forPath: match.path)
             return nil
         }
     }
@@ -45,6 +51,42 @@ final class DirectoryAccessStore {
         var storedBookmarks = bookmarks()
         storedBookmarks[standardizedURL.path] = try bookmarkStore.bookmarkData(for: standardizedURL)
         try persistBookmarks(storedBookmarks)
+        Logger.security.debug("Directory access saved path=\(standardizedURL.path, privacy: .public)")
+    }
+
+    func hasDirectoryAccess(to url: URL) -> Bool {
+        let standardizedURL = url.standardizedFileURL
+        if resolvedURL(for: standardizedURL) != nil {
+            return true
+        }
+
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(atPath: standardizedURL.path, isDirectory: &isDirectory), isDirectory.boolValue else {
+            return false
+        }
+
+        do {
+            _ = try fileManager.contentsOfDirectory(at: standardizedURL, includingPropertiesForKeys: nil, options: [])
+            return true
+        } catch {
+            Logger.security.debug("Directory access check denied url=\(standardizedURL.path, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
+            return false
+        }
+    }
+
+    func securityScopeURL(for url: URL) -> URL? {
+        let standardizedURL = url.standardizedFileURL
+        guard let match = bookmarkMatch(for: standardizedURL) else {
+            return nil
+        }
+
+        do {
+            return try bookmarkStore.resolveBookmark(match.data).standardizedFileURL
+        } catch {
+            Logger.security.error("Directory access bookmark failed requested=\(standardizedURL.path, privacy: .public) granted=\(match.path, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
+            removeBookmark(forPath: match.path)
+            return nil
+        }
     }
 
     private func bookmarks() -> [String: Data] {
@@ -64,6 +106,7 @@ final class DirectoryAccessStore {
             return decoded
         } catch {
             cachedBookmarks = [:]
+            Logger.security.error("Load directory bookmarks failed error=\(error.localizedDescription, privacy: .public)")
             return [:]
         }
     }
@@ -79,8 +122,53 @@ final class DirectoryAccessStore {
     }
 
     private func removeBookmark(for url: URL) {
+        removeBookmark(forPath: url.standardizedFileURL.path)
+    }
+
+    private func removeBookmark(forPath path: String) {
         var storedBookmarks = bookmarks()
-        storedBookmarks.removeValue(forKey: url.standardizedFileURL.path)
+        storedBookmarks.removeValue(forKey: path)
         try? persistBookmarks(storedBookmarks)
+        Logger.security.debug("Directory access bookmark removed path=\(path, privacy: .public)")
+    }
+
+    private func bookmarkMatch(for url: URL) -> (path: String, data: Data)? {
+        let urlPath = url.path
+        return bookmarks()
+            .filter { isPath(urlPath, equalToOrInside: $0.key) }
+            .max { lhs, rhs in lhs.key.count < rhs.key.count }
+            .map { (path: $0.key, data: $0.value) }
+    }
+
+    private func resolvedURL(for requestedURL: URL, from resolvedBookmarkURL: URL, bookmarkPath: String) -> URL {
+        let bookmarkURL = URL(fileURLWithPath: bookmarkPath, isDirectory: true).standardizedFileURL
+        let relativePath = requestedURL.pathComponents
+            .dropFirst(bookmarkURL.pathComponents.count)
+            .joined(separator: "/")
+
+        guard !relativePath.isEmpty else {
+            return resolvedBookmarkURL.standardizedFileURL
+        }
+
+        return resolvedBookmarkURL
+            .appendingPathComponent(relativePath, isDirectory: true)
+            .standardizedFileURL
+    }
+
+    private func isPath(_ path: String, equalToOrInside ancestorPath: String) -> Bool {
+        guard path == ancestorPath || path.hasPrefix(ancestorPath) else {
+            return false
+        }
+
+        if ancestorPath == "/" {
+            return true
+        }
+
+        guard path.count > ancestorPath.count else {
+            return true
+        }
+
+        let boundaryIndex = path.index(path.startIndex, offsetBy: ancestorPath.count)
+        return path[boundaryIndex] == "/"
     }
 }

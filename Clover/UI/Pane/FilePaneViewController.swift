@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 
 final class FilePaneViewController: NSViewController {
     let viewModel: FilePaneViewModel
-    private let directoryAccessStore: DirectoryAccessStore
+    let directoryAccessStore: DirectoryAccessStore
     var activationHandler: ((FilePaneViewController) -> Void)?
     var statusHandler: ((String) -> Void)?
     var pathChangeHandler: ((FilePaneViewController) -> Void)?
@@ -27,6 +27,7 @@ final class FilePaneViewController: NSViewController {
     private var pendingDetailCallbacks: [URL: [(String) -> Void]] = [:]
     private var previewKeyMonitor: EventMonitorToken?
     private var previewIndexObservation: NSKeyValueObservation?
+    private var previewSecurityScopes: [(url: URL, didStartAccessing: Bool)] = []
     var isUpdatingSortIndicators = false
     private var searchTask: Task<Void, Never>?
     var pendingSelectionURLs: [URL] = []
@@ -178,6 +179,7 @@ final class FilePaneViewController: NSViewController {
         currentPreviewIndex = selectedIndex
         Self.previewOwner = self
         guard let panel = QLPreviewPanel.shared() else { return }
+        startPreviewSecurityScopes(for: previewItems)
         panel.dataSource = self
         panel.delegate = self
         panel.reloadData()
@@ -512,6 +514,7 @@ final class FilePaneViewController: NSViewController {
             return false
         }
 
+        Logger.ui.debug("Directory access panel after error url=\(requestedURL.standardizedFileURL.path, privacy: .public)")
         let panel = NSOpenPanel()
         panel.title = L10n.grantFolderAccess
         panel.message = L10n.grantFolderAccessMessage(requestedURL.lastPathComponent.isEmpty ? requestedURL.path : requestedURL.lastPathComponent)
@@ -526,27 +529,34 @@ final class FilePaneViewController: NSViewController {
         panel.beginSheetModal(for: window) { [weak self] response in
             guard let self else { return }
             self.isPresentingDirectoryAccessPanel = false
+            Logger.ui.debug("Directory access panel result response=\(response.rawValue, privacy: .public) selected=\(panel.url?.standardizedFileURL.path ?? "nil", privacy: .public)")
             guard response == .OK, let selectedURL = panel.url else { return }
 
             do {
                 try self.directoryAccessStore.saveAccess(to: selectedURL)
-                self.open(selectedURL.standardizedFileURL)
             } catch {
-                self.showError(error)
+                Logger.ui.error("Failed to persist directory access bookmark: \(error.localizedDescription, privacy: .public)")
             }
+            self.open(selectedURL.standardizedFileURL)
         }
         return true
     }
 
     private func requestDirectoryAccessBeforeOpeningIfNeeded(for url: URL) -> Bool {
+        let standardizedURL = url.standardizedFileURL
+        let shouldRequest = shouldProactivelyRequestDirectoryAccess(for: url)
         guard !isPresentingDirectoryAccessPanel,
-              directoryAccessStore.resolvedURL(for: url) == nil,
-              shouldProactivelyRequestDirectoryAccess(for: url),
+              shouldRequest,
               let window = view.window else {
             return false
         }
 
-        let requestedURL = url.standardizedFileURL
+        guard !directoryAccessStore.hasDirectoryAccess(to: standardizedURL) else {
+            return false
+        }
+
+        let requestedURL = standardizedURL
+        Logger.ui.debug("Directory access panel proactive url=\(requestedURL.path, privacy: .public)")
         let panel = NSOpenPanel()
         panel.title = L10n.grantFolderAccess
         panel.message = L10n.grantFolderAccessMessage(requestedURL.lastPathComponent)
@@ -561,14 +571,15 @@ final class FilePaneViewController: NSViewController {
         panel.beginSheetModal(for: window) { [weak self] response in
             guard let self else { return }
             self.isPresentingDirectoryAccessPanel = false
+            Logger.ui.debug("Directory access panel result response=\(response.rawValue, privacy: .public) selected=\(panel.url?.standardizedFileURL.path ?? "nil", privacy: .public)")
             guard response == .OK, let selectedURL = panel.url else { return }
 
             do {
                 try self.directoryAccessStore.saveAccess(to: selectedURL)
-                self.viewModel.load(url: selectedURL.standardizedFileURL)
             } catch {
-                self.showError(error)
+                Logger.ui.error("Failed to persist directory access bookmark: \(error.localizedDescription, privacy: .public)")
             }
+            self.viewModel.load(url: selectedURL.standardizedFileURL)
         }
         return true
     }
@@ -585,7 +596,7 @@ final class FilePaneViewController: NSViewController {
     private func shouldRequestDirectoryAccess(for url: URL) -> Bool {
         guard url.isFileURL else { return false }
         let standardizedURL = url.standardizedFileURL
-        let homeURL = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
+        let homeURL = UserDirectories.homeURL.standardizedFileURL
 
         if standardizedURL == homeURL {
             return true
@@ -599,7 +610,7 @@ final class FilePaneViewController: NSViewController {
     private func shouldProactivelyRequestDirectoryAccess(for url: URL) -> Bool {
         guard url.isFileURL else { return false }
         let standardizedURL = url.standardizedFileURL
-        let homeURL = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
+        let homeURL = UserDirectories.homeURL.standardizedFileURL
         let protectedFolderNames = Set(["Desktop", "Documents", "Downloads", "Movies", "Music", "Pictures"])
         return standardizedURL.deletingLastPathComponent().standardizedFileURL == homeURL
             && protectedFolderNames.contains(standardizedURL.lastPathComponent)
@@ -732,7 +743,26 @@ final class FilePaneViewController: NSViewController {
         previewIndexObservation = nil
         if panel.dataSource === self { panel.dataSource = nil }
         if panel.delegate === self { panel.delegate = nil }
+        stopPreviewSecurityScopes()
         Self.previewOwner = nil
+    }
+
+    private func startPreviewSecurityScopes(for urls: [URL]) {
+        stopPreviewSecurityScopes()
+        var scopedPaths: Set<String> = []
+        for url in urls {
+            guard let securityScopeURL = directoryAccessStore.securityScopeURL(for: url) else { continue }
+            let path = securityScopeURL.path
+            guard scopedPaths.insert(path).inserted else { continue }
+            previewSecurityScopes.append((url: securityScopeURL, didStartAccessing: securityScopeURL.startAccessingSecurityScopedResource()))
+        }
+    }
+
+    private func stopPreviewSecurityScopes() {
+        for scope in previewSecurityScopes where scope.didStartAccessing {
+            scope.url.stopAccessingSecurityScopedResource()
+        }
+        previewSecurityScopes.removeAll()
     }
 
     private func showPreview(at index: Int, in panel: QLPreviewPanel) {

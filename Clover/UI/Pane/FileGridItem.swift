@@ -117,6 +117,7 @@ final class FileGridItem: NSCollectionViewItem {
     func configure(
         with item: FileItem,
         detail: String,
+        directoryAccessStore: DirectoryAccessStore? = nil,
         loadDetailIfNeeded: ((@escaping (String) -> Void) -> Void)? = nil
     ) {
         thumbnailTask?.cancel()
@@ -131,7 +132,7 @@ final class FileGridItem: NSCollectionViewItem {
         updateSelectionAppearance()
 
         thumbnailTask = Task { [weak self] in
-            guard let thumbnail = await FileThumbnailProvider.thumbnail(for: item, size: 56), !Task.isCancelled else { return }
+            guard let thumbnail = await FileThumbnailProvider.thumbnail(for: item, size: 56, directoryAccessStore: directoryAccessStore), !Task.isCancelled else { return }
             await MainActor.run {
                 guard self?.representedURL == item.url else { return }
                 self?.iconView.image = thumbnail

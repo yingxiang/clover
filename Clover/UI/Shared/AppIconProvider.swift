@@ -159,7 +159,7 @@ enum NewItemKind: Int, CaseIterable {
         let candidateDirectories = [
             URL(fileURLWithPath: "/Applications", isDirectory: true),
             URL(fileURLWithPath: "/System/Applications", isDirectory: true),
-            fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Applications", isDirectory: true)
+            UserDirectories.homeURL.appendingPathComponent("Applications", isDirectory: true)
         ]
 
         for directory in candidateDirectories {

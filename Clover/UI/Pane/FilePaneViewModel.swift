@@ -48,7 +48,7 @@ final class FilePaneViewModel {
 
     init(
         id: UUID = UUID(),
-        currentURL: URL = FileManager.default.homeDirectoryForCurrentUser,
+        currentURL: URL = UserDirectories.homeURL,
         provider: any FileProvider,
         fileOperationService: FileOperationService? = nil
     ) {

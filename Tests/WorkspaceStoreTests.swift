@@ -41,6 +41,6 @@ final class WorkspaceStoreTests: XCTestCase {
             forwardHistory: []
         )
 
-        XCTAssertEqual(store.resolvedURL(for: missingState), FileManager.default.homeDirectoryForCurrentUser)
+        XCTAssertEqual(store.resolvedURL(for: missingState), UserDirectories.homeURL)
     }
 }

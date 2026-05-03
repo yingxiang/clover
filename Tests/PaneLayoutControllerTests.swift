@@ -41,7 +41,8 @@ final class PaneLayoutControllerTests: XCTestCase {
         let environment = AppEnvironment(
             fileProvider: provider,
             fileOperationService: FileOperationService(provider: provider),
-            workspaceStore: try! WorkspaceStore(workspaceURL: FileManager.default.temporaryDirectory.appendingPathComponent("PaneLayoutControllerTests.json"))
+            workspaceStore: try! WorkspaceStore(workspaceURL: FileManager.default.temporaryDirectory.appendingPathComponent("PaneLayoutControllerTests.json")),
+            directoryAccessStore: try! DirectoryAccessStore(storageURL: FileManager.default.temporaryDirectory.appendingPathComponent("PaneLayoutControllerTests-bookmarks.plist"))
         )
         return PaneLayoutController(environment: environment)
     }

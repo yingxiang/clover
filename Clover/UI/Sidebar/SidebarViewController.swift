@@ -58,7 +58,7 @@ final class SidebarViewController: NSViewController {
     }
 
     private static func defaultItems() -> [SidebarItem] {
-        let home = FileManager.default.homeDirectoryForCurrentUser
+        let home = UserDirectories.homeURL
         let userName = NSUserName()
         return [
             SidebarItem(title: userName.isEmpty ? L10n.sidebarHome : userName, url: home, systemIconName: AppSymbol.home.rawValue),
