@@ -32,7 +32,11 @@ Use this skill for development inside the Clover repository.
 - Disk work must be asynchronous and must not block the main thread.
 - Directory listing must return quickly. Do not perform recursive size, thumbnail, image metadata, package inspection, or other expensive per-item work while opening a folder; load that data asynchronously or lazily after the directory contents are visible.
 - Preserve the provider abstraction so remote, archive, and sync providers can later use the same UI.
-- When using restored bookmarks for user-selected folders such as Downloads, call `startAccessingSecurityScopedResource()` around provider operations and balance it with `stopAccessingSecurityScopedResource()`.
+- Use `UserDirectories.homeURL` for the real user's home directory. In the sandbox, `FileManager.default.homeDirectoryForCurrentUser` can point at the container home and break sidebar folders such as Downloads.
+- Directory permission checks must test current access each time: first resolve matching security-scoped bookmarks, then try direct directory readability. Do not rely on an "already authorized" flag.
+- When using restored bookmarks for user-selected folders such as Downloads, call `startAccessingSecurityScopedResource()` around provider, Quick Look thumbnail/preview, and sharing operations, then balance it with `stopAccessingSecurityScopedResource()`.
+- Treat list/grid filtering as an in-memory view-model operation. Type-filter changes should use the loaded `allItems` and update visible rows/items without triggering a full pane reload or directory listing.
+- Avoid synchronous app bundle icon/display-name lookup on the menu-building path. For Open With menus, show a generic icon immediately, then load and cache app icons asynchronously.
 - Keep project-owned Swift files under 1000 lines. Before adding substantial behavior, check the target file length with `wc -l`; if the edit would push it past 1000 lines, split by responsibility first.
 - Treat 800 lines as a warning threshold. Prefer extracting focused controllers, views, services, model types, helpers, or tests before the file becomes hard to review.
 - Do not copy QSpace, Path Finder, Finder, or other products' branding, icons, copy, or proprietary layout details.

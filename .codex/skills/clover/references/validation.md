@@ -57,7 +57,9 @@ When changing AppKit interactions, manually reason through or test the matching 
 - List/grid parity: operations available in list mode should also work in grid mode unless explicitly scoped.
 - Drag/drop: verify list-to-list, list-to-grid, grid-to-list, and grid-to-grid paths when drag/drop code changes. Include dropping onto blank grid space.
 - Thumbnails: list and grid cells should first show an icon, then replace it with a non-distorted Quick Look thumbnail when available.
+- Sandbox thumbnails/previews: when testing files in Downloads/Desktop/Documents or another user-selected folder, verify Quick Look thumbnails/previews do not log missing sandbox read access after access has been granted.
 - Detail reuse: if list or grid has already shown a file's derived detail text such as package size or folder item count, switching to the other view mode should reuse it immediately instead of recalculating it once per surface.
+- Type filter: selecting or clearing the Type header filter should not trigger a provider directory reload, clear pane-local detail caches, or restart unrelated detail work.
 - Quick Look: Space opens preview for the selected item; arrow keys move through pane items while preview is visible.
 - Quick Look animation: in list mode, the zoom should start from the left file icon area; closing should zoom back and crossfade instead of hard-disappearing.
 - Inline rename: Return and selected-name click should edit the visible filename in place.
@@ -66,12 +68,14 @@ When changing AppKit interactions, manually reason through or test the matching 
 - Pending item cancel: Esc or cancel on a pending new item should remove the placeholder and leave no file/folder created on disk.
 - List subtree toggles: expanding/collapsing a directory in list mode should not visibly flash or rebuild the whole pane; it should animate as a local row insertion/removal.
 - Cross-window operations: modifying files in one window should not make unrelated directories in other windows refresh or blink.
+- Open With: application menu items should appear quickly with fallback icons and fill real app icons asynchronously; app names with non-ASCII characters should display from the URL filename, not from compacted system log representations.
 
 ## Manual Review
 
 Before final response:
 
 - Search for direct UI-layer `FileManager` usage when touching file operations.
+- Search for sandbox-sensitive reads when touching thumbnails, Quick Look, sharing, Open With, or protected sidebar folders; confirm they go through `DirectoryAccessStore` or an active security scope.
 - Scan edited AppKit code for newly introduced deprecation warnings. Prefer replacing deprecated Cocoa APIs during the task instead of leaving warning debt behind, especially for `NSWorkspace` lookup helpers and sharing/menu APIs.
 - Search for list/grid asymmetry when changing file interactions:
 

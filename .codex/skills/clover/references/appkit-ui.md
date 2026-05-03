@@ -66,6 +66,7 @@ Rules:
 - Prefer table-native affordances for list headers: use `NSTableColumn.sortDescriptorPrototype` and `tableView(_:sortDescriptorsDidChange:)` for sortable columns, and keep the header's sort indicator synchronized with `FilePaneViewModel.sortOption`.
 - Put type filtering in the table header or another non-overlapping control. Do not float a filter popup over the table header, because it can cover section/header UI.
 - If a table header column opens a menu rather than sorting, make that visible in the title (for example `Type ▾`) and keep the actual filter state in the view model.
+- Type-filter selection should update visible list/grid items from `FilePaneViewModel` memory. Do not send it through the full pane `reload()` path because that clears derived-detail caches and restarts thumbnail/detail work.
 - Prefer SF Symbols or system icons through `AppIconProvider`; do not add third-party icon sets.
 - Keep context-menu setup, table delegate/data source behavior, and row interaction logic separable. If `FilePaneViewController` grows toward 800 lines, extract menu routing, table subclasses, or view construction into focused files.
 - Pane-local navigation controls belong with the pane path UI, not the global toolbar. Each pane should maintain its own back/forward history so multi-pane browsing remains independent.
@@ -79,8 +80,10 @@ Rules:
 
 - Show a system/file icon immediately, then replace it asynchronously with a Quick Look thumbnail when available.
 - Use the same thumbnail policy in list and grid views. Images, text, documents, and other Quick Look-supported files should show thumbnails; folders keep folder icons unless a provider-specific folder thumbnail is added later.
+- When generating Quick Look thumbnails or previewing files under a stored user-selected bookmark, start security-scoped access for the bookmarked ancestor while Quick Look reads the file.
 - List and grid views should share the same pane-local detail metadata cache. If one view has already resolved item count, package size, dimensions, or other visible detail text for an item, switching view modes must reuse that result instead of recalculating it.
 - In-flight detail loads should also be shared per item within a pane so switching between list and grid while metadata is still computing does not launch duplicate work.
+- Derived detail work triggered from a user-interactive table/grid update should not hop to a lower QoS task that can produce priority-inversion warnings.
 - Preserve thumbnail aspect ratio. Do not force `NSImage.size` to a square after Quick Look returns the image.
 - Grid names are maximum two lines, not forced two lines. The name selection background should shrink to one line when the name fits.
 - Grid detail text belongs below the name and is not part of selection highlighting. Follow Finder-like detail semantics: image dimensions, folder item count, otherwise formatted file size.
@@ -112,6 +115,8 @@ Rules:
 - Keep command handlers separate from direct filesystem operations.
 - Menu entries that depend on a selected file or folder should be built from the current selection context, not from hard-coded global availability.
 - Prefer system-provided menu/picker surfaces for share flows. On modern macOS, use `NSSharingServicePicker` and its standard share menu item instead of deprecated `NSSharingService.sharingServices(forItems:)` enumeration.
+- Do not call ShareKit `canPerform` with selected file URLs just to decide whether a menu item is enabled unless security-scoped access is active. Prefer enabling Share/AirDrop from selection shape and wrapping actual share validation/execution in security scopes.
+- Open With menus should avoid synchronous `NSWorkspace`/bundle icon work while building the menu. Display a fallback app icon first, then asynchronously load and cache per-application icons; titles should come from the app URL filename so localized/non-ASCII names are not mangled by system log/path compaction.
 - Context menus and table header menus should live in focused extension files where possible. Avoid letting `FilePaneViewController` absorb menu-building, sorting, preview, and navigation details once it approaches the 800-line warning threshold.
 - Do not implement Finder-like expandable folder rows in the list with ad hoc nested menus or table-row hacks. If multi-level in-place folder expansion is required, plan it as an `NSOutlineView`/tree-model feature.
 - If a legacy Objective-C delegate such as a sharing picker delegate triggers Swift 6 isolation warnings, keep the fix local to that conformance. Prefer `@preconcurrency` or another narrow bridge over broad actor annotations that can hide unrelated threading issues.

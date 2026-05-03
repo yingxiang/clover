@@ -30,6 +30,10 @@ Use this reference before changing shared models, providers, file operations, wo
 - Copy, move, rename, new folder, and trash actions belong in `FileOperationService`.
 - Use `URLResourceValues` for file metadata.
 - Preserve security-scoped bookmark compatibility even when the first local build does not fully enforce sandbox workflows.
+- Use `UserDirectories.homeURL` whenever Clover needs the real user home path. Sandbox APIs can resolve to the app container home, which makes sidebar entries point at paths like `~/Library/Containers/.../Data/Downloads`.
+- `DirectoryAccessStore` should resolve the nearest stored bookmark ancestor with a path-boundary check, not a plain string prefix. A bookmark for `/Users/me/Down` must not authorize `/Users/me/Downloads`.
+- Permission prompts should be based on current readability/bookmark resolution. Do not store or consult a separate runtime "authorized once" marker.
+- Keep security-scope lifetimes tight and operation-scoped. Start access around provider work, Quick Look thumbnail/preview access, and share/AirDrop validation or execution; stop access as soon as that operation or preview ownership ends.
 
 ## Concurrency
 
@@ -40,6 +44,7 @@ Use this reference before changing shared models, providers, file operations, wo
 ## Refresh And Notifications
 
 - Distinguish full directory navigation from local UI mutations. Opening a different folder can reload pane contents; expanding/collapsing an already-visible list subtree should not.
+- Distinguish data reloads from visible-item filtering. Search and type filters should recompute from already loaded pane state; they must not call `FileProvider.listDirectory` or clear pane-local detail caches.
 - Cross-window file-operation notifications should carry enough context, such as affected directories, so panes can ignore unrelated changes instead of all refreshing globally.
 - Prefer scoped refresh decisions based on the pane's current directory and any visible expanded child directories.
 - Cache already loaded expanded child directories within a pane session and invalidate them deliberately, not by default on every refresh path.
