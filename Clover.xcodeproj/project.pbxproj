@@ -500,7 +500,7 @@
 				CODE_SIGN_ENTITLEMENTS = Clover/Clover.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "3rd Party Mac Developer Application";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 26.5.0;
+				CURRENT_PROJECT_VERSION = 26.5.1;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
@@ -524,7 +524,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				INFOPLIST_FILE = Clover/Resources/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				MARKETING_VERSION = 26.5.0;
+				MARKETING_VERSION = 26.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lingchen.clover;
 				PRODUCT_NAME = Clover;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -666,7 +666,7 @@
 				CODE_SIGN_ENTITLEMENTS = Clover/Clover.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 26.5.0;
+				CURRENT_PROJECT_VERSION = 26.5.1;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
@@ -690,7 +690,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				INFOPLIST_FILE = Clover/Resources/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				MARKETING_VERSION = 26.5.0;
+				MARKETING_VERSION = 26.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lingchen.clover;
 				PRODUCT_NAME = Clover;
 				PROVISIONING_PROFILE_SPECIFIER = "";
