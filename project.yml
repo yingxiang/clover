@@ -30,7 +30,11 @@ targets:
         "DEVELOPMENT_TEAM[sdk=macosx*]": GBJH26W27R
         CODE_SIGN_STYLE: Automatic
         "CODE_SIGN_IDENTITY[sdk=macosx*]": "Apple Development"
+        CODE_SIGN_ENTITLEMENTS: Clover/Clover.entitlements
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+        GCC_GENERATE_DEBUGGING_SYMBOLS: "YES"
+        STRIP_INSTALLED_PRODUCT: "NO"
   CloverTests:
     type: bundle.unit-test
     platform: macOS

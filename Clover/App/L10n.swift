@@ -81,6 +81,8 @@ enum L10n {
     static let otherApplication = String(localized: "other_application", defaultValue: "Other...")
     static let chooseApplication = String(localized: "choose_application", defaultValue: "Choose Application")
     static let choose = String(localized: "choose", defaultValue: "Choose")
+    static let grantFolderAccess = String(localized: "grant_folder_access", defaultValue: "Grant Folder Access")
+    static let grantAccess = String(localized: "grant_access", defaultValue: "Grant Access")
     static let sidebarHome = String(localized: "sidebar_home", defaultValue: "Home")
     static let sidebarDesktop = String(localized: "sidebar_desktop", defaultValue: "Desktop")
     static let sidebarDocuments = String(localized: "sidebar_documents", defaultValue: "Documents")
@@ -176,5 +178,16 @@ enum L10n {
 
     static func conflictExists(_ name: String) -> String {
         String(format: conflictExistsFormat, locale: .current, name)
+    }
+
+    static func grantFolderAccessMessage(_ folderName: String) -> String {
+        String(
+            format: String(
+                localized: "grant_folder_access_message_format",
+                defaultValue: "Choose %@ to let Clover access this folder while running in the sandbox."
+            ),
+            locale: .current,
+            folderName
+        )
     }
 }

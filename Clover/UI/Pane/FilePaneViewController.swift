@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 
 final class FilePaneViewController: NSViewController {
     let viewModel: FilePaneViewModel
+    private let directoryAccessStore: DirectoryAccessStore
     var activationHandler: ((FilePaneViewController) -> Void)?
     var statusHandler: ((String) -> Void)?
     var pathChangeHandler: ((FilePaneViewController) -> Void)?
@@ -32,6 +33,7 @@ final class FilePaneViewController: NSViewController {
     private var pendingRenameURL: URL?
     private var pendingRenameStartDate: Date?
     private var pendingCreationKinds: [URL: NewItemKind] = [:]
+    private var isPresentingDirectoryAccessPanel = false
     static weak var previewOwner: FilePaneViewController?
     let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -40,8 +42,9 @@ final class FilePaneViewController: NSViewController {
         return formatter
     }()
 
-    init(viewModel: FilePaneViewModel) {
+    init(viewModel: FilePaneViewModel, directoryAccessStore: DirectoryAccessStore) {
         self.viewModel = viewModel
+        self.directoryAccessStore = directoryAccessStore
         super.init(nibName: nil, bundle: nil)
         self.viewModel.onChange = { [weak self] in
             guard let self else { return }
@@ -90,7 +93,7 @@ final class FilePaneViewController: NSViewController {
         configureLoadingIndicator()
         configurePreviewKeyMonitor()
         NotificationCenter.default.addObserver(self, selector: #selector(fileOperationCompleted(_:)), name: .cloverFileOperationCompleted, object: nil)
-        viewModel.load()
+        open(viewModel.currentURL)
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -108,7 +111,11 @@ final class FilePaneViewController: NSViewController {
     }
 
     func open(_ url: URL) {
-        viewModel.load(url: url)
+        if requestDirectoryAccessBeforeOpeningIfNeeded(for: url) {
+            return
+        }
+        let targetURL = directoryAccessStore.resolvedURL(for: url) ?? url
+        viewModel.load(url: targetURL)
     }
 
     @objc func goBack(_ sender: Any?) {
@@ -490,8 +497,120 @@ final class FilePaneViewController: NSViewController {
     }
 
     func showError(_ error: Error) {
+        if requestDirectoryAccessIfNeeded(for: error) {
+            return
+        }
         guard let window = view.window else { return }
         NSAlert(error: error).beginSheetModal(for: window)
+    }
+
+    private func requestDirectoryAccessIfNeeded(for error: Error) -> Bool {
+        guard !isPresentingDirectoryAccessPanel,
+              let window = view.window,
+              let requestedURL = requestedDirectoryURL(for: error),
+              shouldRequestDirectoryAccess(for: requestedURL) else {
+            return false
+        }
+
+        let panel = NSOpenPanel()
+        panel.title = L10n.grantFolderAccess
+        panel.message = L10n.grantFolderAccessMessage(requestedURL.lastPathComponent.isEmpty ? requestedURL.path : requestedURL.lastPathComponent)
+        panel.prompt = L10n.grantAccess
+        panel.directoryURL = panelDirectoryURL(for: requestedURL)
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.canCreateDirectories = false
+
+        isPresentingDirectoryAccessPanel = true
+        panel.beginSheetModal(for: window) { [weak self] response in
+            guard let self else { return }
+            self.isPresentingDirectoryAccessPanel = false
+            guard response == .OK, let selectedURL = panel.url else { return }
+
+            do {
+                try self.directoryAccessStore.saveAccess(to: selectedURL)
+                self.open(selectedURL.standardizedFileURL)
+            } catch {
+                self.showError(error)
+            }
+        }
+        return true
+    }
+
+    private func requestDirectoryAccessBeforeOpeningIfNeeded(for url: URL) -> Bool {
+        guard !isPresentingDirectoryAccessPanel,
+              directoryAccessStore.resolvedURL(for: url) == nil,
+              shouldProactivelyRequestDirectoryAccess(for: url),
+              let window = view.window else {
+            return false
+        }
+
+        let requestedURL = url.standardizedFileURL
+        let panel = NSOpenPanel()
+        panel.title = L10n.grantFolderAccess
+        panel.message = L10n.grantFolderAccessMessage(requestedURL.lastPathComponent)
+        panel.prompt = L10n.grantAccess
+        panel.directoryURL = requestedURL
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.canCreateDirectories = false
+
+        isPresentingDirectoryAccessPanel = true
+        panel.beginSheetModal(for: window) { [weak self] response in
+            guard let self else { return }
+            self.isPresentingDirectoryAccessPanel = false
+            guard response == .OK, let selectedURL = panel.url else { return }
+
+            do {
+                try self.directoryAccessStore.saveAccess(to: selectedURL)
+                self.viewModel.load(url: selectedURL.standardizedFileURL)
+            } catch {
+                self.showError(error)
+            }
+        }
+        return true
+    }
+
+    private func requestedDirectoryURL(for error: Error) -> URL? {
+        switch error {
+        case CloverError.directoryNotFound(let url), CloverError.permissionDenied(let url):
+            return url.standardizedFileURL
+        default:
+            return nil
+        }
+    }
+
+    private func shouldRequestDirectoryAccess(for url: URL) -> Bool {
+        guard url.isFileURL else { return false }
+        let standardizedURL = url.standardizedFileURL
+        let homeURL = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
+
+        if standardizedURL == homeURL {
+            return true
+        }
+
+        let protectedFolderNames = Set(["Desktop", "Documents", "Downloads", "Movies", "Music", "Pictures"])
+        return standardizedURL.deletingLastPathComponent().standardizedFileURL == homeURL
+            && protectedFolderNames.contains(standardizedURL.lastPathComponent)
+    }
+
+    private func shouldProactivelyRequestDirectoryAccess(for url: URL) -> Bool {
+        guard url.isFileURL else { return false }
+        let standardizedURL = url.standardizedFileURL
+        let homeURL = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
+        let protectedFolderNames = Set(["Desktop", "Documents", "Downloads", "Movies", "Music", "Pictures"])
+        return standardizedURL.deletingLastPathComponent().standardizedFileURL == homeURL
+            && protectedFolderNames.contains(standardizedURL.lastPathComponent)
+    }
+
+    private func panelDirectoryURL(for requestedURL: URL) -> URL {
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: requestedURL.path) {
+            return requestedURL
+        }
+        return requestedURL.deletingLastPathComponent()
     }
 
     func selectedItems() -> [FileItem] {

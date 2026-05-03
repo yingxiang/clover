@@ -207,7 +207,7 @@ final class PaneLayoutController: NSViewController {
     }
 
     private func makePane(viewModel: FilePaneViewModel) -> FilePaneViewController {
-        let pane = FilePaneViewController(viewModel: viewModel)
+        let pane = FilePaneViewController(viewModel: viewModel, directoryAccessStore: environment.directoryAccessStore)
         pane.statusHandler = { [weak self] text in
             self?.statusHandler?(text)
         }

@@ -31,7 +31,12 @@ final class LocalFileProvider: FileProvider {
                 .contentTypeKey,
                 .isHiddenKey
             ]
-            let childURLs = try fileManager.contentsOfDirectory(at: url, includingPropertiesForKeys: Array(keys), options: [.skipsPackageDescendants])
+            let childURLs: [URL]
+            do {
+                childURLs = try fileManager.contentsOfDirectory(at: url, includingPropertiesForKeys: Array(keys), options: [.skipsPackageDescendants])
+            } catch {
+                throw self.normalized(error, for: url)
+            }
 
             return childURLs.compactMap { childURL in
                 do {
@@ -85,7 +90,11 @@ final class LocalFileProvider: FileProvider {
             defer { scopedAccess.stop() }
             let fileManager = FileManager.default
             let url = parentURL.appendingPathComponent(name, isDirectory: true)
-            try fileManager.createDirectory(at: url, withIntermediateDirectories: false)
+            do {
+                try fileManager.createDirectory(at: url, withIntermediateDirectories: false)
+            } catch {
+                throw self.normalized(error, for: parentURL)
+            }
             return url
         }.value
     }
@@ -99,7 +108,11 @@ final class LocalFileProvider: FileProvider {
             if fileManager.fileExists(atPath: url.path) {
                 throw CloverError.fileAlreadyExists(url)
             }
-            try contents.write(to: url, options: .withoutOverwriting)
+            do {
+                try contents.write(to: url, options: .withoutOverwriting)
+            } catch {
+                throw self.normalized(error, for: parentURL)
+            }
             return url
         }.value
     }
@@ -113,7 +126,11 @@ final class LocalFileProvider: FileProvider {
             if fileManager.fileExists(atPath: destination.path) {
                 throw CloverError.fileAlreadyExists(destination)
             }
-            try fileManager.moveItem(at: url, to: destination)
+            do {
+                try fileManager.moveItem(at: url, to: destination)
+            } catch {
+                throw self.normalized(error, for: url.deletingLastPathComponent())
+            }
             return destination
         }.value
     }
@@ -130,7 +147,11 @@ final class LocalFileProvider: FileProvider {
             if fileManager.fileExists(atPath: destinationURL.path) {
                 throw CloverError.fileAlreadyExists(destinationURL)
             }
-            try fileManager.moveItem(at: url, to: destinationURL)
+            do {
+                try fileManager.moveItem(at: url, to: destinationURL)
+            } catch {
+                throw self.normalized(error, for: destinationURL.deletingLastPathComponent())
+            }
         }.value
     }
 
@@ -146,7 +167,11 @@ final class LocalFileProvider: FileProvider {
             if fileManager.fileExists(atPath: destinationURL.path) {
                 throw CloverError.fileAlreadyExists(destinationURL)
             }
-            try fileManager.copyItem(at: url, to: destinationURL)
+            do {
+                try fileManager.copyItem(at: url, to: destinationURL)
+            } catch {
+                throw self.normalized(error, for: destinationURL.deletingLastPathComponent())
+            }
         }.value
     }
 
@@ -174,7 +199,11 @@ final class LocalFileProvider: FileProvider {
                 let scopedAccess = SecurityScopedAccess(url.deletingLastPathComponent())
                 defer { scopedAccess.stop() }
                 var resultingURL: NSURL?
-                try fileManager.trashItem(at: url, resultingItemURL: &resultingURL)
+                do {
+                    try fileManager.trashItem(at: url, resultingItemURL: &resultingURL)
+                } catch {
+                    throw self.normalized(error, for: url.deletingLastPathComponent())
+                }
             }
         }.value
     }
@@ -186,7 +215,11 @@ final class LocalFileProvider: FileProvider {
                 try Task.checkCancellation()
                 let scopedAccess = SecurityScopedAccess(url.deletingLastPathComponent())
                 defer { scopedAccess.stop() }
-                try fileManager.removeItem(at: url)
+                do {
+                    try fileManager.removeItem(at: url)
+                } catch {
+                    throw self.normalized(error, for: url.deletingLastPathComponent())
+                }
             }
         }.value
     }
@@ -200,7 +233,11 @@ final class LocalFileProvider: FileProvider {
                 var values = URLResourceValues()
                 values.labelNumber = labelNumber
                 var mutableURL = url
-                try mutableURL.setResourceValues(values)
+                do {
+                    try mutableURL.setResourceValues(values)
+                } catch {
+                    throw self.normalized(error, for: url.deletingLastPathComponent())
+                }
             }
         }.value
     }
@@ -215,6 +252,40 @@ final class LocalFileProvider: FileProvider {
         guard isApplication else { return fallbackName }
         let displayName = FileManager.default.displayName(atPath: url.path)
         return displayName.isEmpty ? fallbackName : displayName
+    }
+
+    private func normalized(_ error: Error, for url: URL) -> Error {
+        if let cloverError = error as? CloverError {
+            return cloverError
+        }
+
+        let nsError = error as NSError
+        if isPermissionError(nsError) {
+            return CloverError.permissionDenied(url)
+        }
+        return error
+    }
+
+    private func isPermissionError(_ error: NSError) -> Bool {
+        if error.domain == NSCocoaErrorDomain {
+            let cocoaCode = CocoaError.Code(rawValue: error.code)
+            if cocoaCode == .fileReadNoPermission || cocoaCode == .fileWriteNoPermission {
+                return true
+            }
+        }
+
+        if error.domain == NSPOSIXErrorDomain {
+            let posixCode = POSIXErrorCode(rawValue: Int32(error.code))
+            if posixCode == .EPERM || posixCode == .EACCES {
+                return true
+            }
+        }
+
+        if let underlyingError = error.userInfo[NSUnderlyingErrorKey] as? NSError {
+            return isPermissionError(underlyingError)
+        }
+
+        return false
     }
 }
 
