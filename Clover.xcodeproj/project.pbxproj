@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		11FFAE2FC4E2C9542E482B060B6773F3 /* FileItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0070D70052F7AD72E0D357BC6FDE03BA /* FileItem.swift */; };
 		13B1AE83407EF32F1EDDFD5AE95E47FA /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4C51849AFD6E0D4268AF70A1D2BEA65 /* MainWindowController.swift */; };
+		1B7D8C5E1D0445C39B6941D825A4B620 /* SupportDeveloperWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 884FC7A61BE24EE19F235D4B23F2460F /* SupportDeveloperWindowController.swift */; };
 		2B863BA5B9857B3727CE48A664249BA8 /* CloverError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A888914710CAE80BB34FF502C9D183 /* CloverError.swift */; };
 		2D93B169E6EA80D6D741EA936DCA8E57 /* LocalFileProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BFF4D7788A080F55551F7F62546A68D /* LocalFileProvider.swift */; };
 		328938EA41ACBC2436626FAAF3109CD4 /* FilePaneDataSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4943BFE1680FE1B7A17187B73E47242A /* FilePaneDataSources.swift */; };
@@ -93,6 +94,7 @@
 		731A911A9436021A67F9CFD4FEDDDFEF /* CloverTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CloverTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7714B83ECFBB8A78FD7BF902226484FB /* WorkspaceStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStoreTests.swift; sourceTree = "<group>"; };
 		80FB21DAC30ADA7DA73DA8478A9EB233 /* DirectoryAccessStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryAccessStore.swift; sourceTree = "<group>"; };
+		884FC7A61BE24EE19F235D4B23F2460F /* SupportDeveloperWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportDeveloperWindowController.swift; sourceTree = "<group>"; };
 		8EE9C82FD5D8B11D548251F8EFA4A7AC /* FileThumbnailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileThumbnailProvider.swift; sourceTree = "<group>"; };
 		9228904DB68AB8A3A470396154A083FA /* FileOperationNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOperationNotifications.swift; sourceTree = "<group>"; };
 		9C08EC3DF7383A05DFF0BB911C90AC87 /* WorkspaceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStore.swift; sourceTree = "<group>"; };
@@ -221,6 +223,7 @@
 				BE24ADF9B430F10A1F8C25E46980C4D5 /* main.swift */,
 				D4C51849AFD6E0D4268AF70A1D2BEA65 /* MainWindowController.swift */,
 				E75594AF8983889F186AA0422731168C /* RootSplitViewController.swift */,
+				884FC7A61BE24EE19F235D4B23F2460F /* SupportDeveloperWindowController.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -459,6 +462,7 @@
 				75FB404C363FF00BB6612739C3721FD4 /* SidebarItem.swift in Sources */,
 				CE4463E06D4260368EF2038FF258C4CE /* SidebarViewController.swift in Sources */,
 				FB85612F61A988E2784B807FCD84DEB5 /* StatusBarView.swift in Sources */,
+				1B7D8C5E1D0445C39B6941D825A4B620 /* SupportDeveloperWindowController.swift in Sources */,
 				B4E21223B928071A3907A07D62330FB6 /* Workspace.swift in Sources */,
 				C23CEC7B6C6DD193C5792B1091334900 /* WorkspaceStore.swift in Sources */,
 				E82B46BACC16A05225090DD3C2807E38 /* WorkspaceViewController.swift in Sources */,
@@ -500,16 +504,12 @@
 				CODE_SIGN_ENTITLEMENTS = Clover/Clover.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "3rd Party Mac Developer Application";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 26.5.1;
+				CURRENT_PROJECT_VERSION = 26.5.2;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = GBJH26W27R;
 				ENABLE_APP_SANDBOX = YES;
-				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
-				ENABLE_FILE_ACCESS_MOVIES_FOLDER = readwrite;
-				ENABLE_FILE_ACCESS_MUSIC_FOLDER = readwrite;
-				ENABLE_FILE_ACCESS_PICTURE_FOLDER = readwrite;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
 				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
@@ -666,16 +666,12 @@
 				CODE_SIGN_ENTITLEMENTS = Clover/Clover.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 26.5.1;
+				CURRENT_PROJECT_VERSION = 26.5.2;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = GBJH26W27R;
 				ENABLE_APP_SANDBOX = YES;
-				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
-				ENABLE_FILE_ACCESS_MOVIES_FOLDER = readwrite;
-				ENABLE_FILE_ACCESS_MUSIC_FOLDER = readwrite;
-				ENABLE_FILE_ACCESS_PICTURE_FOLDER = readwrite;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
 				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;

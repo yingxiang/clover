@@ -211,6 +211,8 @@ enum AppSymbol: String {
     case tag = "tag"
     case paste = "doc.on.clipboard"
     case selectAll = "checklist"
+    case screenshot = "camera.viewfinder"
+    case support = "heart"
     case folderPlus = "folder.badge.plus"
     case open = "arrow.up.right.square"
     case textFile = "doc.plaintext"

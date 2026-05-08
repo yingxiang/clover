@@ -8,7 +8,6 @@ struct AppEnvironment {
     let directoryAccessStore: DirectoryAccessStore
 
     static func live() -> AppEnvironment {
-        let provider = LocalFileProvider()
         let workspaceStore: WorkspaceStore
         let directoryAccessStore: DirectoryAccessStore
         do {
@@ -23,6 +22,9 @@ struct AppEnvironment {
             Logger.workspace.error("Failed to initialize directory access store: \(error.localizedDescription, privacy: .public)")
             directoryAccessStore = try! DirectoryAccessStore(storageURL: FileManager.default.temporaryDirectory.appendingPathComponent("Clover-directory-bookmarks.plist"))
         }
+        let provider = LocalFileProvider(securityScopeURLProvider: { url in
+            directoryAccessStore.securityScopeURL(for: url)
+        })
         return AppEnvironment(
             fileProvider: provider,
             fileOperationService: FileOperationService(provider: provider),

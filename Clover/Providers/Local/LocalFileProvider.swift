@@ -5,12 +5,16 @@ import UniformTypeIdentifiers
 final class LocalFileProvider: FileProvider {
     let providerID = "local"
     let displayName = "Local Files"
+    private let securityScopeURLProvider: @Sendable (URL) -> URL?
 
-    init() {}
+    init(securityScopeURLProvider: (@Sendable (URL) -> URL?)? = nil) {
+        self.securityScopeURLProvider = securityScopeURLProvider ?? { _ in nil }
+    }
 
     func listDirectory(at url: URL) async throws -> [FileItem] {
-        try await Task.detached(priority: .userInitiated) {
-            let scopedAccess = SecurityScopedAccess(url)
+        let securityScopeURL = securityScopeURL(for: url)
+        return try await Task.detached(priority: .userInitiated) {
+            let scopedAccess = SecurityScopedAccess(securityScopeURL)
             defer { scopedAccess.stop() }
             let fileManager = FileManager.default
             var isDirectory: ObjCBool = false
@@ -85,8 +89,9 @@ final class LocalFileProvider: FileProvider {
     }
 
     func createFolder(at parentURL: URL, name: String) async throws -> URL {
-        try await Task.detached(priority: .userInitiated) {
-            let scopedAccess = SecurityScopedAccess(parentURL)
+        let securityScopeURL = securityScopeURL(for: parentURL)
+        return try await Task.detached(priority: .userInitiated) {
+            let scopedAccess = SecurityScopedAccess(securityScopeURL)
             defer { scopedAccess.stop() }
             let fileManager = FileManager.default
             let url = parentURL.appendingPathComponent(name, isDirectory: true)
@@ -100,8 +105,9 @@ final class LocalFileProvider: FileProvider {
     }
 
     func createFile(at parentURL: URL, name: String, contents: Data) async throws -> URL {
-        try await Task.detached(priority: .userInitiated) {
-            let scopedAccess = SecurityScopedAccess(parentURL)
+        let securityScopeURL = securityScopeURL(for: parentURL)
+        return try await Task.detached(priority: .userInitiated) {
+            let scopedAccess = SecurityScopedAccess(securityScopeURL)
             defer { scopedAccess.stop() }
             let fileManager = FileManager.default
             let url = parentURL.appendingPathComponent(name, isDirectory: false)
@@ -118,27 +124,33 @@ final class LocalFileProvider: FileProvider {
     }
 
     func renameItem(at url: URL, to newName: String) async throws -> URL {
-        try await Task.detached(priority: .userInitiated) {
-            let scopedAccess = SecurityScopedAccess(url.deletingLastPathComponent())
+        let parentURL = url.deletingLastPathComponent()
+        let securityScopeURL = securityScopeURL(for: parentURL)
+        return try await Task.detached(priority: .userInitiated) {
+            let scopedAccess = SecurityScopedAccess(securityScopeURL)
             defer { scopedAccess.stop() }
             let fileManager = FileManager.default
-            let destination = url.deletingLastPathComponent().appendingPathComponent(newName)
+            let destination = parentURL.appendingPathComponent(newName)
             if fileManager.fileExists(atPath: destination.path) {
                 throw CloverError.fileAlreadyExists(destination)
             }
             do {
                 try fileManager.moveItem(at: url, to: destination)
             } catch {
-                throw self.normalized(error, for: url.deletingLastPathComponent())
+                throw self.normalized(error, for: parentURL)
             }
             return destination
         }.value
     }
 
     func moveItem(at url: URL, to destinationURL: URL) async throws {
+        let sourceParentURL = url.deletingLastPathComponent()
+        let destinationParentURL = destinationURL.deletingLastPathComponent()
+        let sourceScopeURL = securityScopeURL(for: sourceParentURL)
+        let destinationScopeURL = securityScopeURL(for: destinationParentURL)
         try await Task.detached(priority: .userInitiated) {
-            let sourceAccess = SecurityScopedAccess(url.deletingLastPathComponent())
-            let destinationAccess = SecurityScopedAccess(destinationURL.deletingLastPathComponent())
+            let sourceAccess = SecurityScopedAccess(sourceScopeURL)
+            let destinationAccess = SecurityScopedAccess(destinationScopeURL)
             defer {
                 destinationAccess.stop()
                 sourceAccess.stop()
@@ -150,15 +162,19 @@ final class LocalFileProvider: FileProvider {
             do {
                 try fileManager.moveItem(at: url, to: destinationURL)
             } catch {
-                throw self.normalized(error, for: destinationURL.deletingLastPathComponent())
+                throw self.normalized(error, for: destinationParentURL)
             }
         }.value
     }
 
     func copyItem(at url: URL, to destinationURL: URL) async throws {
+        let sourceParentURL = url.deletingLastPathComponent()
+        let destinationParentURL = destinationURL.deletingLastPathComponent()
+        let sourceScopeURL = securityScopeURL(for: sourceParentURL)
+        let destinationScopeURL = securityScopeURL(for: destinationParentURL)
         try await Task.detached(priority: .userInitiated) {
-            let sourceAccess = SecurityScopedAccess(url.deletingLastPathComponent())
-            let destinationAccess = SecurityScopedAccess(destinationURL.deletingLastPathComponent())
+            let sourceAccess = SecurityScopedAccess(sourceScopeURL)
+            let destinationAccess = SecurityScopedAccess(destinationScopeURL)
             defer {
                 destinationAccess.stop()
                 sourceAccess.stop()
@@ -170,7 +186,7 @@ final class LocalFileProvider: FileProvider {
             do {
                 try fileManager.copyItem(at: url, to: destinationURL)
             } catch {
-                throw self.normalized(error, for: destinationURL.deletingLastPathComponent())
+                throw self.normalized(error, for: destinationParentURL)
             }
         }.value
     }
@@ -192,11 +208,12 @@ final class LocalFileProvider: FileProvider {
     }
 
     func trashItems(_ urls: [URL]) async throws {
+        let accessURLs = urls.map { securityScopeURL(for: $0.deletingLastPathComponent()) }
         try await Task.detached(priority: .userInitiated) {
             let fileManager = FileManager.default
-            for url in urls {
+            for (url, accessURL) in zip(urls, accessURLs) {
                 try Task.checkCancellation()
-                let scopedAccess = SecurityScopedAccess(url.deletingLastPathComponent())
+                let scopedAccess = SecurityScopedAccess(accessURL)
                 defer { scopedAccess.stop() }
                 var resultingURL: NSURL?
                 do {
@@ -209,11 +226,12 @@ final class LocalFileProvider: FileProvider {
     }
 
     func deleteItemsPermanently(_ urls: [URL]) async throws {
+        let accessURLs = urls.map { securityScopeURL(for: $0.deletingLastPathComponent()) }
         try await Task.detached(priority: .userInitiated) {
             let fileManager = FileManager.default
-            for url in urls {
+            for (url, accessURL) in zip(urls, accessURLs) {
                 try Task.checkCancellation()
-                let scopedAccess = SecurityScopedAccess(url.deletingLastPathComponent())
+                let scopedAccess = SecurityScopedAccess(accessURL)
                 defer { scopedAccess.stop() }
                 do {
                     try fileManager.removeItem(at: url)
@@ -225,10 +243,11 @@ final class LocalFileProvider: FileProvider {
     }
 
     func setLabelNumber(_ labelNumber: Int?, for urls: [URL]) async throws {
+        let accessURLs = urls.map { securityScopeURL(for: $0.deletingLastPathComponent()) }
         try await Task.detached(priority: .userInitiated) {
-            for url in urls {
+            for (url, accessURL) in zip(urls, accessURLs) {
                 try Task.checkCancellation()
-                let scopedAccess = SecurityScopedAccess(url.deletingLastPathComponent())
+                let scopedAccess = SecurityScopedAccess(accessURL)
                 defer { scopedAccess.stop() }
                 var values = URLResourceValues()
                 values.labelNumber = labelNumber
@@ -252,6 +271,10 @@ final class LocalFileProvider: FileProvider {
         guard isApplication else { return fallbackName }
         let displayName = FileManager.default.displayName(atPath: url.path)
         return displayName.isEmpty ? fallbackName : displayName
+    }
+
+    private func securityScopeURL(for url: URL) -> URL {
+        securityScopeURLProvider(url.standardizedFileURL) ?? url
     }
 
     private func normalized(_ error: Error, for url: URL) -> Error {

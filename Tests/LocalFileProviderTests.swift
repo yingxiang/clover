@@ -51,7 +51,7 @@ final class LocalFileProviderTests: XCTestCase {
 
         let provider = LocalFileProvider()
         let items = try await provider.listDirectory(at: root)
-        let app = try XCTUnwrap(items.first { $0.name == "Example.app" })
+        let app = try XCTUnwrap(items.first { $0.url.standardizedFileURL == appURL.standardizedFileURL })
 
         XCTAssertTrue(app.isDirectory)
         XCTAssertTrue(app.isPackage)
@@ -93,9 +93,46 @@ final class LocalFileProviderTests: XCTestCase {
         }
     }
 
+    func testListDirectoryResolvesSecurityScopeForRequestedDirectory() async throws {
+        let root = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let child = root.appendingPathComponent("Child", isDirectory: true)
+        try FileManager.default.createDirectory(at: child, withIntermediateDirectories: false)
+        try "hello".write(to: child.appendingPathComponent("sample.txt"), atomically: true, encoding: .utf8)
+
+        let requestedURLs = LockedURLs()
+        let provider = LocalFileProvider { url in
+            requestedURLs.append(url)
+            return root
+        }
+
+        let items = try await provider.listDirectory(at: child)
+
+        XCTAssertTrue(items.contains { $0.name == "sample.txt" })
+        XCTAssertEqual(requestedURLs.values, [child.standardizedFileURL])
+    }
+
     private func makeTemporaryDirectory() throws -> URL {
         let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("CloverProviderTest-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         return root
+    }
+}
+
+private final class LockedURLs: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storedValues: [URL] = []
+
+    var values: [URL] {
+        lock.lock()
+        defer { lock.unlock() }
+        return storedValues
+    }
+
+    func append(_ url: URL) {
+        lock.lock()
+        storedValues.append(url)
+        lock.unlock()
     }
 }

@@ -1,10 +1,11 @@
 import Foundation
 import OSLog
 
-final class DirectoryAccessStore {
+final class DirectoryAccessStore: @unchecked Sendable {
     private let fileManager: FileManager
     private let storageURL: URL
     private let bookmarkStore: BookmarkStore
+    private let lock = NSRecursiveLock()
     private var cachedBookmarks: [String: Data]?
 
     init(
@@ -90,35 +91,39 @@ final class DirectoryAccessStore {
     }
 
     private func bookmarks() -> [String: Data] {
-        if let cachedBookmarks {
-            return cachedBookmarks
-        }
+        withLock {
+            if let cachedBookmarks {
+                return cachedBookmarks
+            }
 
-        guard fileManager.fileExists(atPath: storageURL.path) else {
-            cachedBookmarks = [:]
-            return [:]
-        }
+            guard fileManager.fileExists(atPath: storageURL.path) else {
+                cachedBookmarks = [:]
+                return [:]
+            }
 
-        do {
-            let data = try Data(contentsOf: storageURL)
-            let decoded = try PropertyListDecoder().decode([String: Data].self, from: data)
-            cachedBookmarks = decoded
-            return decoded
-        } catch {
-            cachedBookmarks = [:]
-            Logger.security.error("Load directory bookmarks failed error=\(error.localizedDescription, privacy: .public)")
-            return [:]
+            do {
+                let data = try Data(contentsOf: storageURL)
+                let decoded = try PropertyListDecoder().decode([String: Data].self, from: data)
+                cachedBookmarks = decoded
+                return decoded
+            } catch {
+                cachedBookmarks = [:]
+                Logger.security.error("Load directory bookmarks failed error=\(error.localizedDescription, privacy: .public)")
+                return [:]
+            }
         }
     }
 
     private func persistBookmarks(_ bookmarks: [String: Data]) throws {
-        try fileManager.createDirectory(
-            at: storageURL.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
-        let data = try PropertyListEncoder().encode(bookmarks)
-        try data.write(to: storageURL, options: .atomic)
-        cachedBookmarks = bookmarks
+        try withLock {
+            try fileManager.createDirectory(
+                at: storageURL.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            let data = try PropertyListEncoder().encode(bookmarks)
+            try data.write(to: storageURL, options: .atomic)
+            cachedBookmarks = bookmarks
+        }
     }
 
     private func removeBookmark(for url: URL) {
@@ -170,5 +175,11 @@ final class DirectoryAccessStore {
 
         let boundaryIndex = path.index(path.startIndex, offsetBy: ancestorPath.count)
         return path[boundaryIndex] == "/"
+    }
+
+    private func withLock<T>(_ body: () throws -> T) rethrows -> T {
+        lock.lock()
+        defer { lock.unlock() }
+        return try body()
     }
 }

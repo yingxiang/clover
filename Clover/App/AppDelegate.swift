@@ -4,7 +4,9 @@ import OSLog
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var windowControllers: [MainWindowController] = []
+    private var supportDeveloperWindowController: SupportDeveloperWindowController?
     private let environment = AppEnvironment.live()
+    private let omniCaptureAppStoreURL = URL(string: "macappstore://apps.apple.com/us/app/omni-capture/id6760931624")!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.disableRelaunchOnLogin()
@@ -28,7 +30,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         false
     }
 
-    private func showMainWindow(reuseExisting: Bool = false) {
+    @discardableResult
+    private func showMainWindow(reuseExisting: Bool = false) -> MainWindowController {
         windowControllers.removeAll { $0.window == nil }
         let controller: MainWindowController
         if reuseExisting, let existing = windowControllers.first {
@@ -40,13 +43,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             windowControllers.append(controller)
         }
         controller.showWindow(self)
-        guard let window = controller.window else { return }
-        if let screen = NSScreen.main, !screen.visibleFrame.intersects(window.frame) {
-            window.center()
-        }
-        window.deminiaturize(self)
-        window.makeKeyAndOrderFront(self)
-        NSApp.activate(ignoringOtherApps: true)
+        bringWindowToFront(controller)
+        return controller
     }
 
     @MainActor
@@ -55,6 +53,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let appItem = NSMenuItem()
         let appMenu = NSMenu(title: L10n.appName)
+        let screenshotItem = NSMenuItem(title: L10n.screenshot, action: #selector(openOmniCaptureInAppStore(_:)), keyEquivalent: "")
+        screenshotItem.target = self
+        screenshotItem.image = AppIconProvider.menuImage(.screenshot, accessibilityDescription: L10n.screenshot)
+        appMenu.addItem(screenshotItem)
+        let supportDeveloperItem = NSMenuItem(title: L10n.supportDeveloper, action: #selector(showSupportDeveloperWindow(_:)), keyEquivalent: "")
+        supportDeveloperItem.target = self
+        supportDeveloperItem.image = AppIconProvider.menuImage(.support, accessibilityDescription: L10n.supportDeveloper)
+        appMenu.addItem(supportDeveloperItem)
+        appMenu.addItem(.separator())
         let quitItem = NSMenuItem(title: L10n.quitClover, action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appMenu.addItem(quitItem)
         appItem.submenu = appMenu
@@ -161,6 +168,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         showMainWindow()
     }
 
+    @objc private func openOmniCaptureInAppStore(_ sender: Any?) {
+        NSWorkspace.shared.open(omniCaptureAppStoreURL)
+    }
+
+    @objc private func showSupportDeveloperWindow(_ sender: Any?) {
+        let controller = supportDeveloperWindowController ?? SupportDeveloperWindowController()
+        supportDeveloperWindowController = controller
+        controller.showWindow(self)
+        guard let window = controller.window else { return }
+        window.makeKeyAndOrderFront(self)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
     @objc private func refreshActivePane(_ sender: Any?) {
         keyWindowController?.refreshActivePane(sender)
     }
@@ -170,11 +190,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func createFolderInActivePane(_ sender: Any?) {
-        keyWindowController?.createFolderInActivePane(sender)
+        activeWindowControllerForNewItemAction()?.createFolderInActivePane(sender)
     }
 
     @objc private func createTextFileInActivePane(_ sender: Any?) {
-        keyWindowController?.createTextFileInActivePane(sender)
+        activeWindowControllerForNewItemAction()?.createTextFileInActivePane(sender)
     }
 
     @objc private func renameSelectedItemInActivePane(_ sender: Any?) {
@@ -182,7 +202,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func performNewItemActionInActivePane(_ sender: NSMenuItem) {
-        keyWindowController?.performNewItemActionInActivePane(sender)
+        activeWindowControllerForNewItemAction()?.performNewItemActionInActivePane(sender)
     }
 
     @objc private func copySelectedItemsInActivePane(_ sender: Any?) {
@@ -213,6 +233,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return controller
         }
         return windowControllers.last
+    }
+
+    private func activeWindowControllerForNewItemAction() -> MainWindowController? {
+        let controller = keyWindowController ?? showMainWindow(reuseExisting: true)
+        bringWindowToFront(controller)
+        return controller
+    }
+
+    private func bringWindowToFront(_ controller: MainWindowController) {
+        guard let window = controller.window else { return }
+        if let screen = NSScreen.main, !screen.visibleFrame.intersects(window.frame) {
+            window.center()
+        }
+        window.deminiaturize(self)
+        window.makeKeyAndOrderFront(self)
+        NSApp.activate(ignoringOtherApps: true)
     }
 }
 
