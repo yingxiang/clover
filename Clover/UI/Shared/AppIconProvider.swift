@@ -183,8 +183,8 @@ enum NewItemKind: Int, CaseIterable {
 
 enum AppSymbol: String {
     case home = "house"
-    case desktop = "macwindow"
-    case documents = "doc.text"
+    case desktop = "menubar.dock.rectangle"
+    case documents = "document"
     case downloads = "arrow.down.circle"
     case applications = "app"
     case folder = "folder"

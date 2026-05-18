@@ -1,11 +1,5 @@
 import AppKit
 
-private final class ToolbarContextMenuButton: NSButton {
-    override func menu(for event: NSEvent) -> NSMenu? {
-        menu
-    }
-}
-
 @MainActor
 final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserInterfaceValidations {
     private let rootViewController: RootSplitViewController
@@ -411,7 +405,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     }
 
     private func makeToolbarIconButton(action: Selector) -> NSButton {
-        let button = ToolbarContextMenuButton(image: NSImage(), target: self, action: action)
+        let button = NSButton(image: NSImage(), target: self, action: action)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.bezelStyle = .texturedRounded
         button.imagePosition = .imageOnly
@@ -428,19 +422,18 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
 
         let image = AppIconProvider.image(.sidebar, accessibilityDescription: nil) ?? NSImage()
         image.isTemplate = true
-        let button = ToolbarContextMenuButton(image: image, target: self, action: #selector(toggleSidebar(_:)))
+        let button = NSButton(image: image, target: self, action: #selector(toggleSidebar(_:)))
         button.translatesAutoresizingMaskIntoConstraints = false
         button.bezelStyle = .texturedRounded
         button.imagePosition = .imageOnly
         button.imageScaling = .scaleProportionallyDown
         button.contentTintColor = .labelColor
 
-        let accessoryView = NSView(frame: NSRect(x: 0, y: 0, width: 56, height: 28))
+        let accessoryView = NSView(frame: NSRect(x: 0, y: 0, width: 56, height: 52))
         accessoryView.translatesAutoresizingMaskIntoConstraints = false
         accessoryView.addSubview(button)
         NSLayoutConstraint.activate([
             accessoryView.widthAnchor.constraint(equalToConstant: 56),
-            accessoryView.heightAnchor.constraint(equalToConstant: 28),
             button.widthAnchor.constraint(equalToConstant: 32),
             button.heightAnchor.constraint(equalToConstant: 28),
             button.leadingAnchor.constraint(equalTo: accessoryView.leadingAnchor),
@@ -458,33 +451,57 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     }
 
     private func installToolbarContextMenuBlocker() {
-        toolbarContextMenuMonitor = NSEvent.addLocalMonitorForEvents(matching: [.rightMouseDown, .leftMouseDown]) { [weak self] event in
-            guard let self,
-                  event.type == .rightMouseDown || (event.type == .leftMouseDown && event.modifierFlags.contains(.control)),
-                  let window = self.window,
-                  event.window === window,
-                  self.toolbarContains(event.locationInWindow) else {
-                return event
-            }
-            window.toolbar?.displayMode = .iconOnly
+        toolbarContextMenuMonitor = NSEvent.addLocalMonitorForEvents(matching: [.rightMouseDown, .rightMouseUp, .leftMouseDown, .leftMouseUp]) { [weak self] event in
+            guard let self, self.shouldBlockToolbarContextMenu(event) else { return event }
+            self.window?.toolbar?.displayMode = .iconOnly
             return nil
         }
     }
 
-    private func toolbarContains(_ pointInWindow: NSPoint) -> Bool {
-        guard let window, window.toolbar != nil else { return false }
+    private func shouldBlockToolbarContextMenu(_ event: NSEvent) -> Bool {
+        guard let window,
+              window.toolbar != nil,
+              event.type == .rightMouseDown || event.type == .rightMouseUp || ((event.type == .leftMouseDown || event.type == .leftMouseUp) && event.modifierFlags.contains(.control)) else {
+            return false
+        }
 
-        let toolbarMinY = window.contentLayoutRect.maxY
-        let toolbarHeight = max(0, window.frame.height - toolbarMinY)
-        guard toolbarHeight > 0 else { return false }
+        if event.window === window {
+            return titlebarOrToolbarContains(event.locationInWindow, in: window)
+        }
 
-        let toolbarRect = NSRect(
-            x: 0,
-            y: toolbarMinY,
-            width: window.frame.width,
-            height: toolbarHeight
-        )
-        return toolbarRect.contains(pointInWindow)
+        guard window.styleMask.contains(.fullScreen) else { return false }
+        if eventWindowLooksLikeSystemChrome(event.window) {
+            return true
+        }
+        guard let eventWindow = event.window else { return false }
+        let screenPoint = eventWindow.convertPoint(toScreen: event.locationInWindow)
+        guard let screen = window.screen ?? eventWindow.screen else { return false }
+        return screen.frame.maxY - screenPoint.y <= 96
+    }
+
+    private func titlebarOrToolbarContains(_ pointInWindow: NSPoint, in window: NSWindow) -> Bool {
+        let chromeMinY = window.contentLayoutRect.maxY
+        let chromeHeight = max(0, window.frame.height - chromeMinY)
+        if chromeHeight > 0 {
+            return NSRect(x: 0, y: chromeMinY, width: window.frame.width, height: chromeHeight).contains(pointInWindow)
+        }
+
+        guard window.styleMask.contains(.fullScreen) else { return false }
+        return NSRect(x: 0, y: max(0, window.frame.height - 96), width: window.frame.width, height: 96).contains(pointInWindow)
+    }
+
+    private func eventWindowLooksLikeSystemChrome(_ eventWindow: NSWindow?) -> Bool {
+        guard let eventWindow else { return false }
+        var names = [String(describing: type(of: eventWindow))]
+        var view = eventWindow.contentView
+        while let current = view {
+            names.append(String(describing: type(of: current)))
+            view = current.superview
+        }
+        return names.contains { name in
+            name.localizedCaseInsensitiveContains("toolbar") ||
+            name.localizedCaseInsensitiveContains("titlebar")
+        }
     }
 
     @objc private func showLayoutPicker(_ sender: Any?) {
