@@ -37,7 +37,12 @@ Window lifecycle rules:
 - Keep layout picker popover content icon-only with tooltips/accessibility labels for specific layout names.
 - If toolbar buttons use custom views, keep `NSButton.isEnabled` and `NSToolbarItem.isEnabled` synchronized. Updating only the button can leave the toolbar label in the wrong enabled/disabled color.
 - When a toolbar action depends on selection state, propagate command-availability changes from the active pane back to the window controller so custom toolbar items update immediately instead of waiting for focus changes.
-- If the toolbar right-click menu is customized, limit display-mode choices to product-approved options and prefer window/titlebar-level interception when button-level menus are insufficient.
+- Clover fixes the system toolbar display mode to icon-only. Set `toolbar.displayMode = .iconOnly`, `allowsUserCustomization = false`, and `autosavesConfiguration = false`; do not remove restored localization strings just to hide system display-mode menu text.
+- AppKit's system toolbar/titlebar right-click menu can still appear in full-screen because events may come from private chrome windows rather than the app's `NSWindow`. For this project, suppress that menu with an `NSEvent.addLocalMonitorForEvents` on right/control-click down/up events, scoped to the Clover window plus full-screen chrome/top-screen-area checks. Button subclass `menu(for:)` overrides or `NSWindow.sendEvent(_:)` interception are not sufficient by themselves for full-screen.
+- Remove local event monitors when the window closes. A window controller-owned monitor is acceptable for toolbar context-menu suppression and pane-switch shortcuts.
+- Titlebar accessory views should avoid fixed-height constraints that fight `NSTitlebarAccessoryClipView` in full-screen. Prefer intrinsic/flexible vertical sizing plus fixed control dimensions, and align controls to titlebar peers visually rather than constraining the accessory container height.
+- Sidebar collapse/expand belongs near the titlebar full-screen button, not in shifting content layout. Keep the toggle fixed to the left titlebar area, match toolbar icon tint, set a tooltip/accessibility label, animate collapse/expand, and persist the sidebar collapsed state in `Workspace`.
+- Toolbar button help should use `toolTip` and accessibility labels for the localized action name. Keep visible toolbar display icon-only and do not expose AppKit's titlebar right-click display-mode switching.
 
 ## Pane Layouts
 
@@ -55,6 +60,10 @@ Rules:
 - Highlight the active pane clearly.
 - Keyboard commands act on the active pane.
 - Each pane can navigate independently.
+- Two-pane split resizing must enforce a minimum ratio of 2:1 from either side rather than allowing one pane to collapse visually.
+- Four-grid resizing must be a true cross split: the vertical and horizontal dividers intersect as one crosshair, and dragging the intersection moves all four pane sizes together. Avoid independent nested split views for four-grid interaction because their dividers can become visually staggered.
+- In four-grid mode, make the crosshair drag target own the drag gesture once the cursor changes to resize. This prevents accidental file drag gestures from the pane content while resizing near the divider.
+- Tab switches focus between panes: `Tab` moves to the next pane, `Shift+Tab` to the previous pane, and single-pane layouts should not intercept it. Do not steal Tab while a text editor/search field/path input/inline rename editor is active. After switching, make the target pane's table or collection view first responder.
 
 ## File Pane
 
@@ -75,6 +84,8 @@ Rules:
 - In list mode, expanding or collapsing a directory should update only the affected rows. Do not rebuild or reload the entire table view for a local tree toggle.
 - List-mode directory expansion should feel animated. Prefer row insertion/removal animations over abrupt whole-table redraws.
 - Re-expanding a previously loaded child directory in the same pane should reuse cached children when possible instead of reloading from disk immediately.
+- Long paths should not force the window wider or prevent shrinking. Use AppKit path controls or similarly compressible native controls for path display/input rather than unbounded labels or text fields.
+- File labels/tags should match Finder placement: in list mode, show tag color dots after the filename; in icon/grid mode, show them before the displayed filename. Keep tag indicators compact and non-textual unless the user explicitly asks for tag names.
 
 ## Icons, Thumbnails, And Grid Details
 

@@ -18,7 +18,7 @@ Use this skill for development inside the Clover repository.
 ## Subskills
 
 - Read `references/architecture.md` before changing models, providers, file operations, workspaces, or shared app services.
-- Read `references/appkit-ui.md` before changing windows, panes, sidebars, tables, grids, thumbnails, path bars, toolbars, popovers, menus, shortcuts, Quick Look, or drag/drop.
+- Read `references/appkit-ui.md` before changing windows, panes, sidebars, tables, grids, thumbnails, path bars, toolbars/titlebar accessories, popovers, menus, shortcuts, Quick Look, tags, split-view resizing, or drag/drop.
 - Read `references/code-organization.md` before adding new controllers, services, views, test suites, or expanding any Swift file that is already near 800 lines.
 - Read `references/validation.md` before finishing a task or touching signing, app startup, `project.yml`, sandboxing, or tests.
 - Read `references/roadmap.md` when choosing the next implementation phase from the execution plan.

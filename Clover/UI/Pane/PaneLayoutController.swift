@@ -19,6 +19,10 @@ final class PaneLayoutController: NSViewController {
         panes.count
     }
 
+    var canActivateAdjacentPane: Bool {
+        panes.count > 1
+    }
+
     var currentLayout: PaneLayout {
         layout
     }
@@ -143,6 +147,15 @@ final class PaneLayoutController: NSViewController {
     func activatePane(at index: Int) {
         guard panes.indices.contains(index) else { return }
         setActivePane(panes[index])
+        panes[index].focusBrowser()
+    }
+
+    func activateNextPane() {
+        activatePane(offset: 1)
+    }
+
+    func activatePreviousPane() {
+        activatePane(offset: -1)
     }
 
     func setLayout(_ newLayout: PaneLayout) {
@@ -302,6 +315,15 @@ final class PaneLayoutController: NSViewController {
         if let url = pane?.viewModel.currentURL {
             activePanePathChangeHandler?(url)
         }
+    }
+
+    private func activatePane(offset: Int) {
+        guard panes.count > 1 else { return }
+        let currentIndex = activePane.flatMap { activePane in
+            panes.firstIndex { $0 === activePane }
+        } ?? 0
+        let nextIndex = (currentIndex + offset + panes.count) % panes.count
+        activatePane(at: nextIndex)
     }
 
     private func paneCount(for layout: PaneLayout) -> Int {

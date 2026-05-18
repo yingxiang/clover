@@ -132,6 +132,14 @@ final class RootSplitViewController: NSSplitViewController {
         workspaceViewController.setPaneLayout(layout)
     }
 
+    func activateNextPane() {
+        workspaceViewController.activateNextPane()
+    }
+
+    func activatePreviousPane() {
+        workspaceViewController.activatePreviousPane()
+    }
+
     func restore(from workspace: Workspace) {
         workspaceViewController.restore(from: workspace)
         lastExpandedSidebarWidth = max(CGFloat(workspace.sidebarWidth), 180)
@@ -170,6 +178,10 @@ final class RootSplitViewController: NSSplitViewController {
 
     var activePaneURL: URL? {
         workspaceViewController.activePaneURL
+    }
+
+    var canActivateAdjacentPane: Bool {
+        workspaceViewController.canActivateAdjacentPane
     }
 
     func setFileViewModeInActivePane(_ mode: FileViewMode) {

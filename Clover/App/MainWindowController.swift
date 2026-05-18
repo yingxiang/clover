@@ -17,6 +17,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     private var sidebarTitlebarAccessory: NSTitlebarAccessoryViewController?
     private var layoutPopover: NSPopover?
     private var toolbarContextMenuMonitor: Any?
+    private var paneSwitchKeyMonitor: Any?
     private let environment: AppEnvironment
 
     init(environment: AppEnvironment, restoredWorkspace: Workspace? = nil) {
@@ -60,6 +61,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
             object: window
         )
         installToolbarContextMenuBlocker()
+        installPaneSwitchKeyMonitor()
 
         if let restoredWorkspace {
             rootViewController.loadViewIfNeeded()
@@ -88,6 +90,10 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         if let toolbarContextMenuMonitor {
             NSEvent.removeMonitor(toolbarContextMenuMonitor)
             self.toolbarContextMenuMonitor = nil
+        }
+        if let paneSwitchKeyMonitor {
+            NSEvent.removeMonitor(paneSwitchKeyMonitor)
+            self.paneSwitchKeyMonitor = nil
         }
         NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: notification.object)
     }
@@ -179,6 +185,14 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     func setFileViewMode(_ mode: FileViewMode) {
         rootViewController.setFileViewModeInActivePane(mode)
         updateViewModeButton()
+    }
+
+    func activateNextPane() {
+        rootViewController.activateNextPane()
+    }
+
+    func activatePreviousPane() {
+        rootViewController.activatePreviousPane()
     }
 
     func workspaceSnapshot() -> Workspace? {
@@ -502,6 +516,43 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
             name.localizedCaseInsensitiveContains("toolbar") ||
             name.localizedCaseInsensitiveContains("titlebar")
         }
+    }
+
+    private func installPaneSwitchKeyMonitor() {
+        paneSwitchKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, self.shouldSwitchPane(for: event) else { return event }
+            if event.modifierFlags.intersection(.deviceIndependentFlagsMask).contains(.shift) {
+                self.activatePreviousPane()
+            } else {
+                self.activateNextPane()
+            }
+            return nil
+        }
+    }
+
+    private func shouldSwitchPane(for event: NSEvent) -> Bool {
+        guard event.window === window,
+              event.keyCode == 48,
+              event.modifierFlags
+                .intersection(.deviceIndependentFlagsMask)
+                .subtracting([.shift, .numericPad, .function])
+                .isEmpty,
+              !isEditingText else {
+            return false
+        }
+        return rootViewController.canActivateAdjacentPane
+    }
+
+    private var isEditingText: Bool {
+        guard let firstResponder = window?.firstResponder else { return false }
+        if firstResponder is NSTextView {
+            return true
+        }
+        if let control = firstResponder as? NSControl,
+           control.currentEditor() != nil {
+            return true
+        }
+        return false
     }
 
     @objc private func showLayoutPicker(_ sender: Any?) {

@@ -115,6 +115,16 @@ final class FilePaneViewController: NSViewController {
         view.layer?.borderColor = (isActive ? NSColor.controlAccentColor : NSColor.separatorColor).cgColor
     }
 
+    func focusBrowser() {
+        activationHandler?(self)
+        switch viewModel.viewMode {
+        case .list:
+            view.window?.makeFirstResponder(tableView)
+        case .grid:
+            view.window?.makeFirstResponder(collectionView)
+        }
+    }
+
     func refresh() {
         viewModel.refresh()
     }

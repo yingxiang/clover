@@ -127,6 +127,14 @@ final class WorkspaceViewController: NSViewController {
         paneController.setLayout(layout)
     }
 
+    func activateNextPane() {
+        paneController.activateNextPane()
+    }
+
+    func activatePreviousPane() {
+        paneController.activatePreviousPane()
+    }
+
     func restore(from workspace: Workspace) {
         paneController.restore(from: workspace)
     }
@@ -145,6 +153,10 @@ final class WorkspaceViewController: NSViewController {
 
     var activePaneURL: URL? {
         paneController.activePaneURL
+    }
+
+    var canActivateAdjacentPane: Bool {
+        paneController.canActivateAdjacentPane
     }
 
     func openInActivePane(_ url: URL) {
