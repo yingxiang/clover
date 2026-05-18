@@ -238,13 +238,11 @@ final class PaneLayoutController: NSViewController {
             addChild(panes[0])
             arrangedView = panes[0].view
         case .twoVertical:
-            arrangedView = split(axis: .horizontal, panes: Array(panes.prefix(2)))
-        case .twoHorizontal:
             arrangedView = split(axis: .vertical, panes: Array(panes.prefix(2)))
+        case .twoHorizontal:
+            arrangedView = split(axis: .horizontal, panes: Array(panes.prefix(2)))
         case .fourGrid:
-            let top = split(axis: .horizontal, panes: Array(panes.prefix(2)))
-            let bottom = split(axis: .horizontal, panes: Array(panes.dropFirst(2).prefix(2)))
-            arrangedView = stack(axis: .vertical, views: [top, bottom])
+            arrangedView = crossSplit(panes: Array(panes.prefix(4)))
         }
 
         arrangedView.translatesAutoresizingMaskIntoConstraints = false
@@ -260,7 +258,32 @@ final class PaneLayoutController: NSViewController {
 
     private func split(axis: NSUserInterfaceLayoutOrientation, panes: [FilePaneViewController]) -> NSView {
         panes.forEach { addChild($0) }
-        return stack(axis: axis, views: panes.map(\.view))
+        let splitView = BoundedPaneSplitView()
+        splitView.isVertical = axis == .vertical
+        splitView.dividerStyle = .thin
+        splitView.translatesAutoresizingMaskIntoConstraints = false
+        splitView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        splitView.setContentHuggingPriority(.defaultLow, for: .vertical)
+        splitView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        splitView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+
+        panes.map(\.view).forEach { paneView in
+            paneView.translatesAutoresizingMaskIntoConstraints = false
+            splitView.addArrangedSubview(paneView)
+        }
+        return splitView
+    }
+
+    private func crossSplit(panes: [FilePaneViewController]) -> NSView {
+        panes.forEach { addChild($0) }
+        let splitView = CrossPaneSplitView()
+        splitView.translatesAutoresizingMaskIntoConstraints = false
+        splitView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        splitView.setContentHuggingPriority(.defaultLow, for: .vertical)
+        splitView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        splitView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+        splitView.setPaneViews(panes.map(\.view))
+        return splitView
     }
 
     private func stack(axis: NSUserInterfaceLayoutOrientation, views: [NSView]) -> NSStackView {
@@ -303,5 +326,175 @@ final class PaneLayoutController: NSViewController {
         case .fourGrid:
             return L10n.fourGrid
         }
+    }
+}
+
+private final class BoundedPaneSplitView: NSSplitView, NSSplitViewDelegate {
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        delegate = self
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        delegate = self
+    }
+
+    func splitView(_ splitView: NSSplitView, constrainSplitPosition proposedPosition: CGFloat, ofSubviewAt dividerIndex: Int) -> CGFloat {
+        let availableLength = (isVertical ? bounds.width : bounds.height) - dividerThickness
+        guard availableLength > 0 else { return proposedPosition }
+
+        let minimumPaneLength = availableLength / 3
+        let maximumFirstPaneLength = availableLength - minimumPaneLength
+        return min(max(proposedPosition, minimumPaneLength), maximumFirstPaneLength)
+    }
+}
+
+private final class CrossPaneSplitView: NSView {
+    private enum DragAxis {
+        case vertical
+        case horizontal
+        case both
+    }
+
+    private let dividerThickness: CGFloat = 1
+    private let dividerHitSlop: CGFloat = 5
+    private let minimumRatio: CGFloat = 1 / 3
+    private let maximumRatio: CGFloat = 2 / 3
+    private var verticalRatio: CGFloat = 0.5
+    private var horizontalRatio: CGFloat = 0.5
+    private var paneViews: [NSView] = []
+    private var dragAxis: DragAxis?
+
+    func setPaneViews(_ views: [NSView]) {
+        paneViews.forEach { $0.removeFromSuperview() }
+        paneViews = Array(views.prefix(4))
+        let initialFrame = bounds.isEmpty ? NSRect(x: 0, y: 0, width: 320, height: 240) : bounds
+        paneViews.forEach { paneView in
+            paneView.translatesAutoresizingMaskIntoConstraints = true
+            paneView.autoresizingMask = []
+            paneView.frame = initialFrame
+            addSubview(paneView)
+        }
+        needsLayout = true
+        needsDisplay = true
+    }
+
+    override func layout() {
+        super.layout()
+        guard paneViews.count == 4 else { return }
+
+        let availableWidth = max(bounds.width - dividerThickness, 0)
+        let availableHeight = max(bounds.height - dividerThickness, 0)
+        let leftWidth = floor(availableWidth * verticalRatio)
+        let rightWidth = availableWidth - leftWidth
+        let topHeight = floor(availableHeight * horizontalRatio)
+        let bottomHeight = availableHeight - topHeight
+        let rightX = bounds.minX + leftWidth + dividerThickness
+        let topY = bounds.minY + bottomHeight + dividerThickness
+
+        paneViews[0].frame = NSRect(x: bounds.minX, y: topY, width: leftWidth, height: topHeight)
+        paneViews[1].frame = NSRect(x: rightX, y: topY, width: rightWidth, height: topHeight)
+        paneViews[2].frame = NSRect(x: bounds.minX, y: bounds.minY, width: leftWidth, height: bottomHeight)
+        paneViews[3].frame = NSRect(x: rightX, y: bounds.minY, width: rightWidth, height: bottomHeight)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        NSColor.separatorColor.setFill()
+        verticalDividerRect().fill()
+        horizontalDividerRect().fill()
+    }
+
+    override func resetCursorRects() {
+        addCursorRect(verticalDividerHitRect(), cursor: .resizeLeftRight)
+        addCursorRect(horizontalDividerHitRect(), cursor: .resizeUpDown)
+        addCursorRect(centerHitRect(), cursor: .crosshair)
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        guard !isHidden, alphaValue > 0, bounds.contains(point) else { return nil }
+        if dragAxis(at: point) != nil {
+            return self
+        }
+        return super.hitTest(point)
+    }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        guard let event else { return false }
+        let location = convert(event.locationInWindow, from: nil)
+        return dragAxis(at: location) != nil
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        dragAxis = dragAxis(at: convert(event.locationInWindow, from: nil))
+        if dragAxis == nil {
+            super.mouseDown(with: event)
+        }
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let dragAxis else { return }
+        let location = convert(event.locationInWindow, from: nil)
+        updateRatios(from: location, dragAxis: dragAxis)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        dragAxis = nil
+    }
+
+    private func dragAxis(at location: NSPoint) -> DragAxis? {
+        if centerHitRect().contains(location) {
+            return .both
+        }
+        if verticalDividerHitRect().contains(location) {
+            return .vertical
+        }
+        if horizontalDividerHitRect().contains(location) {
+            return .horizontal
+        }
+        return nil
+    }
+
+    private func updateRatios(from location: NSPoint, dragAxis: DragAxis) {
+        if dragAxis == .vertical || dragAxis == .both {
+            let availableWidth = max(bounds.width - dividerThickness, 1)
+            verticalRatio = clampedRatio((location.x - bounds.minX) / availableWidth)
+        }
+        if dragAxis == .horizontal || dragAxis == .both {
+            let availableHeight = max(bounds.height - dividerThickness, 1)
+            horizontalRatio = clampedRatio((bounds.maxY - location.y) / availableHeight)
+        }
+        needsLayout = true
+        needsDisplay = true
+    }
+
+    private func clampedRatio(_ ratio: CGFloat) -> CGFloat {
+        min(max(ratio, minimumRatio), maximumRatio)
+    }
+
+    private func verticalDividerRect() -> NSRect {
+        let availableWidth = max(bounds.width - dividerThickness, 0)
+        let x = bounds.minX + floor(availableWidth * verticalRatio)
+        return NSRect(x: x, y: bounds.minY, width: dividerThickness, height: bounds.height)
+    }
+
+    private func horizontalDividerRect() -> NSRect {
+        let availableHeight = max(bounds.height - dividerThickness, 0)
+        let bottomHeight = availableHeight - floor(availableHeight * horizontalRatio)
+        let y = bounds.minY + bottomHeight
+        return NSRect(x: bounds.minX, y: y, width: bounds.width, height: dividerThickness)
+    }
+
+    private func verticalDividerHitRect() -> NSRect {
+        verticalDividerRect().insetBy(dx: -dividerHitSlop, dy: 0)
+    }
+
+    private func horizontalDividerHitRect() -> NSRect {
+        horizontalDividerRect().insetBy(dx: 0, dy: -dividerHitSlop)
+    }
+
+    private func centerHitRect() -> NSRect {
+        verticalDividerRect().intersection(horizontalDividerRect()).insetBy(dx: -dividerHitSlop, dy: -dividerHitSlop)
     }
 }

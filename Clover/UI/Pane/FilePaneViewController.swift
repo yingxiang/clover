@@ -35,6 +35,7 @@ final class FilePaneViewController: NSViewController {
     private var pendingRenameStartDate: Date?
     private var pendingCreationKinds: [URL: NewItemKind] = [:]
     private var isPresentingDirectoryAccessPanel = false
+    private var didPerformInitialOpen = false
     static weak var previewOwner: FilePaneViewController?
     let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -97,7 +98,11 @@ final class FilePaneViewController: NSViewController {
         configureLoadingIndicator()
         configurePreviewKeyMonitor()
         NotificationCenter.default.addObserver(self, selector: #selector(fileOperationCompleted(_:)), name: .cloverFileOperationCompleted, object: nil)
-        open(viewModel.currentURL)
+    }
+
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        performInitialOpenIfNeeded()
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -120,6 +125,12 @@ final class FilePaneViewController: NSViewController {
         }
         let targetURL = directoryAccessStore.resolvedURL(for: url) ?? url
         viewModel.load(url: targetURL)
+    }
+
+    private func performInitialOpenIfNeeded() {
+        guard !didPerformInitialOpen else { return }
+        didPerformInitialOpen = true
+        open(viewModel.currentURL)
     }
 
     @objc func goBack(_ sender: Any?) {
@@ -232,8 +243,8 @@ final class FilePaneViewController: NSViewController {
     }
 
     private func configurePathBar() {
-        configureNavigationButton(backButton, symbol: .back, action: #selector(goBack(_:)), toolTip: "Back")
-        configureNavigationButton(forwardButton, symbol: .forward, action: #selector(goForward(_:)), toolTip: "Forward")
+        configureNavigationButton(backButton, symbol: .back, action: #selector(goBack(_:)), toolTip: L10n.back)
+        configureNavigationButton(forwardButton, symbol: .forward, action: #selector(goForward(_:)), toolTip: L10n.forward)
         view.addSubview(backButton)
         view.addSubview(forwardButton)
 
@@ -255,6 +266,7 @@ final class FilePaneViewController: NSViewController {
         button.target = self
         button.action = action
         button.toolTip = toolTip
+        button.setAccessibilityLabel(toolTip)
         button.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: 28),
@@ -360,12 +372,19 @@ final class FilePaneViewController: NSViewController {
         searchField.action = #selector(searchTextChanged(_:))
         searchField.sendsSearchStringImmediately = true
         searchField.sendsWholeSearchString = false
+        searchField.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        searchField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         view.addSubview(searchField)
+
+        let preferredSearchWidthConstraint = searchField.widthAnchor.constraint(equalToConstant: 180)
+        preferredSearchWidthConstraint.priority = .defaultLow
 
         NSLayoutConstraint.activate([
             searchField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
             searchField.centerYAnchor.constraint(equalTo: pathBarView.centerYAnchor),
-            searchField.widthAnchor.constraint(equalToConstant: 180)
+            searchField.widthAnchor.constraint(greaterThanOrEqualToConstant: 72),
+            searchField.widthAnchor.constraint(lessThanOrEqualToConstant: 180),
+            preferredSearchWidthConstraint
         ])
     }
 
@@ -567,7 +586,7 @@ final class FilePaneViewController: NSViewController {
             return false
         }
 
-        guard !directoryAccessStore.hasDirectoryAccess(to: standardizedURL) else {
+        guard !directoryAccessStore.hasSavedAccess(to: standardizedURL) else {
             return false
         }
 
@@ -610,26 +629,15 @@ final class FilePaneViewController: NSViewController {
     }
 
     private func shouldRequestDirectoryAccess(for url: URL) -> Bool {
-        guard url.isFileURL else { return false }
-        let standardizedURL = url.standardizedFileURL
-        let homeURL = UserDirectories.homeURL.standardizedFileURL
-
-        if standardizedURL == homeURL {
-            return true
-        }
-
-        let protectedFolderNames = Set(["Desktop", "Documents", "Downloads", "Movies", "Music", "Pictures"])
-        return standardizedURL.deletingLastPathComponent().standardizedFileURL == homeURL
-            && protectedFolderNames.contains(standardizedURL.lastPathComponent)
+        shouldRequireUserSelectedAccess(for: url)
     }
 
     private func shouldProactivelyRequestDirectoryAccess(for url: URL) -> Bool {
-        guard url.isFileURL else { return false }
-        let standardizedURL = url.standardizedFileURL
-        let homeURL = UserDirectories.homeURL.standardizedFileURL
-        let protectedFolderNames = Set(["Desktop", "Documents", "Downloads", "Movies", "Music", "Pictures"])
-        return standardizedURL.deletingLastPathComponent().standardizedFileURL == homeURL
-            && protectedFolderNames.contains(standardizedURL.lastPathComponent)
+        shouldRequireUserSelectedAccess(for: url)
+    }
+
+    private func shouldRequireUserSelectedAccess(for url: URL) -> Bool {
+        url.isFileURL
     }
 
     private func panelDirectoryURL(for requestedURL: URL) -> URL {

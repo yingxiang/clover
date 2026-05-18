@@ -7,6 +7,8 @@ final class RootSplitViewController: NSSplitViewController {
 
     private let sidebarViewController: SidebarViewController
     private let workspaceViewController: WorkspaceViewController
+    private weak var sidebarSplitViewItem: NSSplitViewItem?
+    private var lastExpandedSidebarWidth: CGFloat = 220
 
     init(environment: AppEnvironment) {
         sidebarViewController = SidebarViewController()
@@ -36,7 +38,8 @@ final class RootSplitViewController: NSSplitViewController {
         let sidebarItem = NSSplitViewItem(sidebarWithViewController: sidebarViewController)
         sidebarItem.minimumThickness = 180
         sidebarItem.maximumThickness = 320
-        sidebarItem.canCollapse = false
+        sidebarItem.canCollapse = true
+        sidebarSplitViewItem = sidebarItem
 
         let workspaceItem = NSSplitViewItem(viewController: workspaceViewController)
         workspaceItem.minimumThickness = 520
@@ -131,15 +134,19 @@ final class RootSplitViewController: NSSplitViewController {
 
     func restore(from workspace: Workspace) {
         workspaceViewController.restore(from: workspace)
-        if workspace.sidebarWidth > 0 {
-            splitView.layoutSubtreeIfNeeded()
-            splitView.setPosition(workspace.sidebarWidth, ofDividerAt: 0)
+        lastExpandedSidebarWidth = max(CGFloat(workspace.sidebarWidth), 180)
+        splitView.layoutSubtreeIfNeeded()
+        if workspace.isSidebarCollapsed {
+            setSidebarCollapsed(true)
+        } else {
+            setSidebarCollapsed(false)
+            splitView.setPosition(lastExpandedSidebarWidth, ofDividerAt: 0)
         }
     }
 
     func workspaceSnapshot(name: String, windowFrame: String, using store: WorkspaceStore) -> Workspace {
         let state = workspaceViewController.workspaceState(using: store)
-        let sidebarWidth = splitViewItems.first?.viewController.view.frame.width ?? 220
+        let sidebarWidth = isSidebarCollapsed ? lastExpandedSidebarWidth : (splitViewItems.first?.viewController.view.frame.width ?? lastExpandedSidebarWidth)
         return Workspace(
             id: UUID(),
             name: name,
@@ -147,6 +154,7 @@ final class RootSplitViewController: NSSplitViewController {
             panes: state.panes,
             windowFrame: windowFrame,
             sidebarWidth: sidebarWidth,
+            isSidebarCollapsed: isSidebarCollapsed,
             createdAt: Date(),
             updatedAt: Date()
         )
@@ -166,6 +174,41 @@ final class RootSplitViewController: NSSplitViewController {
 
     func setFileViewModeInActivePane(_ mode: FileViewMode) {
         workspaceViewController.setFileViewModeInActivePane(mode)
+    }
+
+    var isSidebarCollapsed: Bool {
+        sidebarSplitViewItem?.isCollapsed ?? false
+    }
+
+    func toggleSidebar() {
+        setSidebarCollapsed(!isSidebarCollapsed, animated: true)
+    }
+
+    private func setSidebarCollapsed(_ collapsed: Bool, animated: Bool = false) {
+        guard let sidebarSplitViewItem else { return }
+        if !collapsed {
+            let currentWidth = sidebarSplitViewItem.viewController.view.frame.width
+            if currentWidth >= sidebarSplitViewItem.minimumThickness {
+                lastExpandedSidebarWidth = currentWidth
+            }
+        } else if !sidebarSplitViewItem.isCollapsed {
+            lastExpandedSidebarWidth = max(sidebarSplitViewItem.viewController.view.frame.width, sidebarSplitViewItem.minimumThickness)
+        }
+
+        let item = animated ? sidebarSplitViewItem.animator() : sidebarSplitViewItem
+        item.isCollapsed = collapsed
+        if !collapsed {
+            let restoreWidth = lastExpandedSidebarWidth
+            if animated {
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.18
+                    self.splitView.animator().setPosition(restoreWidth, ofDividerAt: 0)
+                }
+            } else {
+                splitView.layoutSubtreeIfNeeded()
+                splitView.setPosition(restoreWidth, ofDividerAt: 0)
+            }
+        }
     }
 }
 

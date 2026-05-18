@@ -33,7 +33,8 @@ final class LocalFileProvider: FileProvider {
                 .contentModificationDateKey,
                 .creationDateKey,
                 .contentTypeKey,
-                .isHiddenKey
+                .isHiddenKey,
+                .labelNumberKey
             ]
             let childURLs: [URL]
             do {
@@ -64,7 +65,8 @@ final class LocalFileProvider: FileProvider {
                         typeIdentifier: values.contentType?.identifier,
                         isHidden: values.isHidden ?? name.hasPrefix("."),
                         isPackage: isPackage,
-                        isApplication: isApplication
+                        isApplication: isApplication,
+                        labelNumber: values.labelNumber
                     )
                 } catch {
                     var isDirectory: ObjCBool = false

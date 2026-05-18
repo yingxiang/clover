@@ -13,8 +13,9 @@ struct FileItem: Identifiable, Hashable {
     let isHidden: Bool
     let isPackage: Bool
     let isApplication: Bool
+    let labelNumber: Int?
 
-    init(url: URL, name: String, isDirectory: Bool, size: Int64?, modificationDate: Date?, creationDate: Date?, typeIdentifier: String?, isHidden: Bool, isPackage: Bool = false, isApplication: Bool = false) {
+    init(url: URL, name: String, isDirectory: Bool, size: Int64?, modificationDate: Date?, creationDate: Date?, typeIdentifier: String?, isHidden: Bool, isPackage: Bool = false, isApplication: Bool = false, labelNumber: Int? = nil) {
         self.id = url
         self.url = url
         self.name = name
@@ -26,6 +27,7 @@ struct FileItem: Identifiable, Hashable {
         self.isHidden = isHidden
         self.isPackage = isPackage
         self.isApplication = isApplication
+        self.labelNumber = labelNumber
     }
 
     var isBrowsableDirectory: Bool {

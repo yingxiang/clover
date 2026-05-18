@@ -19,6 +19,8 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     private weak var airDropToolbarItem: NSToolbarItem?
     private weak var shareToolbarItem: NSToolbarItem?
     private weak var infoToolbarItem: NSToolbarItem?
+    private weak var sidebarTitlebarButton: NSButton?
+    private var sidebarTitlebarAccessory: NSTitlebarAccessoryViewController?
     private var layoutPopover: NSPopover?
     private var toolbarContextMenuMonitor: Any?
     private let environment: AppEnvironment
@@ -52,15 +54,18 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
 
         let toolbar = NSToolbar(identifier: "CloverToolbar")
         toolbar.delegate = self
-        toolbar.displayMode = .iconAndLabel
+        toolbar.allowsUserCustomization = false
+        toolbar.autosavesConfiguration = false
+        toolbar.displayMode = .iconOnly
         window.toolbar = toolbar
+        installSidebarTitlebarButton()
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleWindowWillClose(_:)),
             name: NSWindow.willCloseNotification,
             object: window
         )
-        installToolbarContextMenuMonitor()
+        installToolbarContextMenuBlocker()
 
         if let restoredWorkspace {
             rootViewController.loadViewIfNeeded()
@@ -71,6 +76,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
             }
             updateLayoutButton()
             updateViewModeButton()
+            updateSidebarTitlebarButton()
             updateToolbarButtonAvailability()
         }
         updateWindowTitle()
@@ -165,12 +171,9 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         rootViewController.showShareMenuInActivePane(relativeTo: sender as? NSView)
     }
 
-    @objc func setToolbarDisplayModeIconAndLabel(_ sender: Any?) {
-        window?.toolbar?.displayMode = .iconAndLabel
-    }
-
-    @objc func setToolbarDisplayModeIconOnly(_ sender: Any?) {
-        window?.toolbar?.displayMode = .iconOnly
+    @objc private func toggleSidebar(_ sender: Any?) {
+        rootViewController.toggleSidebar()
+        updateSidebarTitlebarButton()
     }
 
     func setPaneLayout(_ layout: PaneLayout) {
@@ -350,22 +353,20 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         layoutToolbarItem?.image = layout.toolbarImage
         layoutToolbarItem?.label = L10n.layout
         layoutToolbarItem?.paletteLabel = L10n.layout
-        layoutToolbarItem?.toolTip = layout.displayName
+        layoutToolbarItem?.toolTip = L10n.layout
         layoutToolbarButton?.image = layout.toolbarImage
-        layoutToolbarButton?.toolTip = layout.displayName
-        layoutToolbarButton?.setAccessibilityLabel(layout.displayName)
+        layoutToolbarButton?.toolTip = L10n.layout
+        layoutToolbarButton?.setAccessibilityLabel(L10n.layout)
     }
 
     private func updateViewModeButton() {
-        let mode = rootViewController.currentFileViewMode
-        let title = mode == .list ? L10n.viewModeList : L10n.viewModeGrid
         viewModeToolbarItem?.image = viewModeImage
         viewModeToolbarItem?.label = L10n.view
         viewModeToolbarItem?.paletteLabel = L10n.view
-        viewModeToolbarItem?.toolTip = title
+        viewModeToolbarItem?.toolTip = L10n.view
         viewModeToolbarButton?.image = viewModeImage
-        viewModeToolbarButton?.toolTip = title
-        viewModeToolbarButton?.setAccessibilityLabel(title)
+        viewModeToolbarButton?.toolTip = L10n.view
+        viewModeToolbarButton?.setAccessibilityLabel(L10n.view)
     }
 
     private func updateToolbarButtonAvailability() {
@@ -380,6 +381,13 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         let infoEnabled = rootViewController.canPerformFileAction(#selector(FilePaneViewController.showSelectedItemsInfo(_:)))
         infoToolbarItem?.isEnabled = infoEnabled
         infoToolbarButton?.isEnabled = infoEnabled
+    }
+
+    private func updateSidebarTitlebarButton() {
+        let isCollapsed = rootViewController.isSidebarCollapsed
+        let title = isCollapsed ? L10n.showSidebar : L10n.hideSidebar
+        sidebarTitlebarButton?.toolTip = title
+        sidebarTitlebarButton?.setAccessibilityLabel(title)
     }
 
     private func updateWindowTitle() {
@@ -408,7 +416,6 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         button.bezelStyle = .texturedRounded
         button.imagePosition = .imageOnly
         button.imageScaling = .scaleProportionallyDown
-        button.menu = makeToolbarDisplayModeMenu()
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: 32),
             button.heightAnchor.constraint(equalToConstant: 28)
@@ -416,45 +423,50 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         return button
     }
 
-    private func makeToolbarDisplayModeMenu() -> NSMenu {
-        let menu = NSMenu(title: L10n.toolbarDisplayModeMenu)
+    private func installSidebarTitlebarButton() {
+        guard let window else { return }
 
-        let iconAndLabelItem = NSMenuItem(
-            title: L10n.toolbarDisplayModeIconAndLabel,
-            action: #selector(setToolbarDisplayModeIconAndLabel(_:)),
-            keyEquivalent: ""
-        )
-        iconAndLabelItem.target = self
-        iconAndLabelItem.state = window?.toolbar?.displayMode == .iconAndLabel ? .on : .off
-        menu.addItem(iconAndLabelItem)
+        let image = AppIconProvider.image(.sidebar, accessibilityDescription: nil) ?? NSImage()
+        image.isTemplate = true
+        let button = ToolbarContextMenuButton(image: image, target: self, action: #selector(toggleSidebar(_:)))
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.bezelStyle = .texturedRounded
+        button.imagePosition = .imageOnly
+        button.imageScaling = .scaleProportionallyDown
+        button.contentTintColor = .labelColor
 
-        let iconOnlyItem = NSMenuItem(
-            title: L10n.toolbarDisplayModeIconOnly,
-            action: #selector(setToolbarDisplayModeIconOnly(_:)),
-            keyEquivalent: ""
-        )
-        iconOnlyItem.target = self
-        iconOnlyItem.state = window?.toolbar?.displayMode == .iconOnly ? .on : .off
-        menu.addItem(iconOnlyItem)
+        let accessoryView = NSView(frame: NSRect(x: 0, y: 0, width: 56, height: 28))
+        accessoryView.translatesAutoresizingMaskIntoConstraints = false
+        accessoryView.addSubview(button)
+        NSLayoutConstraint.activate([
+            accessoryView.widthAnchor.constraint(equalToConstant: 56),
+            accessoryView.heightAnchor.constraint(equalToConstant: 28),
+            button.widthAnchor.constraint(equalToConstant: 32),
+            button.heightAnchor.constraint(equalToConstant: 28),
+            button.leadingAnchor.constraint(equalTo: accessoryView.leadingAnchor),
+            button.centerYAnchor.constraint(equalTo: accessoryView.centerYAnchor)
+        ])
 
-        return menu
+        let accessory = NSTitlebarAccessoryViewController()
+        accessory.view = accessoryView
+        accessory.layoutAttribute = .left
+        window.addTitlebarAccessoryViewController(accessory)
+
+        sidebarTitlebarButton = button
+        sidebarTitlebarAccessory = accessory
+        updateSidebarTitlebarButton()
     }
 
-    private func installToolbarContextMenuMonitor() {
+    private func installToolbarContextMenuBlocker() {
         toolbarContextMenuMonitor = NSEvent.addLocalMonitorForEvents(matching: [.rightMouseDown, .leftMouseDown]) { [weak self] event in
-            guard let self else { return event }
-            guard event.type == .rightMouseDown || (event.type == .leftMouseDown && event.modifierFlags.contains(.control)) else {
+            guard let self,
+                  event.type == .rightMouseDown || (event.type == .leftMouseDown && event.modifierFlags.contains(.control)),
+                  let window = self.window,
+                  event.window === window,
+                  self.toolbarContains(event.locationInWindow) else {
                 return event
             }
-            guard let window = self.window, event.window === window else {
-                return event
-            }
-            guard self.toolbarContains(event.locationInWindow) else {
-                return event
-            }
-
-            let menu = self.makeToolbarDisplayModeMenu()
-            NSMenu.popUpContextMenu(menu, with: event, for: window.contentView ?? NSView())
+            window.toolbar?.displayMode = .iconOnly
             return nil
         }
     }

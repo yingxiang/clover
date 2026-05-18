@@ -4,7 +4,7 @@ final class PathBarView: NSView, NSTextFieldDelegate {
     var navigationHandler: ((URL) -> Void)?
     var pathSubmitHandler: ((String) -> Void)?
 
-    private let stackView = NSStackView()
+    private let pathControl = NSPathControl()
     private let pathField = NSTextField()
     private var currentURL = UserDirectories.homeURL
 
@@ -19,19 +19,18 @@ final class PathBarView: NSView, NSTextFieldDelegate {
 
     func update(url: URL) {
         currentURL = url
+        pathControl.url = url
         pathField.stringValue = displayPath(for: url)
-        rebuildBreadcrumbs(for: url)
     }
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         updateAppearance()
-        rebuildBreadcrumbs(for: currentURL)
     }
 
     func beginEditing() {
         pathField.stringValue = displayPath(for: currentURL)
-        stackView.isHidden = true
+        pathControl.isHidden = true
         pathField.isHidden = false
         window?.makeFirstResponder(pathField)
         pathField.currentEditor()?.selectAll(nil)
@@ -40,7 +39,7 @@ final class PathBarView: NSView, NSTextFieldDelegate {
     override func mouseDown(with event: NSEvent) {
         let location = convert(event.locationInWindow, from: nil)
         let pathFieldContainsClick = !pathField.isHidden && pathField.frame.contains(location)
-        if !stackView.frame.contains(location), !pathFieldContainsClick {
+        if !pathControl.frame.contains(location), !pathFieldContainsClick {
             beginEditing()
             return
         }
@@ -62,11 +61,14 @@ final class PathBarView: NSView, NSTextFieldDelegate {
     }
 
     private func configureViews() {
-        stackView.orientation = .horizontal
-        stackView.alignment = .centerY
-        stackView.spacing = 2
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(stackView)
+        pathControl.pathStyle = .standard
+        pathControl.url = currentURL
+        pathControl.target = self
+        pathControl.action = #selector(openPathComponent(_:))
+        pathControl.translatesAutoresizingMaskIntoConstraints = false
+        pathControl.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        pathControl.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        addSubview(pathControl)
 
         pathField.isHidden = true
         pathField.lineBreakMode = .byTruncatingMiddle
@@ -77,10 +79,13 @@ final class PathBarView: NSView, NSTextFieldDelegate {
         pathField.translatesAutoresizingMaskIntoConstraints = false
         addSubview(pathField)
 
+        let pathControlTrailingConstraint = pathControl.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24)
+        pathControlTrailingConstraint.priority = .defaultHigh
+
         NSLayoutConstraint.activate([
-            stackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6),
-            stackView.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -28),
-            stackView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            pathControl.leadingAnchor.constraint(equalTo: leadingAnchor),
+            pathControlTrailingConstraint,
+            pathControl.centerYAnchor.constraint(equalTo: centerYAnchor),
             pathField.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6),
             pathField.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -28),
             pathField.centerYAnchor.constraint(equalTo: centerYAnchor)
@@ -89,66 +94,19 @@ final class PathBarView: NSView, NSTextFieldDelegate {
         updateAppearance()
     }
 
-    private func rebuildBreadcrumbs(for url: URL) {
-        stackView.arrangedSubviews.forEach { view in
-            stackView.removeArrangedSubview(view)
-            view.removeFromSuperview()
-        }
-
-        for (index, crumb) in breadcrumbs(for: url).enumerated() {
-            if index > 0 {
-                let separator = NSTextField(labelWithString: "/")
-                separator.textColor = .secondaryLabelColor
-                separator.font = .systemFont(ofSize: 11)
-                stackView.addArrangedSubview(separator)
-            }
-
-            let button = PathBreadcrumbButton(title: crumb.title, target: self, action: #selector(openBreadcrumb(_:)))
-            button.bezelStyle = .inline
-            button.isBordered = false
-            button.font = .systemFont(ofSize: 12)
-            button.contentTintColor = crumb.url == url ? .labelColor : .controlAccentColor
-            button.toolTip = crumb.url.path
-            button.url = crumb.url
-            stackView.addArrangedSubview(button)
-        }
-    }
-
-    @objc private func openBreadcrumb(_ sender: PathBreadcrumbButton) {
-        navigationHandler?(sender.url)
+    @objc private func openPathComponent(_ sender: NSPathControl) {
+        guard let url = sender.clickedPathItem?.url ?? sender.url else { return }
+        navigationHandler?(url)
     }
 
     private func finishEditing() {
         pathField.isHidden = true
-        stackView.isHidden = false
+        pathControl.isHidden = false
     }
 
     private func updateAppearance() {
         pathField.textColor = .labelColor
         pathField.backgroundColor = .textBackgroundColor
-    }
-
-    private func breadcrumbs(for url: URL) -> [(title: String, url: URL)] {
-        let components = url.standardizedFileURL.pathComponents
-        guard !components.isEmpty else { return [(title: "/", url: URL(fileURLWithPath: "/", isDirectory: true))] }
-
-        var crumbs: [(title: String, url: URL)] = []
-        var path = ""
-        for component in components {
-            if component == "/" {
-                path = "/"
-                crumbs.append((title: rootTitle(), url: URL(fileURLWithPath: "/", isDirectory: true)))
-                continue
-            }
-
-            path = (path as NSString).appendingPathComponent(component)
-            crumbs.append((title: component, url: URL(fileURLWithPath: path, isDirectory: true)))
-        }
-        return crumbs
-    }
-
-    private func rootTitle() -> String {
-        FileManager.default.displayName(atPath: "/").isEmpty ? "/" : FileManager.default.displayName(atPath: "/")
     }
 
     private func displayPath(for url: URL) -> String {
@@ -162,8 +120,4 @@ final class PathBarView: NSView, NSTextFieldDelegate {
         }
         return path
     }
-}
-
-private final class PathBreadcrumbButton: NSButton {
-    var url = URL(fileURLWithPath: "/", isDirectory: true)
 }

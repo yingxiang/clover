@@ -9,8 +9,11 @@ final class FileGridItem: NSCollectionViewItem {
     private let iconSelectionView = NSView()
     private let iconView = NSImageView()
     private let nameSelectionView = NSView()
+    private let tagDotView = FileTagDotView()
     private let nameField = GridNameTextField()
     private let detailField = NSTextField(labelWithString: "")
+    private var nameLeadingToTagConstraint: NSLayoutConstraint?
+    private var nameLeadingWithoutTagConstraint: NSLayoutConstraint?
     private var representedURL: URL?
     private var representedItemName = ""
     private var representedItemIsDirectory = false
@@ -61,8 +64,14 @@ final class FileGridItem: NSCollectionViewItem {
         view.addSubview(iconSelectionView)
         view.addSubview(iconView)
         view.addSubview(nameSelectionView)
+        nameSelectionView.addSubview(tagDotView)
         nameSelectionView.addSubview(nameField)
         view.addSubview(detailField)
+
+        let nameWithTag = nameField.leadingAnchor.constraint(equalTo: tagDotView.trailingAnchor, constant: 4)
+        let nameWithoutTag = nameField.leadingAnchor.constraint(equalTo: nameSelectionView.leadingAnchor, constant: 4)
+        nameLeadingToTagConstraint = nameWithTag
+        nameLeadingWithoutTagConstraint = nameWithoutTag
 
         NSLayoutConstraint.activate([
             iconSelectionView.topAnchor.constraint(equalTo: view.topAnchor, constant: 5),
@@ -82,7 +91,12 @@ final class FileGridItem: NSCollectionViewItem {
             nameSelectionView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -4),
             nameSelectionView.widthAnchor.constraint(lessThanOrEqualToConstant: 96),
 
-            nameField.leadingAnchor.constraint(equalTo: nameSelectionView.leadingAnchor, constant: 4),
+            tagDotView.leadingAnchor.constraint(equalTo: nameSelectionView.leadingAnchor, constant: 5),
+            tagDotView.topAnchor.constraint(equalTo: nameSelectionView.topAnchor, constant: 5),
+            tagDotView.widthAnchor.constraint(equalToConstant: 8),
+            tagDotView.heightAnchor.constraint(equalToConstant: 8),
+
+            nameWithoutTag,
             nameField.trailingAnchor.constraint(equalTo: nameSelectionView.trailingAnchor, constant: -4),
             nameField.topAnchor.constraint(equalTo: nameSelectionView.topAnchor, constant: 1),
             nameField.bottomAnchor.constraint(equalTo: nameSelectionView.bottomAnchor, constant: -1),
@@ -110,6 +124,7 @@ final class FileGridItem: NSCollectionViewItem {
         representedItemIsDirectory = false
         iconView.image = nil
         nameField.stringValue = ""
+        tagDotView.labelNumber = nil
         detailField.stringValue = ""
         nameField.endEditingMode()
     }
@@ -126,6 +141,7 @@ final class FileGridItem: NSCollectionViewItem {
         representedItemIsDirectory = item.isDirectory
         iconView.image = FileIconProvider.icon(for: item, size: 56)
         nameField.stringValue = item.name
+        setLabelNumber(item.labelNumber)
         nameField.preferredMaxLayoutWidth = 88
         detailField.stringValue = detail
         view.toolTip = item.name
@@ -163,6 +179,14 @@ final class FileGridItem: NSCollectionViewItem {
 
     func setDetail(_ detail: String) {
         detailField.stringValue = detail
+    }
+
+    private func setLabelNumber(_ labelNumber: Int?) {
+        tagDotView.labelNumber = labelNumber
+        let hasTag = !tagDotView.isHidden
+        nameLeadingToTagConstraint?.isActive = hasTag
+        nameLeadingWithoutTagConstraint?.isActive = !hasTag
+        nameField.alignment = hasTag ? .left : .center
     }
 
     private func updateSelectionAppearance() {

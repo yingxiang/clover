@@ -18,6 +18,7 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
             cell.textField?.stringValue = item.name
             cell.imageView?.image = FileIconProvider.icon(for: item)
             cell.imageView?.toolTip = item.url.absoluteString
+            cell.setLabelNumber(item.labelNumber)
             cell.disclosureButton.target = self
             cell.disclosureButton.action = #selector(toggleListDirectoryExpansion(_:))
             cell.disclosureButton.tag = row

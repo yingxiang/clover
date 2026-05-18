@@ -34,7 +34,10 @@ final class FileListNameCellView: NSTableCellView {
     let disclosureButton = NSButton()
     let fileIconView = NSImageView()
     let nameTextField = NSTextField(string: "")
+    private let tagDotView = FileTagDotView()
     private var disclosureLeadingConstraint: NSLayoutConstraint?
+    private var nameTrailingToTagConstraint: NSLayoutConstraint?
+    private var nameTrailingWithoutTagConstraint: NSLayoutConstraint?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -66,11 +69,16 @@ final class FileListNameCellView: NSTableCellView {
         addSubview(disclosureButton)
         addSubview(fileIconView)
         addSubview(nameTextField)
+        addSubview(tagDotView)
         imageView = fileIconView
         textField = nameTextField
 
         let leading = disclosureButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6)
         disclosureLeadingConstraint = leading
+        let nameTrailingToTag = nameTextField.trailingAnchor.constraint(lessThanOrEqualTo: tagDotView.leadingAnchor, constant: -5)
+        let nameTrailingWithoutTag = nameTextField.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -6)
+        nameTrailingToTagConstraint = nameTrailingToTag
+        nameTrailingWithoutTagConstraint = nameTrailingWithoutTag
         NSLayoutConstraint.activate([
             leading,
             disclosureButton.centerYAnchor.constraint(equalTo: centerYAnchor),
@@ -81,8 +89,12 @@ final class FileListNameCellView: NSTableCellView {
             fileIconView.widthAnchor.constraint(equalToConstant: 18),
             fileIconView.heightAnchor.constraint(equalToConstant: 18),
             nameTextField.leadingAnchor.constraint(equalTo: fileIconView.trailingAnchor, constant: 6),
-            nameTextField.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -6),
-            nameTextField.centerYAnchor.constraint(equalTo: centerYAnchor)
+            nameTrailingWithoutTag,
+            nameTextField.centerYAnchor.constraint(equalTo: centerYAnchor),
+            tagDotView.centerYAnchor.constraint(equalTo: nameTextField.centerYAnchor),
+            tagDotView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -6),
+            tagDotView.widthAnchor.constraint(equalToConstant: 8),
+            tagDotView.heightAnchor.constraint(equalToConstant: 8)
         ])
     }
 
@@ -93,12 +105,70 @@ final class FileListNameCellView: NSTableCellView {
         disclosureButton.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
     }
 
+    func setLabelNumber(_ labelNumber: Int?) {
+        tagDotView.labelNumber = labelNumber
+        let hasTag = !tagDotView.isHidden
+        nameTrailingToTagConstraint?.isActive = hasTag
+        nameTrailingWithoutTagConstraint?.isActive = !hasTag
+    }
+
     var previewSourceRect: NSRect {
         fileIconView.frame.insetBy(dx: -1, dy: -1)
     }
 
     var previewTransitionImage: NSImage? {
         fileIconView.image
+    }
+}
+
+final class FileTagDotView: NSView {
+    var labelNumber: Int? {
+        didSet {
+            isHidden = FileTagDotView.color(for: labelNumber) == nil
+            needsDisplay = true
+        }
+    }
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        translatesAutoresizingMaskIntoConstraints = false
+        isHidden = true
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        translatesAutoresizingMaskIntoConstraints = false
+        isHidden = true
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        guard let color = FileTagDotView.color(for: labelNumber) else { return }
+        let rect = bounds.insetBy(dx: 1, dy: 1)
+        let path = NSBezierPath(ovalIn: rect)
+        color.setFill()
+        path.fill()
+    }
+
+    static func color(for labelNumber: Int?) -> NSColor? {
+        switch labelNumber {
+        case 1:
+            return .systemGray
+        case 2:
+            return .systemGreen
+        case 3:
+            return .systemPurple
+        case 4:
+            return .systemBlue
+        case 5:
+            return .systemYellow
+        case 6:
+            return .systemRed
+        case 7:
+            return .systemOrange
+        default:
+            return nil
+        }
     }
 }
 

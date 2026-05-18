@@ -199,6 +199,7 @@ enum AppSymbol: String {
     case grid = "square.grid.2x2"
     case list = "list.bullet"
     case layoutSplit = "rectangle.split.2x1"
+    case sidebar = "sidebar.left"
     case back = "chevron.left"
     case forward = "chevron.right"
     case share = "square.and.arrow.up"

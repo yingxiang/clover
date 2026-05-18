@@ -57,7 +57,7 @@ final class DirectoryAccessStore: @unchecked Sendable {
 
     func hasDirectoryAccess(to url: URL) -> Bool {
         let standardizedURL = url.standardizedFileURL
-        if resolvedURL(for: standardizedURL) != nil {
+        if hasSavedAccess(to: standardizedURL) {
             return true
         }
 
@@ -73,6 +73,10 @@ final class DirectoryAccessStore: @unchecked Sendable {
             Logger.security.debug("Directory access check denied url=\(standardizedURL.path, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
             return false
         }
+    }
+
+    func hasSavedAccess(to url: URL) -> Bool {
+        resolvedURL(for: url.standardizedFileURL) != nil
     }
 
     func securityScopeURL(for url: URL) -> URL? {

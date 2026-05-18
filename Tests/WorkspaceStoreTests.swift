@@ -15,6 +15,7 @@ final class WorkspaceStoreTests: XCTestCase {
             panes: [pane],
             windowFrame: "{{0, 0}, {800, 600}}",
             sidebarWidth: 220,
+            isSidebarCollapsed: true,
             createdAt: Date(timeIntervalSince1970: 10),
             updatedAt: Date(timeIntervalSince1970: 20)
         )
@@ -26,6 +27,32 @@ final class WorkspaceStoreTests: XCTestCase {
         XCTAssertEqual(loaded.layout, .twoVertical)
         XCTAssertEqual(loaded.panes.map(\.id), [pane.id])
         XCTAssertEqual(loaded.sidebarWidth, 220)
+        XCTAssertTrue(loaded.isSidebarCollapsed)
+    }
+
+    func testLoadLegacyWorkspaceDefaultsSidebarToExpanded() throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            .appendingPathComponent("default.json", isDirectory: false)
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let json = """
+        {
+          "createdAt" : "1970-01-01T00:00:10Z",
+          "id" : "\(UUID().uuidString)",
+          "layout" : "single",
+          "name" : "Default",
+          "panes" : [],
+          "sidebarWidth" : 220,
+          "updatedAt" : "1970-01-01T00:00:20Z",
+          "windowFrame" : "{{0, 0}, {800, 600}}"
+        }
+        """
+        try json.data(using: .utf8)?.write(to: url)
+        let store = try WorkspaceStore(workspaceURL: url)
+
+        let loaded = try XCTUnwrap(store.loadDefaultWorkspace())
+
+        XCTAssertFalse(loaded.isSidebarCollapsed)
     }
 
     func testResolvedURLFallsBackToHomeWhenPathIsMissing() throws {

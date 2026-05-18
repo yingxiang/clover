@@ -37,7 +37,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if reuseExisting, let existing = windowControllers.first {
             controller = existing
         } else {
-            let restoredWorkspace = try? environment.workspaceStore.loadDefaultWorkspace()
+            let restoredWorkspace = environment.directoryAccessStore.hasSavedAccess(to: UserDirectories.homeURL)
+                ? try? environment.workspaceStore.loadDefaultWorkspace()
+                : nil
             controller = MainWindowController(environment: environment, restoredWorkspace: restoredWorkspace)
             controller.window?.delegate = self
             windowControllers.append(controller)
