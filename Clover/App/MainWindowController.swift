@@ -204,12 +204,65 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         )
     }
 
+    func saveWorkspace(named name: String) throws -> Workspace? {
+        guard let snapshot = workspaceSnapshot() else { return nil }
+        return try environment.workspaceStore.saveWorkspace(snapshot, named: name)
+    }
+
+    func savedWorkspaces() throws -> [Workspace] {
+        try environment.workspaceStore.loadSavedWorkspaces()
+    }
+
+    func restoreWorkspace(_ workspace: Workspace) {
+        rootViewController.restoreWorkspace(workspace)
+        updateLayoutButton()
+        updateViewModeButton()
+        updateSidebarTitlebarButton()
+        updateToolbarButtonAvailability()
+        updateWindowTitle()
+    }
+
+    func activePaneSelectedURLs() -> [URL] {
+        rootViewController.activePaneSelectedURLs()
+    }
+
+    var activePaneURL: URL? {
+        rootViewController.activePaneURL
+    }
+
+    func paneURLs() -> [URL] {
+        rootViewController.paneURLs()
+    }
+
+    func reloadToolbarConfiguration() {
+        guard let window else { return }
+        let toolbar = NSToolbar(identifier: "CloverToolbar")
+        toolbar.delegate = self
+        toolbar.allowsUserCustomization = false
+        toolbar.autosavesConfiguration = false
+        toolbar.displayMode = .iconOnly
+        window.toolbar = toolbar
+        updateLayoutButton()
+        updateViewModeButton()
+        updateToolbarButtonAvailability()
+    }
+
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
         [.refresh, .terminal, .airDrop, .share, .info, .viewMode, .paneLayout, .flexibleSpace]
     }
 
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.refresh, .terminal, .airDrop, .share, .info, .flexibleSpace, .viewMode, .paneLayout]
+        var identifiers: [NSToolbarItem.Identifier] = []
+        let prefs = environment.toolbarPreferencesStore
+        if prefs.isVisible(.refresh) { identifiers.append(.refresh) }
+        if prefs.isVisible(.terminal) { identifiers.append(.terminal) }
+        if prefs.isVisible(.airDrop) { identifiers.append(.airDrop) }
+        if prefs.isVisible(.share) { identifiers.append(.share) }
+        if prefs.isVisible(.info) { identifiers.append(.info) }
+        identifiers.append(.flexibleSpace)
+        if prefs.isVisible(.viewMode) { identifiers.append(.viewMode) }
+        if prefs.isVisible(.paneLayout) { identifiers.append(.paneLayout) }
+        return identifiers
     }
 
     func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {

@@ -220,6 +220,8 @@ enum AppSymbol: String {
     case markdown = "chevron.left.forwardslash.chevron.right"
     case appStore = "bag"
     case otherApp = "ellipsis.circle"
+    case pro = "sparkles"
+    case proCheckmark = "checkmark.circle.fill"
     case word = "doc.text.image"
     case excel = "tablecells"
     case powerPoint = "chart.bar.doc.horizontal"

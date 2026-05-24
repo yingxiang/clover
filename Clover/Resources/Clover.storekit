@@ -1,0 +1,134 @@
+{
+  "identifier" : "8B4C33D3-1492-4E97-9B50-34A1A7EF8B98",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "¥198.00",
+      "familyShareable" : false,
+      "internalID" : "93D4C7D7",
+      "localizations" : [
+        {
+          "description" : "One purchase unlocks Clover Pro permanently.",
+          "displayName" : "Clover Pro Lifetime",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "一次购买，永久解锁 Clover Pro。",
+          "displayName" : "Clover Pro 终身版",
+          "locale" : "zh_CN"
+        }
+      ],
+      "productID" : "unlock_all",
+      "referenceName" : "Clover Pro Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "com.lingchen.clover",
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingRetryEnabled" : false,
+    "_failTransactionsEnabled" : false,
+    "_locale" : "zh_CN",
+    "_storefront" : "CHN",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21715025",
+      "localizations" : [
+        {
+          "locale" : "en_US",
+          "name" : "Clover Pro"
+        },
+        {
+          "locale" : "zh_CN",
+          "name" : "Clover Pro"
+        }
+      ],
+      "name" : "Clover Pro",
+      "subscriptions" : [
+        {
+          "displayPrice" : "¥88.00",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "64C0CC06",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlock Clover Pro for one year.",
+              "displayName" : "Clover Pro Yearly",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "解锁 Clover Pro 一年。",
+              "displayName" : "Clover Pro 年订阅",
+              "locale" : "zh_CN"
+            }
+          ],
+          "productID" : "clover_buy_one_year",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Clover Pro Yearly",
+          "subscriptionGroupID" : "21715025",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "displayPrice" : "¥58.00",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "2669D315",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlock Clover Pro for six months.",
+              "displayName" : "Clover Pro 6 Months",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "解锁 Clover Pro 六个月。",
+              "displayName" : "Clover Pro 6 个月",
+              "locale" : "zh_CN"
+            }
+          ],
+          "productID" : "clover_buy_six_month",
+          "recurringSubscriptionPeriod" : "P6M",
+          "referenceName" : "Clover Pro 6 Months",
+          "subscriptionGroupID" : "21715025",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "displayPrice" : "¥32.00",
+          "familyShareable" : false,
+          "groupNumber" : 3,
+          "internalID" : "1DB7E4AB",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlock Clover Pro for three months.",
+              "displayName" : "Clover Pro 3 Months",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "解锁 Clover Pro 三个月。",
+              "displayName" : "Clover Pro 3 个月",
+              "locale" : "zh_CN"
+            }
+          ],
+          "productID" : "clover_buy_three_month",
+          "recurringSubscriptionPeriod" : "P3M",
+          "referenceName" : "Clover Pro 3 Months",
+          "subscriptionGroupID" : "21715025",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

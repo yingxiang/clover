@@ -36,8 +36,6 @@
 	<false/>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>com.apple.security.app-sandbox</key>
-	<true/>
 	<key>NSQuitAlwaysKeepsWindows</key>
 	<false/>
 </dict>

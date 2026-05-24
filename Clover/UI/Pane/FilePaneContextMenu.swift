@@ -8,7 +8,8 @@ private enum ApplicationMenuIconLoader {
         cache.object(forKey: appURL as NSURL)
     }
 
-    static func loadIcon(for appURL: URL, accessibilityDescription: String?, completion: @escaping @Sendable (NSImage?) -> Void) {
+    @MainActor
+    static func loadIcon(for appURL: URL, accessibilityDescription: String?, completion: @escaping @MainActor (NSImage?) -> Void) {
         let cacheKey = appURL as NSURL
         if let cached = cache.object(forKey: cacheKey) {
             completion(cached)
@@ -20,7 +21,7 @@ private enum ApplicationMenuIconLoader {
             if let image {
                 cache.setObject(image, forKey: cacheKey)
             }
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 completion(image)
             }
         }

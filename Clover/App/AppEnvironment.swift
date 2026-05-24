@@ -6,7 +6,11 @@ struct AppEnvironment {
     let fileOperationService: FileOperationService
     let workspaceStore: WorkspaceStore
     let directoryAccessStore: DirectoryAccessStore
+    let entitlementService: EntitlementService
+    let featureGate: FeatureGate
+    let toolbarPreferencesStore: ToolbarPreferencesStore
 
+    @MainActor
     static func live() -> AppEnvironment {
         let workspaceStore: WorkspaceStore
         let directoryAccessStore: DirectoryAccessStore
@@ -25,11 +29,16 @@ struct AppEnvironment {
         let provider = LocalFileProvider(securityScopeURLProvider: { url in
             directoryAccessStore.securityScopeURL(for: url)
         })
+        let entitlementService = EntitlementService()
+        let toolbarPreferencesStore = ToolbarPreferencesStore()
         return AppEnvironment(
             fileProvider: provider,
             fileOperationService: FileOperationService(provider: provider),
             workspaceStore: workspaceStore,
-            directoryAccessStore: directoryAccessStore
+            directoryAccessStore: directoryAccessStore,
+            entitlementService: entitlementService,
+            featureGate: FeatureGate(entitlementService: entitlementService),
+            toolbarPreferencesStore: toolbarPreferencesStore
         )
     }
 }

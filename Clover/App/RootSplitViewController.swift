@@ -5,13 +5,15 @@ final class RootSplitViewController: NSSplitViewController {
     var activePanePathChangeHandler: ((URL) -> Void)?
     var commandAvailabilityChangeHandler: (() -> Void)?
 
+    private let environment: AppEnvironment
     private let sidebarViewController: SidebarViewController
     private let workspaceViewController: WorkspaceViewController
     private weak var sidebarSplitViewItem: NSSplitViewItem?
     private var lastExpandedSidebarWidth: CGFloat = 220
 
     init(environment: AppEnvironment) {
-        sidebarViewController = SidebarViewController()
+        self.environment = environment
+        sidebarViewController = SidebarViewController(entitlementService: environment.entitlementService)
         workspaceViewController = WorkspaceViewController(environment: environment)
         super.init(nibName: nil, bundle: nil)
         sidebarViewController.delegate = self
@@ -186,6 +188,20 @@ final class RootSplitViewController: NSSplitViewController {
 
     func setFileViewModeInActivePane(_ mode: FileViewMode) {
         workspaceViewController.setFileViewModeInActivePane(mode)
+    }
+
+    func activePaneSelectedURLs() -> [URL] {
+        workspaceViewController.activePaneSelectedURLs
+    }
+
+    func paneURLs() -> [URL] {
+        workspaceViewController.paneURLs
+    }
+
+    func restoreWorkspace(_ workspace: Workspace) {
+        workspaceViewController.restore(from: workspace)
+        activePaneChangeHandler?()
+        activePanePathChangeHandler?(workspace.panes.first.flatMap { environment.workspaceStore.resolvedURL(for: $0) } ?? UserDirectories.homeURL)
     }
 
     var isSidebarCollapsed: Bool {

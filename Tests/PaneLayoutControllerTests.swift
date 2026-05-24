@@ -38,11 +38,15 @@ final class PaneLayoutControllerTests: XCTestCase {
 
     private func makeController() -> PaneLayoutController {
         let provider = PaneLayoutMockProvider()
+        let entitlementService = EntitlementService()
         let environment = AppEnvironment(
             fileProvider: provider,
             fileOperationService: FileOperationService(provider: provider),
             workspaceStore: try! WorkspaceStore(workspaceURL: FileManager.default.temporaryDirectory.appendingPathComponent("PaneLayoutControllerTests.json")),
-            directoryAccessStore: try! DirectoryAccessStore(storageURL: FileManager.default.temporaryDirectory.appendingPathComponent("PaneLayoutControllerTests-bookmarks.plist"))
+            directoryAccessStore: try! DirectoryAccessStore(storageURL: FileManager.default.temporaryDirectory.appendingPathComponent("PaneLayoutControllerTests-bookmarks.plist")),
+            entitlementService: entitlementService,
+            featureGate: FeatureGate(entitlementService: entitlementService),
+            toolbarPreferencesStore: ToolbarPreferencesStore()
         )
         return PaneLayoutController(environment: environment)
     }

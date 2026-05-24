@@ -70,4 +70,35 @@ final class WorkspaceStoreTests: XCTestCase {
 
         XCTAssertEqual(store.resolvedURL(for: missingState), UserDirectories.homeURL)
     }
+
+    func testSaveLoadAndRenameNamedWorkspaces() throws {
+        let rootURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            .appendingPathComponent("default.json", isDirectory: false)
+        let store = try WorkspaceStore(workspaceURL: rootURL)
+        let pane = PaneState.home()
+        let workspace = Workspace(
+            id: UUID(),
+            name: "Project A",
+            layout: .single,
+            panes: [pane],
+            windowFrame: "{{0, 0}, {800, 600}}",
+            sidebarWidth: 220,
+            createdAt: Date(timeIntervalSince1970: 10),
+            updatedAt: Date(timeIntervalSince1970: 20)
+        )
+
+        let saved = try store.saveWorkspace(workspace, named: workspace.name)
+        let workspaces = try store.loadSavedWorkspaces()
+
+        XCTAssertEqual(workspaces.map(\.name), ["Project A"])
+        XCTAssertEqual(saved.name, "Project A")
+
+        let renamed = try XCTUnwrap(store.renameWorkspace(id: saved.id, to: "Project B"))
+        XCTAssertEqual(renamed.name, "Project B")
+        XCTAssertEqual(try store.loadSavedWorkspaces().first?.name, "Project B")
+
+        try store.deleteWorkspace(id: saved.id)
+        XCTAssertTrue(try store.loadSavedWorkspaces().isEmpty)
+    }
 }

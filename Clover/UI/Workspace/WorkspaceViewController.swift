@@ -155,6 +155,14 @@ final class WorkspaceViewController: NSViewController {
         paneController.activePaneURL
     }
 
+    var activePaneSelectedURLs: [URL] {
+        paneController.activePaneSelectedURLs
+    }
+
+    var paneURLs: [URL] {
+        paneController.paneURLs
+    }
+
     var canActivateAdjacentPane: Bool {
         paneController.canActivateAdjacentPane
     }

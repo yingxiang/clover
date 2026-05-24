@@ -5,6 +5,12 @@ import OSLog
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var windowControllers: [MainWindowController] = []
     private var supportDeveloperWindowController: SupportDeveloperWindowController?
+    private var upgradeProWindowController: UpgradeProWindowController?
+    private var proWorkspacesWindowController: ProWorkspacesWindowController?
+    private var proStashShelfWindowController: ProStashShelfWindowController?
+    private var proBatchRenameWindowController: ProBatchRenameWindowController?
+    private var proFolderCompareWindowController: ProFolderCompareWindowController?
+    private var proPreferencesWindowController: ProPreferencesWindowController?
     private let environment = AppEnvironment.live()
     private let omniCaptureAppStoreURL = URL(string: "macappstore://apps.apple.com/us/app/omni-capture/id6760931624")!
 
@@ -59,6 +65,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         screenshotItem.target = self
         screenshotItem.image = AppIconProvider.menuImage(.screenshot, accessibilityDescription: L10n.screenshot)
         appMenu.addItem(screenshotItem)
+        let upgradeProItem = NSMenuItem(title: L10n.upgradeToPro, action: #selector(showUpgradeProWindow(_:)), keyEquivalent: "")
+        upgradeProItem.target = self
+        upgradeProItem.image = AppIconProvider.menuImage(.pro, accessibilityDescription: L10n.upgradeToPro)
+        appMenu.addItem(upgradeProItem)
+        let restorePurchasesItem = NSMenuItem(title: L10n.restorePurchases, action: #selector(restorePurchases(_:)), keyEquivalent: "")
+        restorePurchasesItem.target = self
+        restorePurchasesItem.image = AppIconProvider.menuImage(.appStore, accessibilityDescription: L10n.restorePurchases)
+        appMenu.addItem(restorePurchasesItem)
+        let manageSubscriptionItem = NSMenuItem(title: L10n.manageSubscription, action: #selector(manageSubscription(_:)), keyEquivalent: "")
+        manageSubscriptionItem.target = self
+        manageSubscriptionItem.image = AppIconProvider.menuImage(.appStore, accessibilityDescription: L10n.manageSubscription)
+        appMenu.addItem(manageSubscriptionItem)
         let supportDeveloperItem = NSMenuItem(title: L10n.supportDeveloper, action: #selector(showSupportDeveloperWindow(_:)), keyEquivalent: "")
         supportDeveloperItem.target = self
         supportDeveloperItem.image = AppIconProvider.menuImage(.support, accessibilityDescription: L10n.supportDeveloper)
@@ -113,6 +131,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         fileMenu.addItem(selectAllItem)
         fileItem.submenu = fileMenu
         mainMenu.addItem(fileItem)
+
+        let proItem = NSMenuItem()
+        let proMenu = NSMenu(title: L10n.pro)
+        let namedWorkspacesItem = makeMenuItem(title: L10n.proNamedWorkspaces, action: #selector(showProWorkspacesWindow(_:)), keyEquivalent: "", target: self)
+        namedWorkspacesItem.image = AppIconProvider.menuImage(.folderPlus, accessibilityDescription: L10n.proNamedWorkspaces)
+        proMenu.addItem(namedWorkspacesItem)
+        let stashShelfItem = makeMenuItem(title: L10n.proStashShelf, action: #selector(showProStashShelfWindow(_:)), keyEquivalent: "", target: self)
+        stashShelfItem.image = AppIconProvider.menuImage(.folder, accessibilityDescription: L10n.proStashShelf)
+        proMenu.addItem(stashShelfItem)
+        let batchRenameItem = makeMenuItem(title: L10n.proBatchRename, action: #selector(showProBatchRenameWindow(_:)), keyEquivalent: "", target: self)
+        batchRenameItem.image = AppIconProvider.menuImage(.rename, accessibilityDescription: L10n.proBatchRename)
+        proMenu.addItem(batchRenameItem)
+        let folderCompareItem = makeMenuItem(title: L10n.proFolderCompare, action: #selector(showProFolderCompareWindow(_:)), keyEquivalent: "", target: self)
+        folderCompareItem.image = AppIconProvider.menuImage(.info, accessibilityDescription: L10n.proFolderCompare)
+        proMenu.addItem(folderCompareItem)
+        let preferencesItem = makeMenuItem(title: L10n.proCustomToolbar, action: #selector(showProPreferencesWindow(_:)), keyEquivalent: "", target: self)
+        preferencesItem.image = AppIconProvider.menuImage(.layoutSplit, accessibilityDescription: L10n.proCustomToolbar)
+        proMenu.addItem(preferencesItem)
+        proMenu.addItem(.separator())
+        let advancedShortcutsItem = makeMenuItem(title: L10n.proAdvancedShortcuts, action: #selector(showProPreferencesWindow(_:)), keyEquivalent: "", target: self)
+        advancedShortcutsItem.image = AppIconProvider.menuImage(.terminal, accessibilityDescription: L10n.proAdvancedShortcuts)
+        proMenu.addItem(advancedShortcutsItem)
+        proItem.submenu = proMenu
+        mainMenu.addItem(proItem)
 
         let viewItem = NSMenuItem()
         let viewMenu = NSMenu(title: L10n.view)
@@ -183,6 +225,92 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    @objc private func showUpgradeProWindow(_ sender: Any?) {
+        let controller = upgradeProWindowController ?? UpgradeProWindowController(entitlementService: environment.entitlementService)
+        upgradeProWindowController = controller
+        controller.showWindow(self)
+        guard let window = controller.window else { return }
+        window.makeKeyAndOrderFront(self)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc private func restorePurchases(_ sender: Any?) {
+        showUpgradeProWindow(sender)
+        Task { [environment] in
+            try? await environment.entitlementService.restorePurchases()
+        }
+    }
+
+    @objc private func manageSubscription(_ sender: Any?) {
+        environment.entitlementService.manageSubscriptions()
+    }
+
+    @objc private func showProWorkspacesWindow(_ sender: Any?) {
+        guard ensureProAccess() else { return }
+        let controller = proWorkspacesWindowController ?? ProWorkspacesWindowController(
+            fetchWorkspaces: { [weak self] in
+                guard let controller = self?.keyWindowController else { return [] }
+                return (try? controller.savedWorkspaces()) ?? []
+            },
+            saveCurrentWorkspace: { [weak self] name in
+                guard let controller = self?.keyWindowController else { return nil }
+                return try? controller.saveWorkspace(named: name)
+            },
+            openWorkspace: { [weak self] workspace in self?.keyWindowController?.restoreWorkspace(workspace) },
+            renameWorkspace: { [weak self] id, name in
+                _ = try? self?.environment.workspaceStore.renameWorkspace(id: id, to: name)
+            },
+            deleteWorkspace: { [weak self] id in
+                try? self?.environment.workspaceStore.deleteWorkspace(id: id)
+            }
+        )
+        proWorkspacesWindowController = controller
+        present(controller)
+    }
+
+    @objc private func showProStashShelfWindow(_ sender: Any?) {
+        guard ensureProAccess() else { return }
+        let controller = proStashShelfWindowController ?? ProStashShelfWindowController(
+            stashShelfStore: try! StashShelfStore(),
+            bookmarkStore: BookmarkStore(),
+            fileOperationService: environment.fileOperationService,
+            selectedURLsProvider: { [weak self] in self?.keyWindowController?.activePaneSelectedURLs() ?? [] },
+            destinationURLProvider: { [weak self] in self?.keyWindowController?.activePaneURL }
+        )
+        proStashShelfWindowController = controller
+        present(controller)
+    }
+
+    @objc private func showProBatchRenameWindow(_ sender: Any?) {
+        guard ensureProAccess() else { return }
+        let controller = proBatchRenameWindowController ?? ProBatchRenameWindowController(
+            fileOperationService: environment.fileOperationService,
+            selectedURLsProvider: { [weak self] in self?.keyWindowController?.activePaneSelectedURLs() ?? [] }
+        )
+        proBatchRenameWindowController = controller
+        present(controller)
+    }
+
+    @objc private func showProFolderCompareWindow(_ sender: Any?) {
+        guard ensureProAccess() else { return }
+        let controller = proFolderCompareWindowController ?? ProFolderCompareWindowController(
+            paneURLsProvider: { [weak self] in self?.keyWindowController?.paneURLs() ?? [] },
+            fileProvider: environment.fileProvider
+        )
+        proFolderCompareWindowController = controller
+        present(controller)
+    }
+
+    @objc private func showProPreferencesWindow(_ sender: Any?) {
+        guard ensureProAccess() else { return }
+        let controller = proPreferencesWindowController ?? ProPreferencesWindowController(
+            toolbarPreferencesStore: environment.toolbarPreferencesStore,
+            onToolbarPreferencesChanged: { [weak self] in self?.keyWindowController?.reloadToolbarConfiguration() }
+        )
+        proPreferencesWindowController = controller
+        present(controller)
+    }
+
     @objc private func refreshActivePane(_ sender: Any?) {
         keyWindowController?.refreshActivePane(sender)
     }
@@ -251,6 +379,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.deminiaturize(self)
         window.makeKeyAndOrderFront(self)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func present(_ controller: NSWindowController) {
+        controller.showWindow(self)
+        guard let window = controller.window else { return }
+        window.makeKeyAndOrderFront(self)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func ensureProAccess() -> Bool {
+        guard environment.entitlementService.isProUnlocked else {
+            showUpgradeProWindow(nil)
+            return false
+        }
+        return true
     }
 }
 

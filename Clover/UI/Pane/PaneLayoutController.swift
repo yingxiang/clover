@@ -35,6 +35,14 @@ final class PaneLayoutController: NSViewController {
         activePane?.viewModel.currentURL
     }
 
+    var activePaneSelectedURLs: [URL] {
+        activePane?.selectedItems().map(\.url) ?? []
+    }
+
+    var paneURLs: [URL] {
+        panes.map { $0.viewModel.currentURL }
+    }
+
     init(environment: AppEnvironment) {
         self.environment = environment
         super.init(nibName: nil, bundle: nil)
@@ -142,6 +150,10 @@ final class PaneLayoutController: NSViewController {
     func setFileViewModeInActivePane(_ mode: FileViewMode) {
         activePane?.setViewMode(mode)
         statusHandler?(L10n.viewStatus(mode == .list ? L10n.viewModeList : L10n.viewModeGrid))
+    }
+
+    func restoreWorkspace(_ workspace: Workspace) {
+        restore(from: workspace)
     }
 
     func activatePane(at index: Int) {
