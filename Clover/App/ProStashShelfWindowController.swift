@@ -1,5 +1,6 @@
 import AppKit
 import QuickLookThumbnailing
+import UniformTypeIdentifiers
 
 @MainActor
 final class ProStashShelfWindowController: NSWindowController {
@@ -40,7 +41,7 @@ final class ProStashShelfWindowController: NSWindowController {
         window.backgroundColor = .clear
         window.isOpaque = false
         window.hasShadow = false
-        window.alphaValue = Self.inactiveAlpha
+//        window.alphaValue = Self.inactiveAlpha
 
         super.init(window: window)
 
@@ -49,8 +50,9 @@ final class ProStashShelfWindowController: NSWindowController {
         surfaceView.dropHandler = { [weak self] draggingInfo in
             self?.acceptStashDrop(draggingInfo) ?? false
         }
+        
         surfaceView.dragPresenceChanged = { [weak self] isInside in
-            self?.window?.alphaValue = isInside ? Self.activeAlpha : Self.inactiveAlpha
+//            self?.window?.alphaValue = isInside ? Self.activeAlpha : Self.inactiveAlpha
             self?.surfaceView.setDropHighlight(isInside)
         }
         surfaceView.thumbnailClicked = { [weak self] anchor in
@@ -78,10 +80,9 @@ final class ProStashShelfWindowController: NSWindowController {
             if items.isEmpty {
                 popover.performClose(nil)
                 listPopover = nil
-            } else {
-                popover.contentViewController = StashShelfListViewController(items: items) { [weak self] item in
-                    self?.removeStashItem(item)
-                }
+            } else if let controller = popover.contentViewController as? StashShelfListViewController {
+                controller.configure(items: items)
+                popover.contentSize = controller.preferredContentSize
             }
         }
     }
@@ -102,7 +103,7 @@ final class ProStashShelfWindowController: NSWindowController {
         if !uniqueURLs.isEmpty {
             _ = try? stashShelfStore.addItems(uniqueURLs, bookmarkStore: bookmarkStore)
         }
-        window?.alphaValue = Self.inactiveAlpha
+//        window?.alphaValue = Self.inactiveAlpha
         surfaceView.setDropHighlight(false)
         refresh()
         return true
@@ -111,8 +112,15 @@ final class ProStashShelfWindowController: NSWindowController {
     private func toggleListPopover(anchor: NSView) {
         guard !items.isEmpty else { return }
         if let popover = listPopover, popover.isShown {
-            popover.performClose(nil)
-            listPopover = nil
+            if let controller = popover.contentViewController as? StashShelfListViewController {
+                controller.animateCollapse { [weak self, weak popover] in
+                    popover?.performClose(nil)
+                    self?.listPopover = nil
+                }
+            } else {
+                popover.performClose(nil)
+                listPopover = nil
+            }
             return
         }
 
@@ -123,7 +131,8 @@ final class ProStashShelfWindowController: NSWindowController {
             self?.removeStashItem(item)
         }
         listPopover = popover
-        popover.show(relativeTo: anchor.bounds, of: anchor, preferredEdge: .minY)
+        let anchorRect = NSRect(x: anchor.bounds.midX - 1, y: anchor.bounds.minY, width: 2, height: 2)
+        popover.show(relativeTo: anchorRect, of: anchor, preferredEdge: .minY)
     }
 
     private func removeStashItem(_ item: StashItem) {
@@ -163,6 +172,12 @@ final class ProStashShelfWindowController: NSWindowController {
 }
 
 private final class StashShelfSurfaceView: NSView {
+    private enum Metrics {
+        static let glassCornerRadius: CGFloat = 12
+        static let glassBorderWidth: CGFloat = 1
+        static let dropBorderWidth: CGFloat = 2
+    }
+
     var closeHandler: (() -> Void)?
     var clearHandler: (() -> Void)?
     var dropHandler: ((NSDraggingInfo) -> Bool)?
@@ -170,14 +185,16 @@ private final class StashShelfSurfaceView: NSView {
     var thumbnailClicked: ((NSView) -> Void)?
     var dragItemsProvider: (() -> [any NSPasteboardWriting])?
 
-    private let glassView = NSVisualEffectView()
-    private let plusImageView = NSImageView()
+    private let glassView = StashShelfSurfaceView.makeGlassBackgroundView()
+    private let plusImageView = StashPassthroughImageView()
     private let thumbnailStackView = StashThumbnailStackView()
+    private let dropCatcherView = StashShelfDropCatcherView()
     private let moveButton = StashShelfMoveButton(symbolName: "arrow.up.and.down.and.arrow.left.and.right", pointSize: 11)
     private let countBadgeView = NSView()
     private let countLabel = NSTextField(labelWithString: "")
     private var hasItems = false
     private var items: [StashItem] = []
+    private var mouseDownEvent: NSEvent?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -189,14 +206,24 @@ private final class StashShelfSurfaceView: NSView {
         setup()
     }
 
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        guard bounds.contains(point) else { return nil }
+        let hitView = super.hitTest(point)
+        if hitView === moveButton || hitView === dropCatcherView || hasItems {
+            return hitView
+        }
+        return self
+    }
+
     func configure(items: [StashItem]) {
         self.items = items
         let isEmpty = items.isEmpty
         hasItems = !isEmpty
         glassView.isHidden = false
-        glassView.alphaValue = isEmpty ? 1 : 0.42
+//        glassView.alphaValue = isEmpty ? 1 : 0.42
         plusImageView.isHidden = !isEmpty
         thumbnailStackView.isHidden = isEmpty
+        moveButton.isHidden = isEmpty
         countBadgeView.isHidden = isEmpty
         countLabel.stringValue = "\(items.count)"
         updateBorder(isDropTargeted: false)
@@ -205,23 +232,19 @@ private final class StashShelfSurfaceView: NSView {
 
     func setDropHighlight(_ isDropTargeted: Bool) {
         updateBorder(isDropTargeted: isDropTargeted)
-        glassView.alphaValue = isDropTargeted ? 0.72 : (hasItems ? 0.42 : 1)
+//        glassView.alphaValue = isDropTargeted ? 0.72 : (hasItems ? 0.42 : 1)
     }
 
     private func setup() {
         registerForDraggedTypes([.fileURL, .URL])
         wantsLayer = true
         layer?.masksToBounds = false
-        layer?.cornerRadius = 30
 
         glassView.translatesAutoresizingMaskIntoConstraints = false
-        glassView.material = .hudWindow
-        glassView.blendingMode = .behindWindow
-        glassView.state = .active
         glassView.wantsLayer = true
-        glassView.layer?.cornerRadius = 28
-        glassView.layer?.borderWidth = 0.8
-        glassView.layer?.borderColor = NSColor.white.withAlphaComponent(0.25).cgColor
+        glassView.layer?.cornerRadius = Metrics.glassCornerRadius
+        glassView.layer?.borderWidth = Metrics.glassBorderWidth
+        glassView.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.9).cgColor
         addSubview(glassView)
 
         plusImageView.translatesAutoresizingMaskIntoConstraints = false
@@ -250,6 +273,31 @@ private final class StashShelfSurfaceView: NSView {
         }
         addSubview(thumbnailStackView)
 
+        dropCatcherView.translatesAutoresizingMaskIntoConstraints = false
+        dropCatcherView.hasItemsProvider = { [weak self] in
+            self?.hasItems ?? false
+        }
+        dropCatcherView.clickHandler = { [weak self] in
+            guard let self else { return }
+            thumbnailClicked?(thumbnailStackView)
+        }
+        dropCatcherView.dropHandler = { [weak self] draggingInfo in
+            self?.dropHandler?(draggingInfo) ?? false
+        }
+        dropCatcherView.dragPresenceChanged = { [weak self] isInside in
+            self?.dragPresenceChanged?(isInside)
+        }
+        dropCatcherView.dragItemsProvider = { [weak self] in
+            self?.dragItemsProvider?() ?? []
+        }
+        dropCatcherView.dragImageProvider = { [weak self] in
+            self?.thumbnailStackView.snapshotImage() ?? NSImage()
+        }
+        dropCatcherView.menuProvider = { [weak self] in
+            self?.contextMenu()
+        }
+        addSubview(dropCatcherView)
+
         moveButton.translatesAutoresizingMaskIntoConstraints = false
         moveButton.toolTip = "Move"
         addSubview(moveButton)
@@ -268,10 +316,10 @@ private final class StashShelfSurfaceView: NSView {
         countBadgeView.addSubview(countLabel)
 
         NSLayoutConstraint.activate([
-            glassView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
-            glassView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
-            glassView.topAnchor.constraint(equalTo: topAnchor, constant: 10),
-            glassView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -10),
+            glassView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6),
+            glassView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -6),
+            glassView.topAnchor.constraint(equalTo: topAnchor, constant: 6),
+            glassView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -6),
 
             plusImageView.centerXAnchor.constraint(equalTo: centerXAnchor),
             plusImageView.centerYAnchor.constraint(equalTo: centerYAnchor),
@@ -280,11 +328,16 @@ private final class StashShelfSurfaceView: NSView {
 
             thumbnailStackView.centerXAnchor.constraint(equalTo: centerXAnchor),
             thumbnailStackView.centerYAnchor.constraint(equalTo: centerYAnchor, constant: 4),
-            thumbnailStackView.widthAnchor.constraint(equalToConstant: 94),
-            thumbnailStackView.heightAnchor.constraint(equalToConstant: 78),
+            thumbnailStackView.widthAnchor.constraint(equalToConstant: 108),
+            thumbnailStackView.heightAnchor.constraint(equalToConstant: 90),
 
-            moveButton.topAnchor.constraint(equalTo: topAnchor, constant: 2),
-            moveButton.centerXAnchor.constraint(equalTo: centerXAnchor),
+            dropCatcherView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            dropCatcherView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            dropCatcherView.topAnchor.constraint(equalTo: topAnchor),
+            dropCatcherView.bottomAnchor.constraint(equalTo: bottomAnchor),
+
+            moveButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
+            moveButton.topAnchor.constraint(equalTo: topAnchor, constant: 8),
             moveButton.widthAnchor.constraint(equalToConstant: 27),
             moveButton.heightAnchor.constraint(equalToConstant: 27),
 
@@ -324,6 +377,29 @@ private final class StashShelfSurfaceView: NSView {
         closeHandler?()
     }
 
+    override func mouseDown(with event: NSEvent) {
+        guard !hasItems else {
+            super.mouseDown(with: event)
+            return
+        }
+        mouseDownEvent = event
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard !hasItems else {
+            super.mouseDragged(with: event)
+            return
+        }
+        if NSApp.currentEvent === event {
+            window?.performDrag(with: mouseDownEvent ?? event)
+        }
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        mouseDownEvent = nil
+        super.mouseUp(with: event)
+    }
+
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
         guard sender.draggingPasteboard.canReadStashFileURLs else { return [] }
         dragPresenceChanged?(true)
@@ -347,22 +423,155 @@ private final class StashShelfSurfaceView: NSView {
     }
 
     private func updateBorder(isDropTargeted: Bool) {
-        guard hasItems || isDropTargeted else {
-            glassView.layer?.borderWidth = 0.8
-            glassView.layer?.borderColor = NSColor.white.withAlphaComponent(0.25).cgColor
-            layer?.shadowOpacity = 0
-            return
-        }
-        glassView.layer?.borderWidth = isDropTargeted ? 2 : 1.25
-        glassView.layer?.borderColor = (isDropTargeted ? NSColor.controlAccentColor : NSColor.white)
-            .withAlphaComponent(isDropTargeted ? 0.95 : 0.78)
-            .cgColor
+        glassView.layer?.borderWidth = isDropTargeted ? Metrics.dropBorderWidth : Metrics.glassBorderWidth
+        glassView.layer?.borderColor = (isDropTargeted
+            ? NSColor.controlAccentColor
+            : NSColor.separatorColor.withAlphaComponent(0.9)
+        ).cgColor
+        glassView.layer?.backgroundColor = (isDropTargeted
+            ? NSColor.controlAccentColor.withAlphaComponent(0.16)
+            : NSColor.clear
+        ).cgColor
         layer?.shadowColor = (isDropTargeted ? NSColor.controlAccentColor : NSColor.clear).cgColor
-        layer?.shadowOpacity = isDropTargeted ? 0.75 : 0
-        layer?.shadowRadius = isDropTargeted ? 14 : 0
+        layer?.shadowOpacity = isDropTargeted ? 0.25 : 0
+        layer?.shadowRadius = isDropTargeted ? 8 : 0
         layer?.shadowOffset = .zero
     }
 
+    private static func makeGlassBackgroundView() -> NSView {
+        if #available(macOS 26.0, *) {
+            let view = StashPassthroughGlassEffectView()
+            view.style = .regular
+            view.cornerRadius = Metrics.glassCornerRadius
+            view.tintColor = NSColor.windowBackgroundColor.withAlphaComponent(0.08)
+            return view
+        }
+        let view = StashPassthroughVisualEffectView()
+        view.material = .hudWindow
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
+    }
+
+}
+
+private final class StashPassthroughImageView: NSImageView {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        nil
+    }
+}
+
+private final class StashPassthroughVisualEffectView: NSVisualEffectView {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        nil
+    }
+}
+
+@available(macOS 26.0, *)
+private final class StashPassthroughGlassEffectView: NSGlassEffectView {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        nil
+    }
+}
+
+private final class StashShelfDropCatcherView: NSView {
+    var hasItemsProvider: (() -> Bool)?
+    var clickHandler: (() -> Void)?
+    var dropHandler: ((NSDraggingInfo) -> Bool)?
+    var dragPresenceChanged: ((Bool) -> Void)?
+    var dragItemsProvider: (() -> [any NSPasteboardWriting])?
+    var dragImageProvider: (() -> NSImage)?
+    var menuProvider: (() -> NSMenu?)?
+
+    private var mouseDownEvent: NSEvent?
+    private var didBeginFileDrag = false
+    private var isReceivingExternalDrag = false
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        registerForDraggedTypes([.fileURL, .URL])
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        registerForDraggedTypes([.fileURL, .URL])
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        isHidden || !bounds.contains(point) ? nil : self
+    }
+
+    override func menu(for event: NSEvent) -> NSMenu? {
+        menuProvider?()
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        guard !isReceivingExternalDrag else { return }
+        mouseDownEvent = event
+        didBeginFileDrag = false
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard !isReceivingExternalDrag else { return }
+        if hasItemsProvider?() == true {
+            beginFileDrag(with: event)
+        } else {
+            window?.performDrag(with: mouseDownEvent ?? event)
+        }
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        if hasItemsProvider?() == true, !didBeginFileDrag {
+            clickHandler?()
+        }
+        mouseDownEvent = nil
+        didBeginFileDrag = false
+    }
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard sender.draggingSource as AnyObject? !== self,
+              sender.draggingPasteboard.canReadStashFileURLs else { return [] }
+        isReceivingExternalDrag = true
+        dragPresenceChanged?(true)
+        return .copy
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        sender.draggingPasteboard.canReadStashFileURLs ? .copy : []
+    }
+
+    override func draggingExited(_ sender: NSDraggingInfo?) {
+        isReceivingExternalDrag = false
+        dragPresenceChanged?(false)
+    }
+
+    override func draggingEnded(_ sender: NSDraggingInfo) {
+        isReceivingExternalDrag = false
+        dragPresenceChanged?(false)
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        isReceivingExternalDrag = false
+        return dropHandler?(sender) ?? false
+    }
+
+    private func beginFileDrag(with event: NSEvent) {
+        guard !didBeginFileDrag, let items = dragItemsProvider?(), !items.isEmpty else { return }
+        didBeginFileDrag = true
+        let snapshot = dragImageProvider?() ?? NSImage(size: bounds.size)
+        let draggingItems = items.map { pasteboardWriter in
+            let draggingItem = NSDraggingItem(pasteboardWriter: pasteboardWriter)
+            draggingItem.setDraggingFrame(bounds, contents: snapshot)
+            return draggingItem
+        }
+        beginDraggingSession(with: draggingItems, event: mouseDownEvent ?? event, source: self)
+    }
+}
+
+extension StashShelfDropCatcherView: NSDraggingSource {
+    func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
+        [.copy, .move]
+    }
 }
 
 private final class StashThumbnailStackView: NSView {
@@ -374,6 +583,7 @@ private final class StashThumbnailStackView: NSView {
 
     private var mouseDownEvent: NSEvent?
     private var didBeginFileDrag = false
+    private var isReceivingExternalDrag = false
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -406,10 +616,9 @@ private final class StashThumbnailStackView: NSView {
             imageView.image = StashPreviewImageProvider.icon(for: item)
             imageView.imageScaling = .scaleProportionallyUpOrDown
             imageView.wantsLayer = true
-            imageView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
-            imageView.layer?.cornerRadius = 10
-            imageView.layer?.borderWidth = 1
-            imageView.layer?.borderColor = NSColor.separatorColor.cgColor
+            imageView.layer?.cornerRadius = 5
+            imageView.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.3).cgColor
+            imageView.layer?.borderWidth = 0
             imageView.layer?.shadowColor = NSColor.black.cgColor
             imageView.layer?.shadowOpacity = 0.22
             imageView.layer?.shadowRadius = 8
@@ -421,11 +630,11 @@ private final class StashThumbnailStackView: NSView {
             NSLayoutConstraint.activate([
                 imageView.centerXAnchor.constraint(equalTo: centerXAnchor, constant: placement.x),
                 imageView.centerYAnchor.constraint(equalTo: centerYAnchor, constant: placement.y),
-                imageView.widthAnchor.constraint(equalToConstant: 64),
-                imageView.heightAnchor.constraint(equalToConstant: 64)
+                imageView.widthAnchor.constraint(equalToConstant: 72),
+                imageView.heightAnchor.constraint(equalToConstant: 72)
             ])
             Task { [weak imageView] in
-                guard let thumbnail = await StashPreviewImageProvider.thumbnail(for: item, size: 64) else { return }
+                guard let thumbnail = await StashPreviewImageProvider.thumbnail(for: item, size: 72) else { return }
                 imageView?.image = thumbnail
             }
         }
@@ -436,20 +645,22 @@ private final class StashThumbnailStackView: NSView {
         case 0, 1:
             return [(0, 0, 0)]
         case 2:
-            return [(-6, 3, -4), (8, -4, 5)]
+            return [(-7, 3, -4), (9, -4, 5)]
         case 3:
-            return [(-12, 6, -7), (0, 0, -1), (12, -6, 6)]
+            return [(-14, 6, -7), (0, 0, -1), (14, -6, 6)]
         default:
-            return [(-16, 8, -8), (-5, 2, -3), (7, -4, 3), (18, -8, 8)]
+            return [(-18, 8, -8), (-6, 2, -3), (8, -4, 3), (20, -8, 8)]
         }
     }
 
     override func mouseDown(with event: NSEvent) {
+        guard !isReceivingExternalDrag else { return }
         mouseDownEvent = event
         didBeginFileDrag = false
     }
 
     override func mouseDragged(with event: NSEvent) {
+        guard !isReceivingExternalDrag else { return }
         guard !didBeginFileDrag, let items = dragItemsProvider?(), !items.isEmpty else { return }
         didBeginFileDrag = true
         let snapshot = snapshotImage()
@@ -469,7 +680,7 @@ private final class StashThumbnailStackView: NSView {
         didBeginFileDrag = false
     }
 
-    private func snapshotImage() -> NSImage {
+    func snapshotImage() -> NSImage {
         guard let bitmap = bitmapImageRepForCachingDisplay(in: bounds) else {
             return NSImage(size: bounds.size)
         }
@@ -481,6 +692,7 @@ private final class StashThumbnailStackView: NSView {
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
         guard sender.draggingPasteboard.canReadStashFileURLs else { return [] }
+        isReceivingExternalDrag = true
         dragPresenceChanged?(true)
         return .copy
     }
@@ -490,15 +702,18 @@ private final class StashThumbnailStackView: NSView {
     }
 
     override func draggingExited(_ sender: NSDraggingInfo?) {
+        isReceivingExternalDrag = false
         dragPresenceChanged?(false)
     }
 
     override func draggingEnded(_ sender: NSDraggingInfo) {
+        isReceivingExternalDrag = false
         dragPresenceChanged?(false)
     }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-        dropHandler?(sender) ?? false
+        isReceivingExternalDrag = false
+        return dropHandler?(sender) ?? false
     }
 }
 
@@ -589,14 +804,34 @@ private final class StashShelfMoveButton: StashShelfIconButton {
 }
 
 private final class StashShelfListViewController: NSViewController {
-    private let items: [StashItem]
+    private static let itemWidth: CGFloat = 78
+    private static let itemHeight: CGFloat = 92
+    private static let itemSpacing: CGFloat = 10
+    private static let horizontalInset: CGFloat = 12
+    private static let topInset: CGFloat = 18
+    private static let bottomInset: CGFloat = 10
+
+    private var items: [StashItem]
     private let removeHandler: (StashItem) -> Void
+    private let stackView = NSStackView()
+    private var itemViews: [NSView] = []
+    private var collapseCompletion: (() -> Void)?
 
     init(items: [StashItem], removeHandler: @escaping (StashItem) -> Void) {
         self.items = items
         self.removeHandler = removeHandler
         super.init(nibName: nil, bundle: nil)
-        preferredContentSize = NSSize(width: min(520, max(180, items.count * 96 + 24)), height: 112)
+        preferredContentSize = Self.contentSize(for: items.count)
+    }
+
+    private static func contentSize(for itemCount: Int) -> NSSize {
+        let contentWidth = CGFloat(itemCount) * Self.itemWidth
+            + CGFloat(max(0, itemCount - 1)) * Self.itemSpacing
+            + Self.horizontalInset * 2
+        return NSSize(
+            width: min(520, max(Self.itemWidth + Self.horizontalInset * 2, contentWidth)),
+            height: Self.itemHeight + Self.topInset + Self.bottomInset
+        )
     }
 
     required init?(coder: NSCoder) {
@@ -617,17 +852,17 @@ private final class StashShelfListViewController: NSViewController {
         scrollView.drawsBackground = false
         scrollView.borderType = .noBorder
 
-        let stackView = NSStackView()
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.orientation = .horizontal
         stackView.alignment = .top
-        stackView.spacing = 10
-        stackView.edgeInsets = NSEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-        items.forEach { item in
-            stackView.addArrangedSubview(StashShelfListItemView(item: item) { [weak self] in
-                self?.removeHandler(item)
-            })
-        }
+        stackView.spacing = Self.itemSpacing
+        stackView.edgeInsets = NSEdgeInsets(
+            top: Self.topInset,
+            left: Self.horizontalInset,
+            bottom: Self.bottomInset,
+            right: Self.horizontalInset
+        )
+        reloadItemViews()
 
         scrollView.documentView = stackView
         visualEffectView.addSubview(scrollView)
@@ -640,6 +875,88 @@ private final class StashShelfListViewController: NSViewController {
             stackView.widthAnchor.constraint(greaterThanOrEqualTo: scrollView.contentView.widthAnchor)
         ])
         view = visualEffectView
+    }
+
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        animateExpansion()
+    }
+
+    override func viewDidLayout() {
+        super.viewDidLayout()
+        updateStackInsets()
+    }
+
+    func configure(items: [StashItem]) {
+        self.items = items
+        preferredContentSize = Self.contentSize(for: items.count)
+        reloadItemViews()
+        updateStackInsets()
+    }
+
+    func animateCollapse(completion: @escaping () -> Void) {
+        view.layoutSubtreeIfNeeded()
+        collapseCompletion = completion
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.16
+            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            itemViews.forEach { itemView in
+                itemView.animator().alphaValue = 0
+                itemView.animator().frame.origin.x = view.bounds.midX - itemView.bounds.width / 2
+                itemView.animator().frame.origin.y = view.bounds.midY - itemView.bounds.height / 2
+            }
+        }
+        perform(#selector(finishCollapseAnimation), with: nil, afterDelay: 0.16)
+    }
+
+    private func animateExpansion() {
+        view.layoutSubtreeIfNeeded()
+        let finalFrames = itemViews.map(\.frame)
+        itemViews.forEach { itemView in
+            itemView.alphaValue = 0
+            itemView.frame.origin.x = view.bounds.midX - itemView.bounds.width / 2
+            itemView.frame.origin.y = view.bounds.midY - itemView.bounds.height / 2
+        }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.2
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            itemViews.enumerated().forEach { index, itemView in
+                itemView.animator().alphaValue = 1
+                itemView.animator().frame = finalFrames[index]
+            }
+        }
+    }
+
+    @objc private func finishCollapseAnimation() {
+        collapseCompletion?()
+        collapseCompletion = nil
+    }
+
+    private func reloadItemViews() {
+        stackView.arrangedSubviews.forEach { view in
+            stackView.removeArrangedSubview(view)
+            view.removeFromSuperview()
+        }
+        itemViews.removeAll()
+        items.forEach { item in
+            let itemView = StashShelfListItemView(item: item) { [weak self] in
+                self?.removeHandler(item)
+            }
+            itemViews.append(itemView)
+            stackView.addArrangedSubview(itemView)
+        }
+    }
+
+    private func updateStackInsets() {
+        let contentWidth = CGFloat(items.count) * Self.itemWidth
+            + CGFloat(max(0, items.count - 1)) * Self.itemSpacing
+        let horizontalInset = max(Self.horizontalInset, (view.bounds.width - contentWidth) / 2)
+        stackView.edgeInsets = NSEdgeInsets(
+            top: Self.topInset,
+            left: horizontalInset,
+            bottom: Self.bottomInset,
+            right: horizontalInset
+        )
     }
 }
 
@@ -657,6 +974,10 @@ private final class StashShelfListItemView: NSView {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.image = StashPreviewImageProvider.icon(for: item)
         imageView.imageScaling = .scaleProportionallyUpOrDown
+        imageView.wantsLayer = true
+        imageView.layer?.cornerRadius = 5
+        imageView.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.3).cgColor
+        imageView.layer?.masksToBounds = false
 
         let closeButton = StashShelfIconButton(symbolName: "xmark", pointSize: 8)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
@@ -676,13 +997,13 @@ private final class StashShelfListItemView: NSView {
         addSubview(label)
         NSLayoutConstraint.activate([
             widthAnchor.constraint(equalToConstant: 78),
-            heightAnchor.constraint(equalToConstant: 82),
-            imageView.topAnchor.constraint(equalTo: topAnchor),
+            heightAnchor.constraint(equalToConstant: 92),
+            imageView.topAnchor.constraint(equalTo: topAnchor, constant: 8),
             imageView.centerXAnchor.constraint(equalTo: centerXAnchor),
             imageView.widthAnchor.constraint(equalToConstant: 48),
             imageView.heightAnchor.constraint(equalToConstant: 48),
-            closeButton.centerXAnchor.constraint(equalTo: imageView.trailingAnchor, constant: -2),
-            closeButton.centerYAnchor.constraint(equalTo: imageView.topAnchor, constant: 2),
+            closeButton.trailingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 4),
+            closeButton.topAnchor.constraint(equalTo: topAnchor, constant: 2),
             closeButton.widthAnchor.constraint(equalToConstant: 16),
             closeButton.heightAnchor.constraint(equalToConstant: 16),
             label.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -713,10 +1034,7 @@ private enum StashPreviewImageProvider {
         guard let url = item.url else {
             return AppIconProvider.image(.file, accessibilityDescription: item.displayName) ?? NSImage()
         }
-        let image = NSWorkspace.shared.icon(forFile: url.path)
-        image.size = NSSize(width: 64, height: 64)
-        image.accessibilityDescription = item.displayName
-        return image
+        return FileIconProvider.icon(for: fileItem(for: item, url: url), size: 64)
     }
 
     static func thumbnail(for item: StashItem, size: CGFloat) async -> NSImage? {
@@ -726,29 +1044,24 @@ private enum StashPreviewImageProvider {
             return image
         }
 
-        let didStartAccessing = url.startAccessingSecurityScopedResource()
-        defer {
-            if didStartAccessing {
-                url.stopAccessingSecurityScopedResource()
-            }
-        }
-
-        let scale = NSScreen.main?.backingScaleFactor ?? 2
-        let request = QLThumbnailGenerator.Request(
-            fileAt: url,
-            size: NSSize(width: size, height: size),
-            scale: scale,
-            representationTypes: .thumbnail
-        )
-        let image = await withCheckedContinuation { continuation in
-            QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { representation, _ in
-                continuation.resume(returning: representation?.nsImage)
-            }
-        }
+        let image = await FileThumbnailProvider.thumbnail(for: fileItem(for: item, url: url), size: size)
         if let image {
             cache[cacheKey] = image
         }
         return image
+    }
+
+    private static func fileItem(for item: StashItem, url: URL) -> FileItem {
+        FileItem(
+            url: url,
+            name: item.displayName,
+            isDirectory: false,
+            size: nil,
+            modificationDate: nil,
+            creationDate: nil,
+            typeIdentifier: UTType(filenameExtension: url.pathExtension)?.identifier,
+            isHidden: url.lastPathComponent.hasPrefix(".")
+        )
     }
 }
 

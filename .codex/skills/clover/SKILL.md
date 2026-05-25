@@ -36,7 +36,23 @@ Use this skill for development inside the Clover repository.
 - Directory permission checks must test current access each time: first resolve matching security-scoped bookmarks, then try direct directory readability. Do not rely on an "already authorized" flag.
 - When using restored bookmarks for user-selected folders such as Downloads, call `startAccessingSecurityScopedResource()` around provider, Quick Look thumbnail/preview, and sharing operations, then balance it with `stopAccessingSecurityScopedResource()`.
 - Treat list/grid filtering as an in-memory view-model operation. Type-filter changes should use the loaded `allItems` and update visible rows/items without triggering a full pane reload or directory listing.
+- For the Pro stash shelf glass background, use `NSGlassEffectView` on macOS 26+ and keep an `NSVisualEffectView` fallback for earlier macOS versions.
 - Avoid synchronous app bundle icon/display-name lookup on the menu-building path. For Open With menus, show a generic icon immediately, then load and cache app icons asynchronously.
 - Keep project-owned Swift files under 1000 lines. Before adding substantial behavior, check the target file length with `wc -l`; if the edit would push it past 1000 lines, split by responsibility first.
 - Treat 800 lines as a warning threshold. Prefer extracting focused controllers, views, services, model types, helpers, or tests before the file becomes hard to review.
 - Do not copy QSpace, Path Finder, Finder, or other products' branding, icons, copy, or proprietary layout details.
+
+## Pro Stash Shelf
+
+- Current free features must stay free. Gate only new Pro v1 features such as the stash shelf.
+- Keep the stash shelf lightweight and Finder-like: a small floating, borderless AppKit window, draggable but not resizable.
+- Use a glass/liquid-glass background. On macOS 26+, use `NSGlassEffectView`; on earlier macOS, fall back to `NSVisualEffectView`.
+- The shelf glass should have a small radius, a subtle `NSColor.separatorColor` border, and a larger non-clipped drag-over highlight using border/fill rather than a hard clipped shadow.
+- Empty state shows only a centered plus icon on glass. Hide the move button when empty; the whole empty shelf window should be draggable.
+- Non-empty state shows file thumbnails as a stack. The newest file is on top; one file is not rotated, multiple files are slightly rotated and offset. Show a bottom-centered red count badge.
+- Stashed file thumbnails use a white background at about 30% opacity, corner radius 5, no extra border.
+- Keep moving the shelf distinct from dragging files out: the move button appears at the top-left only when files exist; dragging/clicking the stack should operate on stashed files.
+- External file drops must be accepted reliably across the whole shelf surface, including the center over thumbnails or the plus icon. Deduplicate stashed files by canonical path.
+- Clicking the stack opens a centered popover below the shelf; clicking again closes it. Popover items use the same thumbnail background/radius as shelf items.
+- Popover content should stay centered, keep its arrow anchored to the shelf center, and update its content size when files are removed so narrow lists can shrink without visible jitter.
+- Each popover file item has a small remove button. Right-click shelf menu includes clearing the stash and closing the window.

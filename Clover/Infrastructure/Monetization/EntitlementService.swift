@@ -31,6 +31,9 @@ final class EntitlementService: ObservableObject {
     private var transactionUpdatesTask: Task<Void, Never>?
 
     init() {
+        Task { [weak self] in
+            await self?.refreshPurchasedProducts()
+        }
         transactionUpdatesTask = Task { [weak self] in
             for await result in Transaction.updates {
                 guard let self else { return }

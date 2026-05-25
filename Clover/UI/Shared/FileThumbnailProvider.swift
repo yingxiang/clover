@@ -14,10 +14,10 @@ enum FileThumbnailProvider {
         }
 
         let securityScopeURL = directoryAccessStore?.securityScopeURL(for: url)
-        let didStartAccessing = securityScopeURL?.startAccessingSecurityScopedResource() ?? false
+        let didStartAccessing = (securityScopeURL ?? url).startAccessingSecurityScopedResource()
         defer {
             if didStartAccessing {
-                securityScopeURL?.stopAccessingSecurityScopedResource()
+                (securityScopeURL ?? url).stopAccessingSecurityScopedResource()
             }
         }
 
@@ -33,11 +33,20 @@ enum FileThumbnailProvider {
             QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { representation, _ in
                 continuation.resume(returning: representation?.nsImage)
             }
-        }
+        } ?? svgImage(for: item, size: size)
 
         if let image {
             cache[url] = image
         }
+        return image
+    }
+
+    private static func svgImage(for item: FileItem, size: CGFloat) -> NSImage? {
+        guard item.url.pathExtension.localizedCaseInsensitiveCompare("svg") == .orderedSame,
+              let image = NSImage(contentsOf: item.url) else {
+            return nil
+        }
+        image.size = NSSize(width: size, height: size)
         return image
     }
 }

@@ -269,6 +269,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func showProStashShelfWindow(_ sender: Any?) {
+        Task { [weak self] in
+            guard let self else { return }
+            await environment.entitlementService.refreshPurchasedProducts()
+            showProStashShelfWindowAfterEntitlementRefresh(sender)
+        }
+    }
+
+    private func showProStashShelfWindowAfterEntitlementRefresh(_ sender: Any?) {
         guard ensureProAccess() else { return }
         let controller = proStashShelfWindowController ?? ProStashShelfWindowController(
             stashShelfStore: try! StashShelfStore(),
