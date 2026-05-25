@@ -6,6 +6,7 @@ enum ProFeature: String, CaseIterable, Sendable {
     case batchRename
     case folderCompare
     case customToolbar
+    case advancedPaneLayouts
     case advancedShortcuts
 
     var title: String {
@@ -20,6 +21,8 @@ enum ProFeature: String, CaseIterable, Sendable {
             return L10n.proFeatureFolderCompare
         case .customToolbar:
             return L10n.proFeatureCustomToolbar
+        case .advancedPaneLayouts:
+            return L10n.proFeatureAdvancedPaneLayouts
         case .advancedShortcuts:
             return L10n.proFeatureAdvancedShortcuts
         }

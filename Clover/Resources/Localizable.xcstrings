@@ -450,6 +450,28 @@
         }
       }
     },
+    "clear_stash_shelf" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear Stash Shelf"
+          }
+        }
+      }
+    },
+    "close_window" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Close Window"
+          }
+        }
+      }
+    },
     "conflict_choice" : {
       "localizations" : {
         "de" : {
@@ -2424,6 +2446,28 @@
         }
       }
     },
+    "left_one_right_two_pane" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Left 1, Right 2"
+          }
+        }
+      }
+    },
+    "left_two_right_one_pane" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Left 2, Right 1"
+          }
+        }
+      }
+    },
     "loading" : {
       "localizations" : {
         "de" : {
@@ -4011,6 +4055,28 @@
         }
       }
     },
+    "open_in_new_window" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open in New Window"
+          }
+        }
+      }
+    },
+    "open_in_other_pane" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Open in Other Pane"
+          }
+        }
+      }
+    },
     "open_in_terminal" : {
       "localizations" : {
         "de" : {
@@ -4219,6 +4285,17 @@
         }
       }
     },
+    "pane_number_format" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Pane %lld"
+          }
+        }
+      }
+    },
     "paste" : {
       "localizations" : {
         "de" : {
@@ -4377,6 +4454,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Choose which toolbar actions stay visible."
+          }
+        }
+      }
+    },
+    "pro_feature_advanced_pane_layouts" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Advanced three-pane layouts"
           }
         }
       }
@@ -7178,6 +7266,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "工具列顯示"
+          }
+        }
+      }
+    },
+    "top_one_bottom_two_pane" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Top 1, Bottom 2"
+          }
+        }
+      }
+    },
+    "top_two_bottom_one_pane" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Top 2, Bottom 1"
           }
         }
       }

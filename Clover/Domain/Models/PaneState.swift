@@ -32,5 +32,9 @@ enum PaneLayout: String, Codable, CaseIterable {
     case single
     case twoVertical
     case twoHorizontal
+    case leftOneRightTwo
+    case leftTwoRightOne
+    case topOneBottomTwo
+    case topTwoBottomOne
     case fourGrid
 }

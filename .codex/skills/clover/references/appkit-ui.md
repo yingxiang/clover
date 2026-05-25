@@ -57,6 +57,7 @@ Rules:
 
 - `PaneLayoutController` creates, removes, and rearranges pane controllers.
 - Preserve active pane state when switching layouts.
+- When switching pane layouts, default newly created left/right and top/bottom split dividers to equal 50/50 proportions unless restoring an explicit saved ratio.
 - Highlight the active pane clearly.
 - Keyboard commands act on the active pane.
 - Each pane can navigate independently.

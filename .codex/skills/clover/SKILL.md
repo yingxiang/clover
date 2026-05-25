@@ -36,10 +36,15 @@ Use this skill for development inside the Clover repository.
 - Directory permission checks must test current access each time: first resolve matching security-scoped bookmarks, then try direct directory readability. Do not rely on an "already authorized" flag.
 - When using restored bookmarks for user-selected folders such as Downloads, call `startAccessingSecurityScopedResource()` around provider, Quick Look thumbnail/preview, and sharing operations, then balance it with `stopAccessingSecurityScopedResource()`.
 - Treat list/grid filtering as an in-memory view-model operation. Type-filter changes should use the loaded `allItems` and update visible rows/items without triggering a full pane reload or directory listing.
+- Keep existing pane layouts free: single, two vertical, two horizontal, and four-grid. Advanced three-pane layouts such as left-one-right-two, left-two-right-one, top-one-bottom-two, and top-two-bottom-one are Pro-only and should trigger the upgrade window when selected without an active Pro entitlement.
 - For the Pro stash shelf glass background, use `NSGlassEffectView` on macOS 26+ and keep an `NSVisualEffectView` fallback for earlier macOS versions.
 - Avoid synchronous app bundle icon/display-name lookup on the menu-building path. For Open With menus, show a generic icon immediately, then load and cache app icons asynchronously.
-- Keep project-owned Swift files under 1000 lines. Before adding substantial behavior, check the target file length with `wc -l`; if the edit would push it past 1000 lines, split by responsibility first.
+- Keep project-owned Swift files under 1000 lines. When any module file grows beyond 1000 lines, consider splitting it by responsibility before adding more behavior.
 - Treat 800 lines as a warning threshold. Prefer extracting focused controllers, views, services, model types, helpers, or tests before the file becomes hard to review.
+- Treat any single method over 200 lines as a warning sign. Consider extracting smaller methods, helper types, or focused collaborators before adding more logic.
+- After feature work, remove unused or deprecated code paths promptly instead of leaving dead code, commented-out implementations, or stale compatibility shims behind.
+- After feature work changes architecture, workflow, UI conventions, or implementation patterns, update this skill or the relevant reference file before finishing.
+- Any user-visible copy added in code must go through localization (`L10n` / string catalog). Do not hard-code display text in Swift, menus, alerts, buttons, tooltips, labels, or status messages.
 - Do not copy QSpace, Path Finder, Finder, or other products' branding, icons, copy, or proprietary layout details.
 
 ## Pro Stash Shelf

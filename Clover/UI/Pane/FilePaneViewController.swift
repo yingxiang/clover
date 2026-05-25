@@ -10,6 +10,10 @@ final class FilePaneViewController: NSViewController {
     var statusHandler: ((String) -> Void)?
     var pathChangeHandler: ((FilePaneViewController) -> Void)?
     var commandAvailabilityHandler: ((FilePaneViewController) -> Void)?
+    var openDirectoryInNewWindowHandler: ((URL) -> Void)?
+    var paneOpenTargetsProvider: ((FilePaneViewController) -> [(paneIndex: Int, displayNumber: Int)])?
+    var paneSelectionOverlayHandler: ((Bool, FilePaneViewController, Int?) -> Void)?
+    var openDirectoryInPaneHandler: ((Int, URL) -> Void)?
 
     private let pathBarView = PathBarView()
     private let backButton = NSButton()

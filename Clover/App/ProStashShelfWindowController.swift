@@ -358,13 +358,13 @@ private final class StashShelfSurfaceView: NSView {
 
     private func contextMenu() -> NSMenu {
         let menu = NSMenu()
-        let clearItem = NSMenuItem(title: "清空暂存架", action: #selector(clearClicked(_:)), keyEquivalent: "")
+        let clearItem = NSMenuItem(title: L10n.clearStashShelf, action: #selector(clearClicked(_:)), keyEquivalent: "")
         clearItem.target = self
         clearItem.isEnabled = hasItems
         menu.addItem(clearItem)
         menu.addItem(.separator())
 
-        let closeItem = NSMenuItem(title: "关闭窗口", action: #selector(closeClicked(_:)), keyEquivalent: "")
+        let closeItem = NSMenuItem(title: L10n.closeWindow, action: #selector(closeClicked(_:)), keyEquivalent: "")
         closeItem.target = self; menu.addItem(closeItem)
         return menu
     }

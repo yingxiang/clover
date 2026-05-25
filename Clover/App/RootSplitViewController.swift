@@ -190,6 +190,10 @@ final class RootSplitViewController: NSSplitViewController {
         workspaceViewController.setFileViewModeInActivePane(mode)
     }
 
+    func openInActivePane(_ url: URL) {
+        workspaceViewController.openInActivePane(url)
+    }
+
     func activePaneSelectedURLs() -> [URL] {
         workspaceViewController.activePaneSelectedURLs
     }

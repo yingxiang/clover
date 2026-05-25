@@ -29,8 +29,15 @@ private enum ApplicationMenuIconLoader {
 }
 
 extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServicePickerDelegate {
+    private static var otherPaneMenuTitle: String { L10n.openInOtherPane }
+
     func menuNeedsUpdate(_ menu: NSMenu) {
+        guard menu.title == "File Actions" else { return }
         menu.removeAllItems()
+
+        addViewModeItems(to: menu)
+        addOpenDirectoryItem(to: menu)
+        menu.addItem(.separator())
 
         let selectedCount = selectedItems().count
         let pasteTitle = pasteMenuTitle()
@@ -74,6 +81,21 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
         menu.addItem(.separator())
         addMenuItem(L10n.moveToTrash, action: #selector(trashSelectedItems(_:)), to: menu, symbol: .trash)
         addMenuItem(L10n.deleteImmediately, action: #selector(deleteSelectedItemsPermanently(_:)), to: menu, symbol: .deleteImmediately)
+    }
+
+    func menuWillOpen(_ menu: NSMenu) {
+        guard menu.title == Self.otherPaneMenuTitle else { return }
+        paneSelectionOverlayHandler?(true, self, nil)
+    }
+
+    func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
+        guard menu.title == Self.otherPaneMenuTitle else { return }
+        paneSelectionOverlayHandler?(true, self, item?.tag)
+    }
+
+    func menuDidClose(_ menu: NSMenu) {
+        guard menu.title == Self.otherPaneMenuTitle else { return }
+        paneSelectionOverlayHandler?(false, self, nil)
     }
 
     func canPerformFileAction(_ action: Selector) -> Bool {
@@ -258,6 +280,33 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
         }
     }
 
+    @objc private func setListViewModeFromContextMenu(_ sender: Any?) {
+        setViewModeFromContextMenu(.list)
+    }
+
+    @objc private func setGridViewModeFromContextMenu(_ sender: Any?) {
+        setViewModeFromContextMenu(.grid)
+    }
+
+    @objc private func openDirectoryInNewWindowFromContextMenu(_ sender: Any?) {
+        activationHandler?(self)
+        openDirectoryInNewWindowHandler?(viewModel.currentURL)
+    }
+
+    @objc private func openDirectoryInOtherPaneFromContextMenu(_ sender: NSMenuItem) {
+        activationHandler?(self)
+        openDirectoryInPaneHandler?(sender.tag, viewModel.currentURL)
+    }
+
+    private func setViewModeFromContextMenu(_ mode: FileViewMode) {
+        activationHandler?(self)
+        if let controller = view.window?.windowController as? MainWindowController {
+            controller.setFileViewMode(mode)
+        } else {
+            setViewMode(mode)
+        }
+    }
+
     @objc func searchAppsInAppStore(_ sender: Any?) {
         activationHandler?(self)
         guard let query = appStoreSearchQuery(),
@@ -364,6 +413,38 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
             item.image = AppIconProvider.menuImage(symbol, accessibilityDescription: title)
         }
         menu.addItem(item)
+    }
+
+    private func addViewModeItems(to menu: NSMenu) {
+        let listItem = NSMenuItem(title: L10n.viewModeList, action: #selector(setListViewModeFromContextMenu(_:)), keyEquivalent: "")
+        listItem.target = self
+        listItem.state = viewModel.viewMode == .list ? .on : .off
+        listItem.image = AppIconProvider.menuImage(.list, accessibilityDescription: L10n.viewModeList)
+        menu.addItem(listItem)
+
+        let gridItem = NSMenuItem(title: L10n.viewModeGrid, action: #selector(setGridViewModeFromContextMenu(_:)), keyEquivalent: "")
+        gridItem.target = self
+        gridItem.state = viewModel.viewMode == .grid ? .on : .off
+        gridItem.image = AppIconProvider.menuImage(.grid, accessibilityDescription: L10n.viewModeGrid)
+        menu.addItem(gridItem)
+    }
+
+    private func addOpenDirectoryItem(to menu: NSMenu) {
+        let targets = paneOpenTargetsProvider?(self) ?? []
+        if targets.isEmpty {
+            addMenuItem(L10n.openInNewWindow, action: #selector(openDirectoryInNewWindowFromContextMenu(_:)), to: menu, symbol: .open)
+            return
+        }
+
+        let submenu = NSMenu(title: Self.otherPaneMenuTitle)
+        submenu.delegate = self
+        for target in targets {
+            let item = NSMenuItem(title: L10n.paneNumber(target.displayNumber), action: #selector(openDirectoryInOtherPaneFromContextMenu(_:)), keyEquivalent: "")
+            item.target = self
+            item.tag = target.paneIndex
+            submenu.addItem(item)
+        }
+        addSubmenuItem(Self.otherPaneMenuTitle, submenu: submenu, to: menu, symbol: .open)
     }
 
     private func addSubmenuItem(_ title: String, submenu: NSMenu, to menu: NSMenu, symbol: AppSymbol? = nil) {

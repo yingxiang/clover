@@ -37,7 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @discardableResult
-    private func showMainWindow(reuseExisting: Bool = false) -> MainWindowController {
+    func showMainWindow(reuseExisting: Bool = false) -> MainWindowController {
         windowControllers.removeAll { $0.window == nil }
         let controller: MainWindowController
         if reuseExisting, let existing = windowControllers.first {
@@ -164,7 +164,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         addLayoutItem(title: L10n.singlePane, key: "1", layout: .single, to: viewMenu)
         addLayoutItem(title: L10n.twoPanesVertical, key: "2", layout: .twoVertical, to: viewMenu)
         addLayoutItem(title: L10n.twoPanesHorizontal, key: "3", layout: .twoHorizontal, to: viewMenu)
-        addLayoutItem(title: L10n.fourPanes, key: "4", layout: .fourGrid, to: viewMenu)
+        addLayoutItem(title: L10n.leftOneRightTwoPane, key: "4", layout: .leftOneRightTwo, to: viewMenu)
+        addLayoutItem(title: L10n.leftTwoRightOnePane, key: "5", layout: .leftTwoRightOne, to: viewMenu)
+        addLayoutItem(title: L10n.topOneBottomTwoPane, key: "6", layout: .topOneBottomTwo, to: viewMenu)
+        addLayoutItem(title: L10n.topTwoBottomOnePane, key: "7", layout: .topTwoBottomOne, to: viewMenu)
+        addLayoutItem(title: L10n.fourPanes, key: "8", layout: .fourGrid, to: viewMenu)
         viewItem.submenu = viewMenu
         mainMenu.addItem(viewItem)
 
@@ -210,6 +214,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func newWindow(_ sender: Any?) {
         showMainWindow()
+    }
+
+    func openDirectoryInNewWindow(_ url: URL) {
+        let controller = showMainWindow()
+        controller.setPaneLayout(.twoVertical)
+        controller.openInActivePane(url)
     }
 
     @objc private func openOmniCaptureInAppStore(_ sender: Any?) {
@@ -357,6 +367,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func changePaneLayout(_ sender: NSMenuItem) {
         guard let layout = PaneLayout(menuTag: sender.tag) else { return }
+        guard !layout.isProOnly || ensureProAccess() else { return }
         keyWindowController?.setPaneLayout(layout)
     }
 
@@ -438,36 +449,6 @@ extension AppDelegate: NSWindowDelegate {
             try environment.workspaceStore.saveDefaultWorkspace(workspace)
         } catch {
             Logger.workspace.error("Failed to save workspace: \(error.localizedDescription, privacy: .public)")
-        }
-    }
-}
-
-private extension PaneLayout {
-    var menuTag: Int {
-        switch self {
-        case .single:
-            return 1
-        case .twoVertical:
-            return 2
-        case .twoHorizontal:
-            return 3
-        case .fourGrid:
-            return 4
-        }
-    }
-
-    init?(menuTag: Int) {
-        switch menuTag {
-        case 1:
-            self = .single
-        case 2:
-            self = .twoVertical
-        case 3:
-            self = .twoHorizontal
-        case 4:
-            self = .fourGrid
-        default:
-            return nil
         }
     }
 }

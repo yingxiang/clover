@@ -10,6 +10,7 @@ final class PaneLayoutController: NSViewController {
     private(set) var layout: PaneLayout = .single
     private var panes: [FilePaneViewController] = []
     private weak var activePane: FilePaneViewController?
+    private var paneSelectionOverlays: [Int: PaneSelectionOverlayView] = [:]
 
     var activePaneID: UUID? {
         activePane?.viewModel.id
@@ -247,6 +248,22 @@ final class PaneLayoutController: NSViewController {
             guard self?.activePane === pane else { return }
             self?.commandAvailabilityChangeHandler?()
         }
+        pane.openDirectoryInNewWindowHandler = { url in
+            (NSApp.delegate as? AppDelegate)?.openDirectoryInNewWindow(url)
+        }
+        pane.paneOpenTargetsProvider = { [weak self] pane in
+            self?.paneOpenTargets(excluding: pane) ?? []
+        }
+        pane.paneSelectionOverlayHandler = { [weak self] show, pane, highlightedPaneIndex in
+            if show {
+                self?.showPaneSelectionOverlays(excluding: pane, highlightedPaneIndex: highlightedPaneIndex)
+            } else {
+                self?.hidePaneSelectionOverlays()
+            }
+        }
+        pane.openDirectoryInPaneHandler = { [weak self] paneIndex, url in
+            self?.open(url, inPaneAt: paneIndex)
+        }
         return pane
     }
 
@@ -263,9 +280,14 @@ final class PaneLayoutController: NSViewController {
             addChild(panes[0])
             arrangedView = panes[0].view
         case .twoVertical:
-            arrangedView = split(axis: .vertical, panes: Array(panes.prefix(2)))
+            Array(panes.prefix(2)).forEach { addChild($0) }
+            arrangedView = split(axis: .vertical, views: Array(panes.prefix(2)).map(\.view))
         case .twoHorizontal:
-            arrangedView = split(axis: .horizontal, panes: Array(panes.prefix(2)))
+            Array(panes.prefix(2)).forEach { addChild($0) }
+            arrangedView = split(axis: .horizontal, views: Array(panes.prefix(2)).map(\.view))
+        case .leftOneRightTwo, .leftTwoRightOne, .topOneBottomTwo, .topTwoBottomOne:
+            Array(panes.prefix(3)).forEach { addChild($0) }
+            arrangedView = asymmetricSplit(layout: layout, panes: Array(panes.prefix(3)))
         case .fourGrid:
             arrangedView = crossSplit(panes: Array(panes.prefix(4)))
         }
@@ -281,8 +303,7 @@ final class PaneLayoutController: NSViewController {
         panes.forEach { $0.setActive($0 === activePane) }
     }
 
-    private func split(axis: NSUserInterfaceLayoutOrientation, panes: [FilePaneViewController]) -> NSView {
-        panes.forEach { addChild($0) }
+    private func split(axis: NSUserInterfaceLayoutOrientation, views: [NSView]) -> NSView {
         let splitView = BoundedPaneSplitView()
         splitView.isVertical = axis == .vertical
         splitView.dividerStyle = .thin
@@ -292,11 +313,30 @@ final class PaneLayoutController: NSViewController {
         splitView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         splitView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
 
-        panes.map(\.view).forEach { paneView in
+        views.forEach { paneView in
             paneView.translatesAutoresizingMaskIntoConstraints = false
             splitView.addArrangedSubview(paneView)
         }
         return splitView
+    }
+
+    private func asymmetricSplit(layout: PaneLayout, panes: [FilePaneViewController]) -> NSView {
+        switch layout {
+        case .leftOneRightTwo:
+            let right = split(axis: .horizontal, views: [panes[1].view, panes[2].view])
+            return split(axis: .vertical, views: [panes[0].view, right])
+        case .leftTwoRightOne:
+            let left = split(axis: .horizontal, views: [panes[0].view, panes[1].view])
+            return split(axis: .vertical, views: [left, panes[2].view])
+        case .topOneBottomTwo:
+            let bottom = split(axis: .vertical, views: [panes[1].view, panes[2].view])
+            return split(axis: .horizontal, views: [panes[0].view, bottom])
+        case .topTwoBottomOne:
+            let top = split(axis: .vertical, views: [panes[0].view, panes[1].view])
+            return split(axis: .horizontal, views: [top, panes[2].view])
+        default:
+            return panes.first?.view ?? NSView()
+        }
     }
 
     private func crossSplit(panes: [FilePaneViewController]) -> NSView {
@@ -344,26 +384,120 @@ final class PaneLayoutController: NSViewController {
             return 1
         case .twoVertical, .twoHorizontal:
             return 2
+        case .leftOneRightTwo, .leftTwoRightOne, .topOneBottomTwo, .topTwoBottomOne:
+            return 3
         case .fourGrid:
             return 4
         }
     }
 
     private func displayName(for layout: PaneLayout) -> String {
-        switch layout {
-        case .single:
-            return L10n.single
-        case .twoVertical:
-            return L10n.twoVertical
-        case .twoHorizontal:
-            return L10n.twoHorizontal
-        case .fourGrid:
-            return L10n.fourGrid
+        layout.shortStatusName
+    }
+
+    private func paneOpenTargets(excluding sourcePane: FilePaneViewController) -> [(paneIndex: Int, displayNumber: Int)] {
+        var displayNumber = 1
+        return panes.enumerated().compactMap { index, pane in
+            guard pane !== sourcePane else { return nil }
+            defer { displayNumber += 1 }
+            return (index, displayNumber)
         }
+    }
+
+    private func open(_ url: URL, inPaneAt paneIndex: Int) {
+        guard panes.indices.contains(paneIndex) else { return }
+        let targetPane = panes[paneIndex]
+        targetPane.open(url)
+        setActivePane(targetPane)
+        targetPane.focusBrowser()
+        hidePaneSelectionOverlays()
+    }
+
+    private func showPaneSelectionOverlays(excluding sourcePane: FilePaneViewController, highlightedPaneIndex: Int?) {
+        let targets = paneOpenTargets(excluding: sourcePane)
+        if paneSelectionOverlays.isEmpty {
+            for target in targets {
+                let overlay = PaneSelectionOverlayView(number: target.displayNumber)
+                overlay.translatesAutoresizingMaskIntoConstraints = false
+                let paneView = panes[target.paneIndex].view
+                paneView.addSubview(overlay)
+                NSLayoutConstraint.activate([
+                    overlay.leadingAnchor.constraint(equalTo: paneView.leadingAnchor),
+                    overlay.trailingAnchor.constraint(equalTo: paneView.trailingAnchor),
+                    overlay.topAnchor.constraint(equalTo: paneView.topAnchor),
+                    overlay.bottomAnchor.constraint(equalTo: paneView.bottomAnchor)
+                ])
+                paneSelectionOverlays[target.paneIndex] = overlay
+            }
+        }
+        paneSelectionOverlays.forEach { paneIndex, overlay in
+            overlay.setHighlighted(paneIndex == highlightedPaneIndex)
+        }
+    }
+
+    private func hidePaneSelectionOverlays() {
+        paneSelectionOverlays.values.forEach { $0.removeFromSuperview() }
+        paneSelectionOverlays.removeAll()
+    }
+}
+
+private final class PaneSelectionOverlayView: NSView {
+    private let glassView = PaneSelectionOverlayView.makeGlassView()
+    private let label = NSTextField(labelWithString: "")
+
+    init(number: Int) {
+        super.init(frame: .zero)
+        addSubview(glassView)
+
+        label.stringValue = "\(number)"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.alignment = .center
+        label.textColor = .textColor
+        label.font = .boldSystemFont(ofSize: 48)
+        addSubview(label)
+
+        NSLayoutConstraint.activate([
+            glassView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            glassView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            glassView.topAnchor.constraint(equalTo: topAnchor),
+            glassView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            label.centerXAnchor.constraint(equalTo: centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: centerYAnchor)
+        ])
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layout() {
+        super.layout()
+        label.font = .boldSystemFont(ofSize: max(24, min(bounds.width, bounds.height) / 2))
+    }
+
+    func setHighlighted(_ highlighted: Bool) {
+        label.textColor = highlighted ? .controlAccentColor : .textColor
+    }
+
+    private static func makeGlassView() -> NSView {
+        if #available(macOS 26.0, *) {
+            let view = NSGlassEffectView()
+            view.translatesAutoresizingMaskIntoConstraints = false
+            view.style = .regular
+            return view
+        }
+        let view = NSVisualEffectView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.material = .hudWindow
+        view.blendingMode = .withinWindow
+        view.state = .active
+        return view
     }
 }
 
 private final class BoundedPaneSplitView: NSSplitView, NSSplitViewDelegate {
+    private var didSetInitialDividerPosition = false
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         delegate = self
@@ -374,6 +508,11 @@ private final class BoundedPaneSplitView: NSSplitView, NSSplitViewDelegate {
         delegate = self
     }
 
+    override func layout() {
+        super.layout()
+        setInitialDividerPositionIfNeeded()
+    }
+
     func splitView(_ splitView: NSSplitView, constrainSplitPosition proposedPosition: CGFloat, ofSubviewAt dividerIndex: Int) -> CGFloat {
         let availableLength = (isVertical ? bounds.width : bounds.height) - dividerThickness
         guard availableLength > 0 else { return proposedPosition }
@@ -381,6 +520,15 @@ private final class BoundedPaneSplitView: NSSplitView, NSSplitViewDelegate {
         let minimumPaneLength = availableLength / 3
         let maximumFirstPaneLength = availableLength - minimumPaneLength
         return min(max(proposedPosition, minimumPaneLength), maximumFirstPaneLength)
+    }
+
+    private func setInitialDividerPositionIfNeeded() {
+        guard !didSetInitialDividerPosition, arrangedSubviews.count >= 2 else { return }
+        let availableLength = (isVertical ? bounds.width : bounds.height) - dividerThickness
+        guard availableLength > 0 else { return }
+
+        didSetInitialDividerPosition = true
+        setPosition(floor(availableLength / 2), ofDividerAt: 0)
     }
 }
 

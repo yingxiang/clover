@@ -16,6 +16,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     private weak var sidebarTitlebarButton: NSButton?
     private var sidebarTitlebarAccessory: NSTitlebarAccessoryViewController?
     private var layoutPopover: NSPopover?
+    private var upgradeProWindowController: UpgradeProWindowController?
     private var toolbarContextMenuMonitor: Any?
     private var paneSwitchKeyMonitor: Any?
     private let environment: AppEnvironment
@@ -177,6 +178,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     }
 
     func setPaneLayout(_ layout: PaneLayout) {
+        guard ensurePaneLayoutAccess(layout) else { return }
         rootViewController.setPaneLayout(layout)
         updateLayoutButton()
         updateToolbarButtonAvailability()
@@ -185,6 +187,11 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     func setFileViewMode(_ mode: FileViewMode) {
         rootViewController.setFileViewModeInActivePane(mode)
         updateViewModeButton()
+    }
+
+    func openInActivePane(_ url: URL) {
+        rootViewController.openInActivePane(url)
+        updateWindowTitle()
     }
 
     func activateNextPane() {
@@ -617,13 +624,30 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
 
         let popover = NSPopover()
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 174, height: 126)
+        popover.contentSize = NSSize(width: 174, height: 164)
         popover.contentViewController = controller
         layoutPopover = popover
         let anchorView = (sender as? NSView) ?? layoutToolbarButton
         if let anchorView {
             popover.show(relativeTo: anchorView.bounds, of: anchorView, preferredEdge: .maxY)
         }
+    }
+
+    private func ensurePaneLayoutAccess(_ layout: PaneLayout) -> Bool {
+        guard !layout.isProOnly || environment.featureGate.canUse(.advancedPaneLayouts) else {
+            showUpgradeProWindow()
+            return false
+        }
+        return true
+    }
+
+    private func showUpgradeProWindow() {
+        let controller = upgradeProWindowController ?? UpgradeProWindowController(entitlementService: environment.entitlementService)
+        upgradeProWindowController = controller
+        controller.showWindow(self)
+        guard let upgradeWindow = controller.window else { return }
+        upgradeWindow.makeKeyAndOrderFront(self)
+        NSApp.activate(ignoringOtherApps: true)
     }
 }
 
@@ -635,160 +659,4 @@ private extension NSToolbarItem.Identifier {
     static let info = NSToolbarItem.Identifier("CloverToolbar.Info")
     static let viewMode = NSToolbarItem.Identifier("CloverToolbar.ViewMode")
     static let paneLayout = NSToolbarItem.Identifier("CloverToolbar.PaneLayout")
-}
-
-private extension PaneLayout {
-    var displayName: String {
-        switch self {
-        case .single:
-            return L10n.singlePane
-        case .twoVertical:
-            return L10n.twoPanesVertical
-        case .twoHorizontal:
-            return L10n.twoPanesHorizontal
-        case .fourGrid:
-            return L10n.fourPanes
-        }
-    }
-
-    var toolbarImage: NSImage {
-        LayoutIconFactory.image(for: self, highlighted: false)
-    }
-
-    var menuTag: Int {
-        switch self {
-        case .single:
-            return 1
-        case .twoVertical:
-            return 2
-        case .twoHorizontal:
-            return 3
-        case .fourGrid:
-            return 4
-        }
-    }
-
-    init?(menuTag: Int) {
-        switch menuTag {
-        case 1:
-            self = .single
-        case 2:
-            self = .twoVertical
-        case 3:
-            self = .twoHorizontal
-        case 4:
-            self = .fourGrid
-        default:
-            return nil
-        }
-    }
-}
-
-private final class LayoutPickerViewController: NSViewController {
-    var selectionHandler: ((PaneLayout) -> Void)?
-
-    private let selectedLayout: PaneLayout
-
-    init(selectedLayout: PaneLayout) {
-        self.selectedLayout = selectedLayout
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func loadView() {
-        let rootView = NSView()
-        rootView.wantsLayer = true
-        rootView.layer?.cornerRadius = 12
-
-        let grid = NSGridView(views: [
-            [makeButton(.single), makeButton(.twoVertical), makeButton(.twoHorizontal), makeButton(.fourGrid)]
-        ])
-        grid.translatesAutoresizingMaskIntoConstraints = false
-        grid.rowSpacing = 10
-        grid.columnSpacing = 12
-        rootView.addSubview(grid)
-
-        NSLayoutConstraint.activate([
-            grid.leadingAnchor.constraint(equalTo: rootView.leadingAnchor, constant: 14),
-            grid.trailingAnchor.constraint(equalTo: rootView.trailingAnchor, constant: -14),
-            grid.topAnchor.constraint(equalTo: rootView.topAnchor, constant: 14),
-            grid.bottomAnchor.constraint(equalTo: rootView.bottomAnchor, constant: -14)
-        ])
-
-        view = rootView
-    }
-
-    private func makeButton(_ layout: PaneLayout) -> NSButton {
-        let button = NSButton(image: LayoutIconFactory.image(for: layout, highlighted: layout == selectedLayout), target: self, action: #selector(selectLayout(_:)))
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.bezelStyle = NSButton.BezelStyle.regularSquare
-        button.isBordered = false
-        button.imagePosition = NSControl.ImagePosition.imageOnly
-        button.tag = layout.menuTag
-        button.toolTip = layout.displayName
-        button.setAccessibilityLabel(layout.displayName)
-        NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: 26),
-            button.heightAnchor.constraint(equalToConstant: 26)
-        ])
-        return button
-    }
-
-    @objc private func selectLayout(_ sender: NSButton) {
-        guard let layout = PaneLayout(menuTag: sender.tag) else { return }
-        selectionHandler?(layout)
-    }
-}
-
-private enum LayoutIconFactory {
-    static func image(for layout: PaneLayout, highlighted: Bool) -> NSImage {
-        let size = NSSize(width: 22, height: 22)
-        let image = NSImage(size: size)
-        image.lockFocus()
-        defer { image.unlockFocus() }
-
-        NSColor.clear.setFill()
-        NSRect(origin: .zero, size: size).fill()
-
-        let strokeColor = highlighted ? NSColor.systemGreen : NSColor.secondaryLabelColor
-        strokeColor.setStroke()
-
-        let lineWidth: CGFloat = highlighted ? 2 : 1.6
-        let outer = NSRect(x: 3, y: 3, width: 16, height: 16)
-        let path = NSBezierPath(rect: outer)
-        path.lineWidth = lineWidth
-        path.stroke()
-
-        let dividers = dividers(for: layout, in: outer)
-        for divider in dividers {
-            let dividerPath = NSBezierPath()
-            dividerPath.lineWidth = lineWidth
-            dividerPath.move(to: divider.start)
-            dividerPath.line(to: divider.end)
-            dividerPath.stroke()
-        }
-
-        return image
-    }
-
-    private static func dividers(for layout: PaneLayout, in rect: NSRect) -> [(start: NSPoint, end: NSPoint)] {
-        let midX = rect.midX
-        let midY = rect.midY
-        switch layout {
-        case .single:
-            return []
-        case .twoVertical:
-            return [(NSPoint(x: midX, y: rect.minY), NSPoint(x: midX, y: rect.maxY))]
-        case .twoHorizontal:
-            return [(NSPoint(x: rect.minX, y: midY), NSPoint(x: rect.maxX, y: midY))]
-        case .fourGrid:
-            return [
-                (NSPoint(x: midX, y: rect.minY), NSPoint(x: midX, y: rect.maxY)),
-                (NSPoint(x: rect.minX, y: midY), NSPoint(x: rect.maxX, y: midY))
-            ]
-        }
-    }
 }
