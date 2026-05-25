@@ -324,6 +324,17 @@ final class FilePaneViewModel {
         )
     }
 
+    func extractArchive(_ item: FileItem) async throws -> URL {
+        let destinationDirectoryURL = item.url.deletingLastPathComponent()
+        onStatusChange?(L10n.extractingItem(item.name))
+        let extractedURL = try await fileOperationService.extractArchive(at: item.url, to: destinationDirectoryURL)
+        onStatusChange?(L10n.extractedItem(item.name))
+        NotificationCenter.default.postCloverFileOperationCompleted(
+            affectedDirectories: [destinationDirectoryURL]
+        )
+        return extractedURL
+    }
+
     func item(at index: Int) -> FileItem? {
         if viewMode == .list {
             guard listRows.indices.contains(index) else { return nil }

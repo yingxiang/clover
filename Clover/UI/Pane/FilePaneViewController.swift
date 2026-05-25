@@ -260,7 +260,7 @@ final class FilePaneViewController: NSViewController {
 
         pathBarView.translatesAutoresizingMaskIntoConstraints = false
         pathBarView.navigationHandler = { [weak self] url in
-            self?.viewModel.load(url: url)
+            self?.open(url)
         }
         pathBarView.pathSubmitHandler = { [weak self] path in
             self?.openSubmittedPath(path)
@@ -582,7 +582,7 @@ final class FilePaneViewController: NSViewController {
             } catch {
                 Logger.ui.error("Failed to persist directory access bookmark: \(error.localizedDescription, privacy: .public)")
             }
-            self.open(selectedURL.standardizedFileURL)
+            self.open(requestedURL)
         }
         return true
     }
@@ -624,7 +624,7 @@ final class FilePaneViewController: NSViewController {
             } catch {
                 Logger.ui.error("Failed to persist directory access bookmark: \(error.localizedDescription, privacy: .public)")
             }
-            self.viewModel.load(url: selectedURL.standardizedFileURL)
+            self.open(requestedURL)
         }
         return true
     }
@@ -1220,7 +1220,15 @@ final class FilePaneViewController: NSViewController {
         guard let item = viewModel.item(at: index) else { return }
 
         if item.isBrowsableDirectory {
-            viewModel.load(url: item.url)
+            open(item.url)
+        } else if item.isZipArchive {
+            runOperation {
+                let extractedURL = try await self.viewModel.extractArchive(item)
+                await MainActor.run {
+                    self.rememberSelection(urls: [extractedURL])
+                    self.refresh()
+                }
+            }
         } else {
             Task {
                 do {
@@ -1235,7 +1243,7 @@ final class FilePaneViewController: NSViewController {
     private func openSubmittedPath(_ path: String) {
         let expandedPath = (path as NSString).expandingTildeInPath
         let url = URL(fileURLWithPath: expandedPath, isDirectory: true)
-        viewModel.load(url: url.standardizedFileURL)
+        open(url.standardizedFileURL)
     }
 
     private func openNewDocumentApp(_ kind: NewItemKind) {
@@ -1320,7 +1328,7 @@ final class FilePaneViewController: NSViewController {
         pendingDetailCallbacks[url] = completion.map { [$0] } ?? []
 
         Task(priority: .userInitiated) { [weak self] in
-            let detail = await FileGridDetailProvider.detail(for: item)
+            let detail = await FileGridDetailProvider.detail(for: item, directoryAccessStore: self?.directoryAccessStore)
             await MainActor.run {
                 guard let self else { return }
                 self.detailCache[url] = detail

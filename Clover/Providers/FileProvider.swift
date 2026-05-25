@@ -15,5 +15,6 @@ protocol FileProvider: AnyObject, Sendable {
     func trashItems(_ urls: [URL]) async throws
     func deleteItemsPermanently(_ urls: [URL]) async throws
     func setLabelNumber(_ labelNumber: Int?, for urls: [URL]) async throws
+    func extractArchive(at url: URL, to destinationDirectoryURL: URL) async throws -> URL
     func openItem(_ url: URL) async throws
 }

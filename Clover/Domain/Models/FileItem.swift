@@ -33,6 +33,14 @@ struct FileItem: Identifiable, Hashable {
     var isBrowsableDirectory: Bool {
         isDirectory && !isPackage && !isApplication
     }
+
+    var isZipArchive: Bool {
+        if url.pathExtension.localizedCaseInsensitiveCompare("zip") == .orderedSame {
+            return true
+        }
+        guard let typeIdentifier else { return false }
+        return typeIdentifier == "public.zip-archive" || typeIdentifier == "com.pkware.zip-archive"
+    }
 }
 
 enum FileViewMode: String, Codable {

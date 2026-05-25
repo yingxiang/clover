@@ -123,6 +123,10 @@ private final class OperationMockProvider: FileProvider, @unchecked Sendable {
 
     func setLabelNumber(_ labelNumber: Int?, for urls: [URL]) async throws {}
 
+    func extractArchive(at url: URL, to destinationDirectoryURL: URL) async throws -> URL {
+        destinationDirectoryURL.appendingPathComponent(url.deletingPathExtension().lastPathComponent, isDirectory: true)
+    }
+
     func openItem(_ url: URL) async throws {}
 
     private func recordOperation(source: URL, destination: URL, isCopy: Bool) throws {

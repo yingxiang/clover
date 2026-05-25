@@ -8,6 +8,7 @@ enum FileOperationKind: Sendable {
     case deletePermanently
     case createFolder
     case createFile
+    case extractArchive
 }
 
 enum FileOperationState {
@@ -94,6 +95,10 @@ final class FileOperationService: Sendable {
 
     func setLabelNumber(_ labelNumber: Int?, for urls: [URL]) async throws {
         try await provider.setLabelNumber(labelNumber, for: urls)
+    }
+
+    func extractArchive(at url: URL, to destinationDirectoryURL: URL) async throws -> URL {
+        try await provider.extractArchive(at: url, to: destinationDirectoryURL)
     }
 
     private func perform(_ kind: FileOperationKind, urls: [URL], destinationURL: URL, conflictResolver: FileConflictResolver?) async throws {

@@ -234,6 +234,14 @@ enum L10n {
         String(format: String(localized: "deleted_items_format", defaultValue: "Deleted %lld items"), locale: .current, count)
     }
 
+    static func extractingItem(_ name: String) -> String {
+        String(format: String(localized: "extracting_item_format", defaultValue: "Extracting %@..."), locale: .current, name)
+    }
+
+    static func extractedItem(_ name: String) -> String {
+        String(format: String(localized: "extracted_item_format", defaultValue: "Extracted %@"), locale: .current, name)
+    }
+
     static func viewStatus(_ mode: String) -> String {
         String(format: String(localized: "view_status_format", defaultValue: "View: %@"), locale: .current, mode)
     }

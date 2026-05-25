@@ -3,13 +3,14 @@ import ImageIO
 import UniformTypeIdentifiers
 
 enum FileGridDetailProvider {
-    static func detail(for item: FileItem) async -> String {
+    static func detail(for item: FileItem, directoryAccessStore: DirectoryAccessStore? = nil) async -> String {
+        let securityScopeURL = directoryAccessStore?.securityScopeURL(for: item.url)
         if item.isBrowsableDirectory {
-            let count = await directoryItemCount(at: item.url)
+            let count = await directoryItemCount(at: item.url, securityScopeURL: securityScopeURL)
             return L10n.itemCount(count)
         }
 
-        if let dimensions = imageDimensions(for: item) {
+        if let dimensions = imageDimensions(for: item, securityScopeURL: securityScopeURL) {
             return "\(dimensions.width)x\(dimensions.height)"
         }
 
@@ -17,7 +18,7 @@ enum FileGridDetailProvider {
         if let itemSize = item.size {
             size = itemSize
         } else if item.isPackage || item.isApplication {
-            size = await packageDirectorySize(at: item.url)
+            size = await packageDirectorySize(at: item.url, securityScopeURL: securityScopeURL)
         } else {
             size = nil
         }
@@ -25,15 +26,19 @@ enum FileGridDetailProvider {
         return ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
     }
 
-    private static func directoryItemCount(at url: URL) async -> Int {
+    private static func directoryItemCount(at url: URL, securityScopeURL: URL?) async -> Int {
         await Task.detached(priority: .userInitiated) {
-            (try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]).count) ?? 0
+            withSecurityScope(securityScopeURL) {
+                (try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]).count) ?? 0
+            }
         }.value
     }
 
-    private static func packageDirectorySize(at url: URL) async -> Int64? {
+    private static func packageDirectorySize(at url: URL, securityScopeURL: URL?) async -> Int64? {
         await Task.detached(priority: .userInitiated) {
-            packageDirectorySizeSync(at: url)
+            withSecurityScope(securityScopeURL) {
+                packageDirectorySizeSync(at: url)
+            }
         }.value
     }
 
@@ -54,15 +59,27 @@ enum FileGridDetailProvider {
         return total
     }
 
-    private static func imageDimensions(for item: FileItem) -> (width: Int, height: Int)? {
-        guard isImage(item),
-              let source = CGImageSourceCreateWithURL(item.url as CFURL, nil),
-              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
-              let width = properties[kCGImagePropertyPixelWidth] as? Int,
-              let height = properties[kCGImagePropertyPixelHeight] as? Int else {
-            return nil
+    private static func imageDimensions(for item: FileItem, securityScopeURL: URL?) -> (width: Int, height: Int)? {
+        withSecurityScope(securityScopeURL) {
+            guard isImage(item),
+                  let source = CGImageSourceCreateWithURL(item.url as CFURL, nil),
+                  let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+                  let width = properties[kCGImagePropertyPixelWidth] as? Int,
+                  let height = properties[kCGImagePropertyPixelHeight] as? Int else {
+                return nil
+            }
+            return (width, height)
         }
-        return (width, height)
+    }
+
+    private static func withSecurityScope<T>(_ url: URL?, _ body: () -> T) -> T {
+        let didStartAccessing = url?.startAccessingSecurityScopedResource() ?? false
+        defer {
+            if didStartAccessing {
+                url?.stopAccessingSecurityScopedResource()
+            }
+        }
+        return body()
     }
 
     private static func isImage(_ item: FileItem) -> Bool {

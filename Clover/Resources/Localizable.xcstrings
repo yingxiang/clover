@@ -1491,6 +1491,28 @@
         }
       }
     },
+    "extracted_item_format" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Extracted %@"
+          }
+        }
+      }
+    },
+    "extracting_item_format" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Extracting %@..."
+          }
+        }
+      }
+    },
     "file" : {
       "extractionState" : "manual",
       "localizations" : {

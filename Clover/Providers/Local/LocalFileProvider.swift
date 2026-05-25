@@ -6,9 +6,16 @@ final class LocalFileProvider: FileProvider {
     let providerID = "local"
     let displayName = "Local Files"
     private let securityScopeURLProvider: @Sendable (URL) -> URL?
+    private let openURLHandler: @MainActor @Sendable (URL) -> Bool
 
-    init(securityScopeURLProvider: (@Sendable (URL) -> URL?)? = nil) {
+    init(
+        securityScopeURLProvider: (@Sendable (URL) -> URL?)? = nil,
+        openURLHandler: (@MainActor @Sendable (URL) -> Bool)? = nil
+    ) {
         self.securityScopeURLProvider = securityScopeURLProvider ?? { _ in nil }
+        self.openURLHandler = openURLHandler ?? { url in
+            NSWorkspace.shared.open(url)
+        }
     }
 
     func listDirectory(at url: URL) async throws -> [FileItem] {
@@ -263,9 +270,39 @@ final class LocalFileProvider: FileProvider {
         }.value
     }
 
+    func extractArchive(at url: URL, to destinationDirectoryURL: URL) async throws -> URL {
+        let sourceScopeURL = securityScopeURL(for: url)
+        let destinationScopeURL = securityScopeURL(for: destinationDirectoryURL)
+        return try await Task.detached(priority: .userInitiated) {
+            let sourceAccess = SecurityScopedAccess(sourceScopeURL)
+            let destinationAccess = SecurityScopedAccess(destinationScopeURL)
+            defer {
+                destinationAccess.stop()
+                sourceAccess.stop()
+            }
+
+            let fileManager = FileManager.default
+            let destinationURL = self.uniqueExtractionDirectory(for: url, in: destinationDirectoryURL, fileManager: fileManager)
+            do {
+                try fileManager.createDirectory(at: destinationURL, withIntermediateDirectories: false)
+                try self.runDittoExtract(sourceURL: url, destinationURL: destinationURL)
+            } catch {
+                try? fileManager.removeItem(at: destinationURL)
+                throw self.normalized(error, for: destinationDirectoryURL)
+            }
+            return destinationURL
+        }.value
+    }
+
     func openItem(_ url: URL) async throws {
-        await MainActor.run {
-            _ = NSWorkspace.shared.open(url)
+        let securityScopeURL = securityScopeURL(for: url)
+        let scopedAccess = SecurityScopedAccess(securityScopeURL)
+        defer { scopedAccess.stop() }
+        let didOpen = await MainActor.run {
+            openURLHandler(url)
+        }
+        if !didOpen {
+            throw CloverError.unsupportedOperation
         }
     }
 
@@ -277,6 +314,36 @@ final class LocalFileProvider: FileProvider {
 
     private func securityScopeURL(for url: URL) -> URL {
         securityScopeURLProvider(url.standardizedFileURL) ?? url
+    }
+
+    private func uniqueExtractionDirectory(for archiveURL: URL, in parentURL: URL, fileManager: FileManager) -> URL {
+        let baseName = archiveURL.deletingPathExtension().lastPathComponent.isEmpty
+            ? "Archive"
+            : archiveURL.deletingPathExtension().lastPathComponent
+        var candidate = parentURL.appendingPathComponent(baseName, isDirectory: true)
+        var attempt = 2
+        while fileManager.fileExists(atPath: candidate.path) {
+            candidate = parentURL.appendingPathComponent("\(baseName) \(attempt)", isDirectory: true)
+            attempt += 1
+        }
+        return candidate
+    }
+
+    private func runDittoExtract(sourceURL: URL, destinationURL: URL) throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+        process.arguments = ["-x", "-k", sourceURL.path, destinationURL.path]
+        let errorPipe = Pipe()
+        process.standardError = errorPipe
+
+        try process.run()
+        process.waitUntilExit()
+
+        guard process.terminationStatus == 0 else {
+            let data = errorPipe.fileHandleForReading.readDataToEndOfFile()
+            let message = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            throw ArchiveExtractionError(message: message?.isEmpty == false ? message! : "ditto exited with status \(process.terminationStatus)")
+        }
     }
 
     private func normalized(_ error: Error, for url: URL) -> Error {
@@ -311,6 +378,14 @@ final class LocalFileProvider: FileProvider {
         }
 
         return false
+    }
+}
+
+private struct ArchiveExtractionError: LocalizedError {
+    let message: String
+
+    var errorDescription: String? {
+        message
     }
 }
 

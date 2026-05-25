@@ -113,10 +113,67 @@ final class LocalFileProviderTests: XCTestCase {
         XCTAssertEqual(requestedURLs.values, [child.standardizedFileURL])
     }
 
+    func testOpenItemResolvesSecurityScopeForRequestedFile() async throws {
+        let root = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let fileURL = root.appendingPathComponent("archive.zip")
+        try Data().write(to: fileURL)
+
+        let requestedURLs = LockedURLs()
+        let openedURLs = LockedURLs()
+        let provider = LocalFileProvider(
+            securityScopeURLProvider: { url in
+                requestedURLs.append(url)
+                return root
+            },
+            openURLHandler: { url in
+                openedURLs.append(url)
+                return true
+            }
+        )
+
+        try await provider.openItem(fileURL)
+
+        XCTAssertEqual(requestedURLs.values, [fileURL.standardizedFileURL])
+        XCTAssertEqual(openedURLs.values, [fileURL])
+    }
+
+    func testExtractArchiveCreatesFolderNamedAfterZip() async throws {
+        let root = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let sourceFolder = root.appendingPathComponent("Payload", isDirectory: true)
+        try FileManager.default.createDirectory(at: sourceFolder, withIntermediateDirectories: false)
+        try "hello".write(to: sourceFolder.appendingPathComponent("sample.txt"), atomically: true, encoding: .utf8)
+        let archiveURL = root.appendingPathComponent("Archive.zip")
+        try runProcess(
+            executable: "/usr/bin/zip",
+            arguments: ["-q", "-r", archiveURL.path, sourceFolder.lastPathComponent],
+            currentDirectory: root
+        )
+
+        let provider = LocalFileProvider()
+        let extractedURL = try await provider.extractArchive(at: archiveURL, to: root)
+
+        XCTAssertEqual(extractedURL.lastPathComponent, "Archive")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: extractedURL.appendingPathComponent("Payload/sample.txt").path))
+    }
+
     private func makeTemporaryDirectory() throws -> URL {
         let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("CloverProviderTest-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         return root
+    }
+
+    private func runProcess(executable: String, arguments: [String], currentDirectory: URL) throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: executable)
+        process.arguments = arguments
+        process.currentDirectoryURL = currentDirectory
+        try process.run()
+        process.waitUntilExit()
+        XCTAssertEqual(process.terminationStatus, 0)
     }
 }
 
