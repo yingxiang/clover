@@ -10,16 +10,20 @@ final class UpgradeProWindowController: NSWindowController {
     private let restoreButton = NSButton(title: L10n.restorePurchases, target: nil, action: nil)
     private let manageButton = NSButton(title: L10n.manageSubscription, target: nil, action: nil)
     private var selectedProductID = ProProduct.lifetime.rawValue
+    private let contentWidth: CGFloat = 420
 
     init(entitlementService: EntitlementService) {
         self.entitlementService = entitlementService
 
         let contentView = NSView()
         contentView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.wantsLayer = true
+        contentView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
 
         let titleLabel = NSTextField(labelWithString: L10n.upgradeToPro)
-        titleLabel.font = .systemFont(ofSize: 24, weight: .bold)
+        titleLabel.font = .systemFont(ofSize: 26, weight: .bold)
         titleLabel.alignment = .center
+        titleLabel.maximumNumberOfLines = 1
 
         let subtitleLabel = NSTextField(labelWithString: L10n.proUpgradeSubtitle)
         subtitleLabel.font = .systemFont(ofSize: 13)
@@ -30,18 +34,20 @@ final class UpgradeProWindowController: NSWindowController {
 
         let featureStack = NSStackView()
         featureStack.orientation = .vertical
-        featureStack.alignment = .leading
-        featureStack.spacing = 6
+        featureStack.alignment = .centerX
+        featureStack.spacing = 8
         for feature in ProFeature.visibleFeatures {
             featureStack.addArrangedSubview(Self.makeFeatureRow(feature.title))
         }
 
         productStack.orientation = .vertical
         productStack.alignment = .width
-        productStack.spacing = 8
+        productStack.spacing = 10
 
-        purchaseButton.bezelStyle = .rounded
+        Self.configureActionButton(purchaseButton, width: contentWidth, emphasized: true)
         purchaseButton.keyEquivalent = "\r"
+        Self.configureActionButton(restoreButton, width: contentWidth, emphasized: false)
+        Self.configureActionButton(manageButton, width: contentWidth, emphasized: false)
 
         statusLabel.font = .systemFont(ofSize: 12)
         statusLabel.textColor = .secondaryLabelColor
@@ -54,34 +60,39 @@ final class UpgradeProWindowController: NSWindowController {
         actionButtons.append(manageButton)
 #endif
         let buttonStack = NSStackView(views: actionButtons)
-        buttonStack.orientation = .horizontal
-        buttonStack.alignment = .centerY
-        buttonStack.distribution = .fillEqually
+        buttonStack.orientation = .vertical
+        buttonStack.alignment = .centerX
+        buttonStack.distribution = .fill
         buttonStack.spacing = 8
 
         let stackView = NSStackView(views: [titleLabel, subtitleLabel, featureStack, productStack, buttonStack, statusLabel])
         stackView.orientation = .vertical
-        stackView.alignment = .width
-        stackView.spacing = 16
+        stackView.alignment = .centerX
+        stackView.spacing = 18
         stackView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stackView)
 
         NSLayoutConstraint.activate([
-            stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 28),
-            stackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -28),
-            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 24),
-            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -24),
-            subtitleLabel.widthAnchor.constraint(equalTo: stackView.widthAnchor),
-            statusLabel.widthAnchor.constraint(equalTo: stackView.widthAnchor)
+            stackView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 34),
+            stackView.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -28),
+            titleLabel.widthAnchor.constraint(equalToConstant: contentWidth),
+            subtitleLabel.widthAnchor.constraint(equalToConstant: contentWidth),
+            productStack.widthAnchor.constraint(equalToConstant: contentWidth),
+            buttonStack.widthAnchor.constraint(equalToConstant: contentWidth),
+            statusLabel.widthAnchor.constraint(equalToConstant: contentWidth)
         ])
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 620),
-            styleMask: [.titled, .closable],
+            contentRect: NSRect(x: 0, y: 0, width: 540, height: 620),
+            styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
         window.title = L10n.upgradeToPro
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.isMovableByWindowBackground = true
         window.contentView = contentView
         window.center()
         window.isReleasedWhenClosed = false
@@ -109,6 +120,17 @@ final class UpgradeProWindowController: NSWindowController {
             await entitlementService.loadProducts()
             renderProducts()
         }
+    }
+
+    private static func configureActionButton(_ button: NSButton, width: CGFloat, emphasized: Bool) {
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.bezelStyle = .rounded
+        button.controlSize = .large
+        button.font = .systemFont(ofSize: 14, weight: emphasized ? .semibold : .regular)
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: width),
+            button.heightAnchor.constraint(equalToConstant: 36)
+        ])
     }
 
     private func renderLoadingState() {
@@ -146,7 +168,10 @@ final class UpgradeProWindowController: NSWindowController {
 
         let label = NSTextField(labelWithString: title)
         label.font = .systemFont(ofSize: 13)
-        label.lineBreakMode = .byTruncatingTail
+        label.textColor = .secondaryLabelColor
+        label.alignment = .center
+        label.lineBreakMode = .byWordWrapping
+        label.maximumNumberOfLines = 2
 
         let row = NSStackView(views: [icon, label])
         row.orientation = .horizontal
@@ -163,26 +188,27 @@ final class UpgradeProWindowController: NSWindowController {
         let knownProduct = ProProduct(rawValue: product.id)
         let title = knownProduct?.displayTitle ?? product.displayName
         let subtitle = knownProduct?.displaySubtitle ?? product.description
-        let badge = product.id == ProProduct.lifetime.rawValue ? "  \(L10n.bestValue)" : ""
-        let button = NSButton(
-            title: "\(title)\(badge)\n\(subtitle) - \(product.displayPrice)",
+        let badge = product.id == ProProduct.lifetime.rawValue ? L10n.bestValue : nil
+        let button = ProProductOptionButton(
+            productID: product.id,
+            title: title,
+            subtitle: subtitle,
+            price: product.displayPrice,
+            badge: badge,
             target: self,
             action: #selector(selectProduct(_:))
         )
-        button.identifier = NSUserInterfaceItemIdentifier(product.id)
-        button.setButtonType(.radio)
-        button.alignment = .left
-        button.font = .systemFont(ofSize: 13, weight: product.id == ProProduct.lifetime.rawValue ? .semibold : .regular)
-        button.state = product.id == selectedProductID ? .on : .off
+        button.isSelected = product.id == selectedProductID
+        button.widthAnchor.constraint(equalToConstant: contentWidth).isActive = true
         return button
     }
 
-    @objc private func selectProduct(_ sender: NSButton) {
+    @objc private func selectProduct(_ sender: ProProductOptionButton) {
         guard let productID = sender.identifier?.rawValue else { return }
         selectedProductID = productID
         for view in productStack.arrangedSubviews {
-            guard let button = view as? NSButton else { continue }
-            button.state = button.identifier?.rawValue == productID ? .on : .off
+            guard let button = view as? ProProductOptionButton else { continue }
+            button.isSelected = button.identifier?.rawValue == productID
         }
     }
 
@@ -222,5 +248,102 @@ final class UpgradeProWindowController: NSWindowController {
 
     @objc private func manageSubscription(_ sender: Any?) {
         entitlementService.manageSubscriptions()
+    }
+}
+
+private final class ProProductOptionButton: NSButton {
+    var isSelected = false {
+        didSet {
+            updateAppearance()
+        }
+    }
+
+    init(productID: String, title: String, subtitle: String, price: String, badge: String?, target: AnyObject?, action: Selector?) {
+        super.init(frame: .zero)
+        identifier = NSUserInterfaceItemIdentifier(productID)
+        self.title = ""
+        attributedTitle = NSAttributedString(string: "")
+        alternateTitle = ""
+        setButtonType(.momentaryChange)
+        isBordered = false
+        self.target = target
+        self.action = action
+        translatesAutoresizingMaskIntoConstraints = false
+        wantsLayer = true
+        focusRingType = .none
+        setAccessibilityLabel(title)
+
+        let titleLabel = NSTextField(labelWithString: title)
+        titleLabel.font = .systemFont(ofSize: 15, weight: .semibold)
+        titleLabel.alignment = .center
+        titleLabel.maximumNumberOfLines = 1
+
+        let subtitleLabel = NSTextField(labelWithString: subtitle)
+        subtitleLabel.font = .systemFont(ofSize: 12)
+        subtitleLabel.textColor = .secondaryLabelColor
+        subtitleLabel.alignment = .center
+        subtitleLabel.maximumNumberOfLines = 2
+        subtitleLabel.lineBreakMode = .byWordWrapping
+
+        let priceLabel = NSTextField(labelWithString: price)
+        priceLabel.font = .systemFont(ofSize: 15, weight: .bold)
+        priceLabel.alignment = .center
+
+        let contentViews: [NSView]
+        if let badge {
+            let badgeLabel = NSTextField(labelWithString: badge)
+            badgeLabel.font = .systemFont(ofSize: 10, weight: .bold)
+            badgeLabel.textColor = .controlAccentColor
+            badgeLabel.alignment = .center
+            badgeLabel.wantsLayer = true
+            badgeLabel.layer?.cornerRadius = 8
+            badgeLabel.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.12).cgColor
+            NSLayoutConstraint.activate([
+                badgeLabel.heightAnchor.constraint(equalToConstant: 18),
+                badgeLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 72)
+            ])
+            contentViews = [badgeLabel, titleLabel, subtitleLabel, priceLabel]
+        } else {
+            contentViews = [titleLabel, subtitleLabel, priceLabel]
+        }
+
+        let contentStack = NSStackView(views: contentViews)
+        contentStack.orientation = .vertical
+        contentStack.alignment = .centerX
+        contentStack.spacing = 4
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(contentStack)
+
+        NSLayoutConstraint.activate([
+            heightAnchor.constraint(equalToConstant: badge == nil ? 78 : 96),
+            contentStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 18),
+            contentStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -18),
+            contentStack.centerYAnchor.constraint(equalTo: centerYAnchor),
+            titleLabel.widthAnchor.constraint(equalTo: contentStack.widthAnchor),
+            subtitleLabel.widthAnchor.constraint(equalTo: contentStack.widthAnchor),
+            priceLabel.widthAnchor.constraint(equalTo: contentStack.widthAnchor)
+        ])
+        updateAppearance()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        setPressedAppearance(true)
+        super.mouseDown(with: event)
+        setPressedAppearance(false)
+    }
+
+    private func setPressedAppearance(_ highlighted: Bool) {
+        alphaValue = highlighted ? 0.85 : 1
+    }
+
+    private func updateAppearance() {
+        layer?.cornerRadius = 12
+        layer?.borderWidth = isSelected ? 2 : 1
+        layer?.borderColor = (isSelected ? NSColor.controlAccentColor : NSColor.separatorColor).cgColor
+        layer?.backgroundColor = (isSelected ? NSColor.controlAccentColor.withAlphaComponent(0.10) : NSColor.controlBackgroundColor.withAlphaComponent(0.55)).cgColor
     }
 }

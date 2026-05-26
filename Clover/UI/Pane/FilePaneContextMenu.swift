@@ -648,7 +648,7 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
         }
     }
 
-    private func stopSecurityScopes(_ scopes: [(url: URL, didStartAccessing: Bool)]) {
+    nonisolated private func stopSecurityScopes(_ scopes: [(url: URL, didStartAccessing: Bool)]) {
         for scope in scopes where scope.didStartAccessing {
             scope.url.stopAccessingSecurityScopedResource()
         }
