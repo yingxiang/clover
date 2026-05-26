@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import OSLog
 
 @MainActor
@@ -11,6 +12,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var proBatchRenameWindowController: ProBatchRenameWindowController?
     private var proFolderCompareWindowController: ProFolderCompareWindowController?
     private var proPreferencesWindowController: ProPreferencesWindowController?
+    private var appUpgradeProMenuItem: NSMenuItem?
+    private var proUpgradeMenuItem: NSMenuItem?
+    private var entitlementCancellable: AnyCancellable?
     private let environment = AppEnvironment.live()
     private let omniCaptureAppStoreURL = URL(string: "macappstore://apps.apple.com/us/app/omni-capture/id6760931624")!
 
@@ -18,6 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.disableRelaunchOnLogin()
         NSApp.setActivationPolicy(.regular)
         configureMainMenu()
+        observeEntitlements()
         showMainWindow()
     }
 
@@ -68,15 +73,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let upgradeProItem = NSMenuItem(title: L10n.upgradeToPro, action: #selector(showUpgradeProWindow(_:)), keyEquivalent: "")
         upgradeProItem.target = self
         upgradeProItem.image = AppIconProvider.menuImage(.pro, accessibilityDescription: L10n.upgradeToPro)
+        appUpgradeProMenuItem = upgradeProItem
         appMenu.addItem(upgradeProItem)
-        let restorePurchasesItem = NSMenuItem(title: L10n.restorePurchases, action: #selector(restorePurchases(_:)), keyEquivalent: "")
-        restorePurchasesItem.target = self
-        restorePurchasesItem.image = AppIconProvider.menuImage(.appStore, accessibilityDescription: L10n.restorePurchases)
-        appMenu.addItem(restorePurchasesItem)
+#if DEBUG
         let manageSubscriptionItem = NSMenuItem(title: L10n.manageSubscription, action: #selector(manageSubscription(_:)), keyEquivalent: "")
         manageSubscriptionItem.target = self
         manageSubscriptionItem.image = AppIconProvider.menuImage(.appStore, accessibilityDescription: L10n.manageSubscription)
         appMenu.addItem(manageSubscriptionItem)
+#endif
         let supportDeveloperItem = NSMenuItem(title: L10n.supportDeveloper, action: #selector(showSupportDeveloperWindow(_:)), keyEquivalent: "")
         supportDeveloperItem.target = self
         supportDeveloperItem.image = AppIconProvider.menuImage(.support, accessibilityDescription: L10n.supportDeveloper)
@@ -134,25 +138,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let proItem = NSMenuItem()
         let proMenu = NSMenu(title: L10n.pro)
-        let namedWorkspacesItem = makeMenuItem(title: L10n.proNamedWorkspaces, action: #selector(showProWorkspacesWindow(_:)), keyEquivalent: "", target: self)
-        namedWorkspacesItem.image = AppIconProvider.menuImage(.folderPlus, accessibilityDescription: L10n.proNamedWorkspaces)
-        proMenu.addItem(namedWorkspacesItem)
+        let proUpgradeItem = makeMenuItem(title: L10n.upgradeToPro, action: #selector(showUpgradeProWindow(_:)), keyEquivalent: "", target: self)
+        proUpgradeItem.image = AppIconProvider.menuImage(.pro, accessibilityDescription: L10n.upgradeToPro)
+        proUpgradeMenuItem = proUpgradeItem
+        proMenu.addItem(proUpgradeItem)
+#if DEBUG
+        let restorePurchasesItem = makeMenuItem(title: L10n.restorePurchases, action: #selector(restorePurchases(_:)), keyEquivalent: "", target: self)
+        restorePurchasesItem.image = AppIconProvider.menuImage(.appStore, accessibilityDescription: L10n.restorePurchases)
+        proMenu.addItem(restorePurchasesItem)
+        let proManageSubscriptionItem = makeMenuItem(title: L10n.manageSubscription, action: #selector(manageSubscription(_:)), keyEquivalent: "", target: self)
+        proManageSubscriptionItem.image = AppIconProvider.menuImage(.appStore, accessibilityDescription: L10n.manageSubscription)
+        proMenu.addItem(proManageSubscriptionItem)
+#endif
+        proMenu.addItem(.separator())
         let stashShelfItem = makeMenuItem(title: L10n.proStashShelf, action: #selector(showProStashShelfWindow(_:)), keyEquivalent: "", target: self)
         stashShelfItem.image = AppIconProvider.menuImage(.folder, accessibilityDescription: L10n.proStashShelf)
         proMenu.addItem(stashShelfItem)
-        let batchRenameItem = makeMenuItem(title: L10n.proBatchRename, action: #selector(showProBatchRenameWindow(_:)), keyEquivalent: "", target: self)
-        batchRenameItem.image = AppIconProvider.menuImage(.rename, accessibilityDescription: L10n.proBatchRename)
-        proMenu.addItem(batchRenameItem)
-        let folderCompareItem = makeMenuItem(title: L10n.proFolderCompare, action: #selector(showProFolderCompareWindow(_:)), keyEquivalent: "", target: self)
-        folderCompareItem.image = AppIconProvider.menuImage(.info, accessibilityDescription: L10n.proFolderCompare)
-        proMenu.addItem(folderCompareItem)
-        let preferencesItem = makeMenuItem(title: L10n.proCustomToolbar, action: #selector(showProPreferencesWindow(_:)), keyEquivalent: "", target: self)
-        preferencesItem.image = AppIconProvider.menuImage(.layoutSplit, accessibilityDescription: L10n.proCustomToolbar)
-        proMenu.addItem(preferencesItem)
-        proMenu.addItem(.separator())
-        let advancedShortcutsItem = makeMenuItem(title: L10n.proAdvancedShortcuts, action: #selector(showProPreferencesWindow(_:)), keyEquivalent: "", target: self)
-        advancedShortcutsItem.image = AppIconProvider.menuImage(.terminal, accessibilityDescription: L10n.proAdvancedShortcuts)
-        proMenu.addItem(advancedShortcutsItem)
         proItem.submenu = proMenu
         mainMenu.addItem(proItem)
 
@@ -164,15 +165,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         addLayoutItem(title: L10n.singlePane, key: "1", layout: .single, to: viewMenu)
         addLayoutItem(title: L10n.twoPanesVertical, key: "2", layout: .twoVertical, to: viewMenu)
         addLayoutItem(title: L10n.twoPanesHorizontal, key: "3", layout: .twoHorizontal, to: viewMenu)
-        addLayoutItem(title: L10n.leftOneRightTwoPane, key: "4", layout: .leftOneRightTwo, to: viewMenu)
-        addLayoutItem(title: L10n.leftTwoRightOnePane, key: "5", layout: .leftTwoRightOne, to: viewMenu)
-        addLayoutItem(title: L10n.topOneBottomTwoPane, key: "6", layout: .topOneBottomTwo, to: viewMenu)
-        addLayoutItem(title: L10n.topTwoBottomOnePane, key: "7", layout: .topTwoBottomOne, to: viewMenu)
         addLayoutItem(title: L10n.fourPanes, key: "8", layout: .fourGrid, to: viewMenu)
         viewItem.submenu = viewMenu
         mainMenu.addItem(viewItem)
 
         NSApp.mainMenu = mainMenu
+        updateMonetizationMenuVisibility()
+    }
+
+    private func observeEntitlements() {
+        entitlementCancellable = environment.entitlementService.$activeProductIDs
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.updateMonetizationMenuVisibility()
+                }
+            }
+    }
+
+    private func updateMonetizationMenuVisibility() {
+#if DEBUG
+        appUpgradeProMenuItem?.isHidden = false
+        proUpgradeMenuItem?.isHidden = false
+#else
+        let shouldHideUpgrade = environment.entitlementService.isLifetimeUnlocked
+        appUpgradeProMenuItem?.isHidden = shouldHideUpgrade
+        proUpgradeMenuItem?.isHidden = shouldHideUpgrade
+#endif
     }
 
     private func addLayoutItem(title: String, key: String, layout: PaneLayout, to menu: NSMenu) {

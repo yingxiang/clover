@@ -28,6 +28,10 @@ final class EntitlementService: ObservableObject {
     @Published private(set) var isProUnlocked = false
     @Published private(set) var activeProductIDs: Set<String> = []
 
+    var isLifetimeUnlocked: Bool {
+        activeProductIDs.contains(ProProduct.lifetime.rawValue)
+    }
+
     private var transactionUpdatesTask: Task<Void, Never>?
 
     init() {

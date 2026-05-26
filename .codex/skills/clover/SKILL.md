@@ -10,8 +10,8 @@ Use this skill for development inside the Clover repository.
 ## First Steps
 
 1. Read `mac_file_manager_ai_execution_plan.md` for product scope and phase requirements.
-2. Keep `project.yml` as the source for generated Xcode settings.
-3. Run `xcodegen generate` after adding/removing files or changing build settings. If `xcodegen` is unavailable in the local environment, update `Clover.xcodeproj/project.pbxproj` manually and call that out in the final response.
+2. Do not edit `project.yml` for build-setting changes unless the user explicitly asks; this repo may keep hand-tuned `.xcodeproj` settings that should not be regenerated away.
+3. When adding/removing files or changing build settings, update `Clover.xcodeproj/project.pbxproj` directly and call out the touched project settings in the final response.
 4. Build with `xcodebuild -project Clover.xcodeproj -scheme Clover -destination 'platform=macOS,arch=arm64' build`.
 5. Run focused tests after changing domain, provider, file-operation, startup, or persistence behavior.
 
@@ -37,6 +37,8 @@ Use this skill for development inside the Clover repository.
 - When using restored bookmarks for user-selected folders such as Downloads, call `startAccessingSecurityScopedResource()` around provider, Quick Look thumbnail/preview, and sharing operations, then balance it with `stopAccessingSecurityScopedResource()`.
 - Treat list/grid filtering as an in-memory view-model operation. Type-filter changes should use the loaded `allItems` and update visible rows/items without triggering a full pane reload or directory listing.
 - Keep existing pane layouts free: single, two vertical, two horizontal, and four-grid. Advanced three-pane layouts such as left-one-right-two, left-two-right-one, top-one-bottom-two, and top-two-bottom-one are Pro-only and should trigger the upgrade window when selected without an active Pro entitlement.
+- Keep Release monetization UI purchase-focused: show Upgrade/Purchase entry points before purchase, hide Upgrade to Clover Pro once the lifetime product is active, and keep Restore Purchases / Manage Subscription menu and dialog buttons behind Debug-only controls unless the user explicitly asks to ship them.
+- Until the next Pro iteration, expose only the stash shelf in Pro menus, upgrade-page feature lists, and visible paid feature entry points. Keep other Pro v1 feature code available for later development, but do not advertise those entries.
 - For the Pro stash shelf glass background, use `NSGlassEffectView` on macOS 26+ and keep an `NSVisualEffectView` fallback for earlier macOS versions.
 - Avoid synchronous app bundle icon/display-name lookup on the menu-building path. For Open With menus, show a generic icon immediately, then load and cache app icons asynchronously.
 - Keep project-owned Swift files under 1000 lines. When any module file grows beyond 1000 lines, consider splitting it by responsibility before adding more behavior.

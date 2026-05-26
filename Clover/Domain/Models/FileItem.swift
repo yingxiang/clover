@@ -34,12 +34,39 @@ struct FileItem: Identifiable, Hashable {
         isDirectory && !isPackage && !isApplication
     }
 
-    var isZipArchive: Bool {
-        if url.pathExtension.localizedCaseInsensitiveCompare("zip") == .orderedSame {
+    var isExtractableArchive: Bool {
+        let filename = url.lastPathComponent.lowercased()
+        let archiveSuffixes = [
+            ".zip",
+            ".tar",
+            ".tgz",
+            ".tar.gz",
+            ".tbz",
+            ".tbz2",
+            ".tar.bz2",
+            ".txz",
+            ".tar.xz"
+        ]
+        if archiveSuffixes.contains(where: { filename.hasSuffix($0) }) {
             return true
         }
         guard let typeIdentifier else { return false }
-        return typeIdentifier == "public.zip-archive" || typeIdentifier == "com.pkware.zip-archive"
+        let archiveTypeIdentifiers: Set<String> = [
+            "public.zip-archive",
+            "com.pkware.zip-archive",
+            "public.tar-archive",
+            "org.gnu.gnu-zip-archive",
+            "org.gnu.gnu-tar-archive",
+            "org.gnu.gnu-zip-tar-archive",
+            "org.gnu.gnu-bzip2-archive",
+            "org.tukaani.xz-archive",
+            "com.apple.archive"
+        ]
+        return archiveTypeIdentifiers.contains(typeIdentifier)
+    }
+
+    var isZipArchive: Bool {
+        isExtractableArchive
     }
 }
 

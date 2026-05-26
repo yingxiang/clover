@@ -285,12 +285,41 @@ final class LocalFileProvider: FileProvider {
             let destinationURL = self.uniqueExtractionDirectory(for: url, in: destinationDirectoryURL, fileManager: fileManager)
             do {
                 try fileManager.createDirectory(at: destinationURL, withIntermediateDirectories: false)
-                try self.runDittoExtract(sourceURL: url, destinationURL: destinationURL)
+                try self.extractArchive(sourceURL: url, destinationURL: destinationURL)
             } catch {
                 try? fileManager.removeItem(at: destinationURL)
                 throw self.normalized(error, for: destinationDirectoryURL)
             }
             return destinationURL
+        }.value
+    }
+
+    func createArchive(from urls: [URL], in destinationDirectoryURL: URL, suggestedName: String) async throws -> URL {
+        let sourceScopeURLs = urls.map { securityScopeURL(for: $0.deletingLastPathComponent()) }
+        let destinationScopeURL = securityScopeURL(for: destinationDirectoryURL)
+        return try await Task.detached(priority: .userInitiated) {
+            let sourceAccesses = sourceScopeURLs.map(SecurityScopedAccess.init)
+            let destinationAccess = SecurityScopedAccess(destinationScopeURL)
+            defer {
+                destinationAccess.stop()
+                sourceAccesses.forEach { $0.stop() }
+            }
+
+            let fileManager = FileManager.default
+            let archiveURL = self.uniqueArchiveURL(named: suggestedName, in: destinationDirectoryURL, fileManager: fileManager)
+            let relativePaths = urls.map { self.archiveRelativePath(for: $0, relativeTo: destinationDirectoryURL) }
+            do {
+                try self.runArchiveTool(
+                    executablePath: "/usr/bin/zip",
+                    arguments: ["-qry", archiveURL.path] + relativePaths,
+                    failurePrefix: "zip",
+                    currentDirectoryURL: destinationDirectoryURL
+                )
+            } catch {
+                try? fileManager.removeItem(at: archiveURL)
+                throw self.normalized(error, for: destinationDirectoryURL)
+            }
+            return archiveURL
         }.value
     }
 
@@ -329,10 +358,65 @@ final class LocalFileProvider: FileProvider {
         return candidate
     }
 
-    private func runDittoExtract(sourceURL: URL, destinationURL: URL) throws {
+    private func uniqueArchiveURL(named suggestedName: String, in parentURL: URL, fileManager: FileManager) -> URL {
+        let suggestedURL = URL(fileURLWithPath: suggestedName)
+        let extensionName = suggestedURL.pathExtension.isEmpty ? "zip" : suggestedURL.pathExtension
+        let baseName = suggestedURL.deletingPathExtension().lastPathComponent.isEmpty
+            ? "Archive"
+            : suggestedURL.deletingPathExtension().lastPathComponent
+        var candidate = parentURL.appendingPathComponent("\(baseName).\(extensionName)", isDirectory: false)
+        var attempt = 2
+        while fileManager.fileExists(atPath: candidate.path) {
+            candidate = parentURL.appendingPathComponent("\(baseName) \(attempt).\(extensionName)", isDirectory: false)
+            attempt += 1
+        }
+        return candidate
+    }
+
+    private func archiveRelativePath(for url: URL, relativeTo parentURL: URL) -> String {
+        let parentPath = parentURL.standardizedFileURL.path
+        let path = url.standardizedFileURL.path
+        let prefix = parentPath.hasSuffix("/") ? parentPath : "\(parentPath)/"
+        guard path.hasPrefix(prefix) else { return url.lastPathComponent }
+        return String(path.dropFirst(prefix.count))
+    }
+
+    private func extractArchive(sourceURL: URL, destinationURL: URL) throws {
+        if shouldExtractWithTar(sourceURL) {
+            try runArchiveTool(
+                executablePath: "/usr/bin/tar",
+                arguments: ["-xf", sourceURL.path, "-C", destinationURL.path],
+                failurePrefix: "tar"
+            )
+        } else {
+            try runArchiveTool(
+                executablePath: "/usr/bin/ditto",
+                arguments: ["-x", "-k", sourceURL.path, destinationURL.path],
+                failurePrefix: "ditto"
+            )
+        }
+    }
+
+    private func shouldExtractWithTar(_ url: URL) -> Bool {
+        let filename = url.lastPathComponent.lowercased()
+        let tarSuffixes = [
+            ".tar",
+            ".tgz",
+            ".tar.gz",
+            ".tbz",
+            ".tbz2",
+            ".tar.bz2",
+            ".txz",
+            ".tar.xz"
+        ]
+        return tarSuffixes.contains { filename.hasSuffix($0) }
+    }
+
+    private func runArchiveTool(executablePath: String, arguments: [String], failurePrefix: String, currentDirectoryURL: URL? = nil) throws {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
-        process.arguments = ["-x", "-k", sourceURL.path, destinationURL.path]
+        process.executableURL = URL(fileURLWithPath: executablePath)
+        process.arguments = arguments
+        process.currentDirectoryURL = currentDirectoryURL
         let errorPipe = Pipe()
         process.standardError = errorPipe
 
@@ -342,7 +426,7 @@ final class LocalFileProvider: FileProvider {
         guard process.terminationStatus == 0 else {
             let data = errorPipe.fileHandleForReading.readDataToEndOfFile()
             let message = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-            throw ArchiveExtractionError(message: message?.isEmpty == false ? message! : "ditto exited with status \(process.terminationStatus)")
+            throw ArchiveExtractionError(message: message?.isEmpty == false ? message! : "\(failurePrefix) exited with status \(process.terminationStatus)")
         }
     }
 

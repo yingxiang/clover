@@ -75,6 +75,7 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
         }
         addMenuItem(L10n.copyTo, action: #selector(copySelectedItems(_:)), to: menu, symbol: .copy)
         addMenuItem(L10n.moveTo, action: #selector(moveSelectedItems(_:)), to: menu, symbol: .move)
+        addMenuItem(L10n.compress, action: #selector(compressSelectedItems(_:)), to: menu, symbol: .archive)
         addMenuItem(L10n.copyPath, action: #selector(copySelectedItemPaths(_:)), to: menu, symbol: .file)
         menu.addItem(.separator())
         addSubmenuItem(L10n.tags, submenu: tagsMenu(), to: menu, symbol: .tag)
@@ -116,6 +117,7 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
         case #selector(copySelectionToPasteboard(_:)),
              #selector(copySelectedItems(_:)),
              #selector(moveSelectedItems(_:)),
+             #selector(compressSelectedItems(_:)),
              #selector(trashSelectedItems(_:)),
              #selector(deleteSelectedItemsPermanently(_:)),
              #selector(revealSelectedItemsInFinder(_:)),

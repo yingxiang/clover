@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 
 @MainActor
 protocol SidebarViewControllerDelegate: AnyObject {
@@ -13,6 +14,9 @@ final class SidebarViewController: NSViewController {
     private let upgradeButton = NSButton(title: L10n.upgradeToPro, target: nil, action: nil)
     private let entitlementService: EntitlementService
     private var upgradeProWindowController: UpgradeProWindowController?
+    private var entitlementCancellable: AnyCancellable?
+    private var scrollBottomToUpgradeConstraint: NSLayoutConstraint?
+    private var scrollBottomToViewConstraint: NSLayoutConstraint?
     private var items: [SidebarItem] = []
 
     init(entitlementService: EntitlementService) {
@@ -34,6 +38,7 @@ final class SidebarViewController: NSViewController {
         super.viewDidLoad()
         items = Self.defaultItems()
         configureOutlineView()
+        observeEntitlements()
     }
 
     private func configureOutlineView() {
@@ -55,18 +60,22 @@ final class SidebarViewController: NSViewController {
 
         configureUpgradeButton()
 
+        scrollBottomToUpgradeConstraint = scrollView.bottomAnchor.constraint(equalTo: upgradeButton.topAnchor, constant: -10)
+        scrollBottomToViewConstraint = scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+
         NSLayoutConstraint.activate([
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: upgradeButton.topAnchor, constant: -10),
             upgradeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 12),
             upgradeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
             upgradeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -12),
             upgradeButton.heightAnchor.constraint(equalToConstant: 34)
         ])
+        scrollBottomToUpgradeConstraint?.isActive = true
 
         outlineView.reloadData()
+        updateUpgradeButtonVisibility()
     }
 
     private func configureUpgradeButton() {
@@ -81,6 +90,27 @@ final class SidebarViewController: NSViewController {
         upgradeButton.toolTip = L10n.upgradeToPro
         upgradeButton.setAccessibilityLabel(L10n.upgradeToPro)
         view.addSubview(upgradeButton)
+    }
+
+    private func observeEntitlements() {
+        entitlementCancellable = entitlementService.$activeProductIDs
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.updateUpgradeButtonVisibility()
+                }
+            }
+    }
+
+    private func updateUpgradeButtonVisibility() {
+#if DEBUG
+        let shouldHideUpgrade = false
+#else
+        let shouldHideUpgrade = entitlementService.isLifetimeUnlocked
+#endif
+        upgradeButton.isHidden = shouldHideUpgrade
+        scrollBottomToUpgradeConstraint?.isActive = !shouldHideUpgrade
+        scrollBottomToViewConstraint?.isActive = shouldHideUpgrade
     }
 
     @objc private func selectionChanged() {

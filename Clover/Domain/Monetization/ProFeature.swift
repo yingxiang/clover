@@ -9,6 +9,10 @@ enum ProFeature: String, CaseIterable, Sendable {
     case advancedPaneLayouts
     case advancedShortcuts
 
+    static let visibleFeatures: [ProFeature] = [
+        .stashShelf
+    ]
+
     var title: String {
         switch self {
         case .namedWorkspaces:

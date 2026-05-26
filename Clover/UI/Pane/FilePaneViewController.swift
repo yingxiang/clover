@@ -241,6 +241,19 @@ final class FilePaneViewController: NSViewController {
         }
     }
 
+    @objc func compressSelectedItems(_ sender: Any?) {
+        activationHandler?(self)
+        let items = selectedItems()
+        guard !items.isEmpty else { return }
+        runOperation {
+            let archiveURL = try await self.viewModel.createArchive(from: items, in: self.viewModel.currentURL)
+            await MainActor.run {
+                self.rememberSelection(urls: [archiveURL])
+                self.refresh()
+            }
+        }
+    }
+
     @objc func trashSelectedItems(_ sender: Any?) {
         activationHandler?(self)
         let items = selectedItems()
@@ -1241,14 +1254,8 @@ final class FilePaneViewController: NSViewController {
 
         if item.isBrowsableDirectory {
             open(item.url)
-        } else if item.isZipArchive {
-            runOperation {
-                let extractedURL = try await self.viewModel.extractArchive(item)
-                await MainActor.run {
-                    self.rememberSelection(urls: [extractedURL])
-                    self.refresh()
-                }
-            }
+        } else if item.isExtractableArchive {
+            extractArchiveAndSelectResult(item)
         } else {
             Task {
                 do {
@@ -1256,6 +1263,16 @@ final class FilePaneViewController: NSViewController {
                 } catch {
                     await MainActor.run { showError(error) }
                 }
+            }
+        }
+    }
+
+    private func extractArchiveAndSelectResult(_ item: FileItem) {
+        runOperation {
+            let extractedURL = try await self.viewModel.extractArchive(item)
+            await MainActor.run {
+                self.rememberSelection(urls: [extractedURL])
+                self.refresh()
             }
         }
     }
@@ -1284,13 +1301,20 @@ final class FilePaneViewController: NSViewController {
 
     @objc private func fileOperationCompleted(_ notification: Notification) {
         let affectedDirectories = notification.cloverAffectedDirectories
+        let movedItemURLs = notification.cloverMovedItemURLs
         guard !affectedDirectories.isEmpty else {
+            if !movedItemURLs.isEmpty {
+                viewModel.removeCachedItems(with: movedItemURLs, notify: false)
+            }
             refresh()
             return
         }
         let relevantDirectories = viewModel.relevantDirectoryURLsForRefresh()
         let shouldRefresh = affectedDirectories.contains { relevantDirectories.contains($0.standardizedFileURL) }
         if shouldRefresh {
+            if !movedItemURLs.isEmpty {
+                viewModel.removeCachedItems(with: movedItemURLs, notify: false)
+            }
             refresh()
         }
     }

@@ -87,6 +87,9 @@ Rules:
 - Re-expanding a previously loaded child directory in the same pane should reuse cached children when possible instead of reloading from disk immediately.
 - During file drags, hovering a browsable directory should visibly select that directory as the drop target and auto-expand it after a short delay. Drop target calculation should use the current pointer location, not stale cell row tags or AppKit's proposed insertion row.
 - Refreshes after file operations must update cached children for currently expanded directories as well as the root directory so expanded folders show newly moved/copied items immediately.
+- Move notifications should include the original moved item URLs so other panes/windows can clear stale visible rows from expanded-directory caches before reloading affected directories.
+- Opening an extractable archive from the file pane should run Clover's extraction flow, refresh the pane, and select the extracted result. It must not fall through to the system/Finder open path. Treat common archive extensions such as zip, tar, tgz, tar.gz, tbz, tbz2, tar.bz2, txz, and tar.xz as extractable, and route them to an extraction tool that supports the format.
+- Compressing selected files from the context menu should route through `FileOperationService`/`FileProvider`, create a uniquely named zip in the current pane directory, refresh the pane, and select the created archive.
 - Long paths should not force the window wider or prevent shrinking. Use AppKit path controls or similarly compressible native controls for path display/input rather than unbounded labels or text fields.
 - File labels/tags should match Finder placement: in list mode, show tag color dots after the filename; in icon/grid mode, show them before the displayed filename. Keep tag indicators compact and non-textual unless the user explicitly asks for tag names.
 

@@ -9,6 +9,7 @@ enum FileOperationKind: Sendable {
     case createFolder
     case createFile
     case extractArchive
+    case createArchive
 }
 
 enum FileOperationState {
@@ -99,6 +100,10 @@ final class FileOperationService: Sendable {
 
     func extractArchive(at url: URL, to destinationDirectoryURL: URL) async throws -> URL {
         try await provider.extractArchive(at: url, to: destinationDirectoryURL)
+    }
+
+    func createArchive(from urls: [URL], in destinationDirectoryURL: URL, suggestedName: String) async throws -> URL {
+        try await provider.createArchive(from: urls, in: destinationDirectoryURL, suggestedName: suggestedName)
     }
 
     private func perform(_ kind: FileOperationKind, urls: [URL], destinationURL: URL, conflictResolver: FileConflictResolver?) async throws {

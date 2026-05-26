@@ -472,6 +472,39 @@
         }
       }
     },
+    "compress" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Compress"
+          }
+        }
+      }
+    },
+    "compressed_items_format" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Compressed %lld items"
+          }
+        }
+      }
+    },
+    "compressing_items_format" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Compressing %lld items..."
+          }
+        }
+      }
+    },
     "conflict_choice" : {
       "localizations" : {
         "de" : {
@@ -1249,6 +1282,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "預設應用程式"
+          }
+        }
+      }
+    },
+    "default_archive_file_name" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Archive.zip"
           }
         }
       }

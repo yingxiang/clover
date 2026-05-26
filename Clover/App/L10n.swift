@@ -17,6 +17,8 @@ enum L10n {
     static let paste = String(localized: "paste", defaultValue: "Paste")
     static let copyTo = String(localized: "copy_to", defaultValue: "Copy To...")
     static let moveTo = String(localized: "move_to", defaultValue: "Move To...")
+    static let compress = String(localized: "compress", defaultValue: "Compress")
+    static let defaultArchiveFileName = String(localized: "default_archive_file_name", defaultValue: "Archive.zip")
     static let moveToTrash = String(localized: "move_to_trash", defaultValue: "Move to Trash")
     static let deleteImmediately = String(localized: "delete_immediately", defaultValue: "Delete Immediately")
     static let open = String(localized: "open", defaultValue: "Open")
@@ -252,6 +254,14 @@ enum L10n {
 
     static func extractedItem(_ name: String) -> String {
         String(format: String(localized: "extracted_item_format", defaultValue: "Extracted %@"), locale: .current, name)
+    }
+
+    static func compressingItems(_ count: Int) -> String {
+        String(format: String(localized: "compressing_items_format", defaultValue: "Compressing %lld items..."), locale: .current, count)
+    }
+
+    static func compressedItems(_ count: Int) -> String {
+        String(format: String(localized: "compressed_items_format", defaultValue: "Compressed %lld items"), locale: .current, count)
     }
 
     static func viewStatus(_ mode: String) -> String {

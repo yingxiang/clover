@@ -211,6 +211,7 @@ enum AppSymbol: String {
     case openWith = "arrow.up.forward.app"
     case tag = "tag"
     case paste = "doc.on.clipboard"
+    case archive = "archivebox"
     case selectAll = "checklist"
     case screenshot = "camera.viewfinder"
     case support = "heart"

@@ -32,7 +32,7 @@ final class UpgradeProWindowController: NSWindowController {
         featureStack.orientation = .vertical
         featureStack.alignment = .leading
         featureStack.spacing = 6
-        for feature in ProFeature.allCases {
+        for feature in ProFeature.visibleFeatures {
             featureStack.addArrangedSubview(Self.makeFeatureRow(feature.title))
         }
 
@@ -48,7 +48,12 @@ final class UpgradeProWindowController: NSWindowController {
         statusLabel.alignment = .center
         statusLabel.maximumNumberOfLines = 2
 
-        let buttonStack = NSStackView(views: [purchaseButton, restoreButton, manageButton])
+        var actionButtons = [purchaseButton]
+#if DEBUG
+        actionButtons.append(restoreButton)
+        actionButtons.append(manageButton)
+#endif
+        let buttonStack = NSStackView(views: actionButtons)
         buttonStack.orientation = .horizontal
         buttonStack.alignment = .centerY
         buttonStack.distribution = .fillEqually
@@ -84,10 +89,12 @@ final class UpgradeProWindowController: NSWindowController {
         super.init(window: window)
         purchaseButton.target = self
         purchaseButton.action = #selector(purchaseSelectedProduct(_:))
+#if DEBUG
         restoreButton.target = self
         restoreButton.action = #selector(restorePurchases(_:))
         manageButton.target = self
         manageButton.action = #selector(manageSubscription(_:))
+#endif
         renderLoadingState()
         loadProducts()
     }

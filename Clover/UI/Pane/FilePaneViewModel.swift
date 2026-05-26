@@ -224,6 +224,21 @@ final class FilePaneViewModel {
         }
     }
 
+    func removeCachedItems(with urls: [URL], notify: Bool = true) {
+        let standardizedURLs = Set(urls.map(\.standardizedFileURL))
+        guard !standardizedURLs.isEmpty else { return }
+
+        allItems.removeAll { standardizedURLs.contains($0.url.standardizedFileURL) }
+        items.removeAll { standardizedURLs.contains($0.url.standardizedFileURL) }
+        directoryChildren = directoryChildren.mapValues { children in
+            children.filter { !standardizedURLs.contains($0.url.standardizedFileURL) }
+        }
+        rebuildListRows()
+        if notify {
+            onChange?()
+        }
+    }
+
     func listRowIndex(for url: URL) -> Int? {
         let standardizedURL = url.standardizedFileURL
         return listRows.firstIndex { $0.item.url.standardizedFileURL == standardizedURL }
@@ -278,7 +293,8 @@ final class FilePaneViewModel {
         try await fileOperationService.moveItems(items.map(\.url), to: destinationURL, conflictResolver: conflictResolver)
         onStatusChange?(L10n.movedItems(items.count))
         NotificationCenter.default.postCloverFileOperationCompleted(
-            affectedDirectories: sourceDirectories + [destinationURL]
+            affectedDirectories: sourceDirectories + [destinationURL],
+            movedItemURLs: items.map(\.url)
         )
     }
 
@@ -289,7 +305,8 @@ final class FilePaneViewModel {
         try await fileOperationService.moveItems(urls, to: destinationURL, conflictResolver: conflictResolver)
         onStatusChange?(L10n.movedItems(urls.count))
         NotificationCenter.default.postCloverFileOperationCompleted(
-            affectedDirectories: sourceDirectories + [destinationURL]
+            affectedDirectories: sourceDirectories + [destinationURL],
+            movedItemURLs: urls
         )
     }
 
@@ -333,6 +350,28 @@ final class FilePaneViewModel {
             affectedDirectories: [destinationDirectoryURL]
         )
         return extractedURL
+    }
+
+    func createArchive(from items: [FileItem], in destinationDirectoryURL: URL) async throws -> URL {
+        guard !items.isEmpty else { throw CloverError.unsupportedOperation }
+        onStatusChange?(L10n.compressingItems(items.count))
+        let archiveURL = try await fileOperationService.createArchive(
+            from: items.map(\.url),
+            in: destinationDirectoryURL,
+            suggestedName: suggestedArchiveName(for: items)
+        )
+        onStatusChange?(L10n.compressedItems(items.count))
+        NotificationCenter.default.postCloverFileOperationCompleted(
+            affectedDirectories: [destinationDirectoryURL]
+        )
+        return archiveURL
+    }
+
+    private func suggestedArchiveName(for items: [FileItem]) -> String {
+        guard items.count == 1, let item = items.first else {
+            return L10n.defaultArchiveFileName
+        }
+        return "\(item.name).zip"
     }
 
     func item(at index: Int) -> FileItem? {
