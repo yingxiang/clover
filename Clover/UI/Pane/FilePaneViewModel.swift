@@ -111,7 +111,7 @@ final class FilePaneViewModel {
     }
 
     func refresh() {
-        load(url: currentURL)
+        refreshPreservingListExpansion()
     }
 
     var canGoBack: Bool {
@@ -368,6 +368,18 @@ final class FilePaneViewModel {
             collapseListDirectory(url)
             return
         }
+        expandListDirectory(url)
+    }
+
+    func expandListDirectory(at row: Int) {
+        guard viewMode == .list,
+              listRows.indices.contains(row),
+              listRows[row].item.isBrowsableDirectory else { return }
+        expandListDirectory(listRows[row].item.url)
+    }
+
+    private func expandListDirectory(_ url: URL) {
+        guard !expandedDirectoryURLs.contains(url) else { return }
         if let children = directoryChildren[url] {
             expandedDirectoryURLs.insert(url)
             directoryChildren[url] = FileSortService.sort(children, by: sortOption)
@@ -391,6 +403,53 @@ final class FilePaneViewModel {
                 await MainActor.run {
                     guard let self else { return }
                     self.onError?(error)
+                }
+            }
+        }
+    }
+
+    private func refreshPreservingListExpansion() {
+        loadTask?.cancel()
+        let targetURL = currentURL
+        let expandedURLs = expandedDirectoryURLs
+        let includeHidden = showHiddenFiles
+        let sort = sortOption
+        onStatusChange?(L10n.loadingFolder(targetURL.lastPathComponent.isEmpty ? targetURL.path : targetURL.lastPathComponent))
+
+        loadTask = Task { [weak self, provider] in
+            do {
+                let loadedItems = try await provider.listDirectory(at: targetURL)
+                try Task.checkCancellation()
+
+                var loadedChildrenByURL: [URL: [FileItem]] = [:]
+                for expandedURL in expandedURLs {
+                    try Task.checkCancellation()
+                    loadedChildrenByURL[expandedURL] = try? await provider.listDirectory(at: expandedURL)
+                }
+
+                await MainActor.run {
+                    guard let self, self.currentURL.standardizedFileURL == targetURL.standardizedFileURL else { return }
+                    let visibleItems = includeHidden ? loadedItems : loadedItems.filter { !$0.isHidden }
+                    self.allItems = FileSortService.sort(visibleItems, by: sort)
+                    for (url, children) in loadedChildrenByURL {
+                        let visibleChildren = includeHidden ? children : children.filter { !$0.isHidden }
+                        self.directoryChildren[url] = FileSortService.sort(visibleChildren, by: sort)
+                    }
+                    self.applyFilters()
+                    self.onChange?()
+                    self.onStatusChange?("\(self.items.count) items")
+                }
+            } catch is CancellationError {
+                await MainActor.run { [weak self] in
+                    self?.onStatusChange?(L10n.cancelled)
+                }
+            } catch {
+                await MainActor.run { [weak self] in
+                    self?.allItems = []
+                    self?.items = []
+                    self?.onChange?()
+                    self?.onStatusChange?(L10n.unableToLoadFolder)
+                    self?.onError?(error)
                 }
             }
         }

@@ -105,17 +105,28 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
     }
 
     func tableView(_ tableView: NSTableView, validateDrop info: NSDraggingInfo, proposedRow row: Int, proposedDropOperation dropOperation: NSTableView.DropOperation) -> NSDragOperation {
-        info.draggingPasteboard.canReadFileURLs ? .move : []
+        let targetRow = tableDropTargetRow(for: info)
+        let operation = updateDropHover(info, itemIndex: targetRow)
+        if let targetRow, viewModel.item(at: targetRow)?.isBrowsableDirectory == true {
+            tableView.setDropRow(targetRow, dropOperation: .on)
+        } else {
+            tableView.setDropRow(-1, dropOperation: .on)
+        }
+        return operation
     }
 
     func tableView(_ tableView: NSTableView, acceptDrop info: NSDraggingInfo, row: Int, dropOperation: NSTableView.DropOperation) -> Bool {
-        performMoveDrop(info, itemIndex: row >= 0 ? row : nil)
+        defer { clearDropHover() }
+        return performMoveDrop(info, itemIndex: tableDropTargetRow(for: info))
     }
 
     @objc private func toggleListDirectoryExpansion(_ sender: NSButton) {
         activationHandler?(self)
         view.window?.makeFirstResponder(tableView)
-        viewModel.toggleListExpansion(at: sender.tag)
+        let centerInTable = sender.convert(NSPoint(x: sender.bounds.midX, y: sender.bounds.midY), to: tableView)
+        let row = tableView.row(at: centerInTable)
+        guard row >= 0 else { return }
+        viewModel.toggleListExpansion(at: row)
     }
 }
 
@@ -167,11 +178,12 @@ extension FilePaneViewController: NSCollectionViewDataSource, @preconcurrency NS
 
     func collectionView(_ collectionView: NSCollectionView, validateDrop draggingInfo: NSDraggingInfo, proposedIndexPath proposedDropIndexPath: AutoreleasingUnsafeMutablePointer<NSIndexPath>, dropOperation proposedDropOperation: UnsafeMutablePointer<NSCollectionView.DropOperation>) -> NSDragOperation {
         proposedDropOperation.pointee = .on
-        return draggingInfo.draggingPasteboard.canReadFileURLs ? .move : []
+        return updateDropHover(draggingInfo, itemIndex: collectionDropTargetIndex(for: draggingInfo))
     }
 
     func collectionView(_ collectionView: NSCollectionView, acceptDrop draggingInfo: NSDraggingInfo, indexPath: IndexPath, dropOperation: NSCollectionView.DropOperation) -> Bool {
-        performMoveDrop(draggingInfo, itemIndex: indexPath.item)
+        defer { clearDropHover() }
+        return performMoveDrop(draggingInfo, itemIndex: collectionDropTargetIndex(for: draggingInfo))
     }
 }
 
@@ -244,6 +256,69 @@ extension FilePaneViewController {
             guard let self else { return }
             self.view.window?.makeFirstResponder(self.tableView)
             NSCursor.arrow.set()
+        }
+    }
+
+    func tableDropTargetRow(for draggingInfo: NSDraggingInfo) -> Int? {
+        let point = tableView.convert(draggingInfo.draggingLocation, from: nil)
+        let row = tableView.row(at: point)
+        return row >= 0 ? row : nil
+    }
+
+    func collectionDropTargetIndex(for draggingInfo: NSDraggingInfo) -> Int? {
+        let point = collectionView.convert(draggingInfo.draggingLocation, from: nil)
+        return collectionView.indexPathForItem(at: point)?.item
+    }
+
+    func updateDropHover(_ draggingInfo: NSDraggingInfo, itemIndex: Int?) -> NSDragOperation {
+        guard draggingInfo.draggingPasteboard.canReadFileURLs else {
+            clearDropHover()
+            return []
+        }
+        guard let itemIndex,
+              let item = viewModel.item(at: itemIndex),
+              item.isBrowsableDirectory else {
+            clearDropHover()
+            return .move
+        }
+
+        activationHandler?(self)
+        selectDropTarget(at: itemIndex)
+        scheduleDropExpansionIfNeeded(for: item.url)
+        return .move
+    }
+
+    func clearDropHover() {
+        pendingDropExpansionURL = nil
+        dropExpansionTask?.cancel()
+        dropExpansionTask = nil
+    }
+
+    private func selectDropTarget(at itemIndex: Int) {
+        switch viewModel.viewMode {
+        case .list:
+            tableView.selectRowIndexes(IndexSet(integer: itemIndex), byExtendingSelection: false)
+        case .grid:
+            collectionView.selectionIndexPaths = [IndexPath(item: itemIndex, section: 0)]
+        }
+        updateCommandAvailability()
+    }
+
+    private func scheduleDropExpansionIfNeeded(for url: URL) {
+        let standardizedURL = url.standardizedFileURL
+        guard viewModel.viewMode == .list,
+              pendingDropExpansionURL != standardizedURL else { return }
+        pendingDropExpansionURL = standardizedURL
+        dropExpansionTask?.cancel()
+        dropExpansionTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 650_000_000)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                guard let self,
+                      self.pendingDropExpansionURL == standardizedURL,
+                      let row = self.viewModel.listRowIndex(for: standardizedURL) else { return }
+                self.viewModel.expandListDirectory(at: row)
+            }
         }
     }
 }

@@ -37,6 +37,8 @@ final class FilePaneViewController: NSViewController {
     var pendingSelectionURLs: [URL] = []
     private var pendingRenameURL: URL?
     private var pendingRenameStartDate: Date?
+    var pendingDropExpansionURL: URL?
+    var dropExpansionTask: Task<Void, Never>?
     private var pendingCreationKinds: [URL: NewItemKind] = [:]
     private var isPresentingDirectoryAccessPanel = false
     private var didPerformInitialOpen = false
@@ -83,6 +85,7 @@ final class FilePaneViewController: NSViewController {
                 previewKeyMonitor.remove()
             }
         }
+        dropExpansionTask?.cancel()
         searchTask?.cancel()
     }
 
@@ -331,6 +334,12 @@ final class FilePaneViewController: NSViewController {
         tableView.dropHandler = { [weak self] draggingInfo, row in
             self?.performMoveDrop(draggingInfo, itemIndex: row) ?? false
         }
+        tableView.dragUpdateHandler = { [weak self] draggingInfo, row in
+            self?.updateDropHover(draggingInfo, itemIndex: row) ?? []
+        }
+        tableView.dragExitHandler = { [weak self] in
+            self?.clearDropHover()
+        }
         tableView.registerForDraggedTypes([.fileURL])
         tableView.setDraggingSourceOperationMask(.move, forLocal: true)
         tableView.setDraggingSourceOperationMask(.move, forLocal: false)
@@ -430,6 +439,12 @@ final class FilePaneViewController: NSViewController {
         }
         collectionView.dropHandler = { [weak self] draggingInfo, index in
             self?.performMoveDrop(draggingInfo, itemIndex: index) ?? false
+        }
+        collectionView.dragUpdateHandler = { [weak self] draggingInfo, index in
+            self?.updateDropHover(draggingInfo, itemIndex: index) ?? []
+        }
+        collectionView.dragExitHandler = { [weak self] in
+            self?.clearDropHover()
         }
         collectionView.registerForDraggedTypes([.fileURL])
         collectionView.setDraggingSourceOperationMask(.move, forLocal: true)
@@ -681,6 +696,7 @@ final class FilePaneViewController: NSViewController {
     }
 
     func performMoveDrop(_ draggingInfo: NSDraggingInfo, itemIndex: Int?) -> Bool {
+        defer { clearDropHover() }
         guard let urls = draggingInfo.draggingPasteboard.fileURLs, !urls.isEmpty else { return false }
         let destination = dropDestinationURL(itemIndex: itemIndex)
         let movableURLs = urls.filter { $0.deletingLastPathComponent().standardizedFileURL != destination.standardizedFileURL }

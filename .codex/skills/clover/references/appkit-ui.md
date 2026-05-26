@@ -85,6 +85,8 @@ Rules:
 - In list mode, expanding or collapsing a directory should update only the affected rows. Do not rebuild or reload the entire table view for a local tree toggle.
 - List-mode directory expansion should feel animated. Prefer row insertion/removal animations over abrupt whole-table redraws.
 - Re-expanding a previously loaded child directory in the same pane should reuse cached children when possible instead of reloading from disk immediately.
+- During file drags, hovering a browsable directory should visibly select that directory as the drop target and auto-expand it after a short delay. Drop target calculation should use the current pointer location, not stale cell row tags or AppKit's proposed insertion row.
+- Refreshes after file operations must update cached children for currently expanded directories as well as the root directory so expanded folders show newly moved/copied items immediately.
 - Long paths should not force the window wider or prevent shrinking. Use AppKit path controls or similarly compressible native controls for path display/input rather than unbounded labels or text fields.
 - File labels/tags should match Finder placement: in list mode, show tag color dots after the filename; in icon/grid mode, show them before the displayed filename. Keep tag indicators compact and non-textual unless the user explicitly asks for tag names.
 

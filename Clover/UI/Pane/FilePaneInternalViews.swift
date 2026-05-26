@@ -176,6 +176,8 @@ final class FileTableView: NSTableView {
     var activationHandler: (() -> Void)?
     var rightClickHandler: ((Int) -> Void)?
     var dropHandler: ((NSDraggingInfo, Int?) -> Bool)?
+    var dragUpdateHandler: ((NSDraggingInfo, Int?) -> NSDragOperation)?
+    var dragExitHandler: (() -> Void)?
     var keyHandler: ((NSEvent) -> Bool)?
 
     override var acceptsFirstResponder: Bool { true }
@@ -197,11 +199,19 @@ final class FileTableView: NSTableView {
     }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        sender.draggingPasteboard.canReadFileURLs ? .move : []
+        updateDragTarget(for: sender)
     }
 
     override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
-        sender.draggingPasteboard.canReadFileURLs ? .move : []
+        updateDragTarget(for: sender)
+    }
+
+    override func draggingExited(_ sender: NSDraggingInfo?) {
+        dragExitHandler?()
+    }
+
+    override func draggingEnded(_ sender: NSDraggingInfo) {
+        dragExitHandler?()
     }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
@@ -214,12 +224,21 @@ final class FileTableView: NSTableView {
         if keyHandler?(event) == true { return }
         super.keyDown(with: event)
     }
+
+    private func updateDragTarget(for sender: NSDraggingInfo) -> NSDragOperation {
+        let point = convert(sender.draggingLocation, from: nil)
+        let row = row(at: point)
+        return dragUpdateHandler?(sender, row >= 0 ? row : nil)
+            ?? (sender.draggingPasteboard.canReadFileURLs ? .move : [])
+    }
 }
 
 final class FileCollectionView: NSCollectionView {
     var activationHandler: (() -> Void)?
     var rightClickHandler: ((Int?) -> Void)?
     var dropHandler: ((NSDraggingInfo, Int?) -> Bool)?
+    var dragUpdateHandler: ((NSDraggingInfo, Int?) -> NSDragOperation)?
+    var dragExitHandler: (() -> Void)?
     var doubleClickHandler: ((Int) -> Void)?
     var keyHandler: ((NSEvent) -> Bool)?
 
@@ -246,11 +265,19 @@ final class FileCollectionView: NSCollectionView {
     }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        sender.draggingPasteboard.canReadFileURLs ? .move : []
+        updateDragTarget(for: sender)
     }
 
     override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
-        sender.draggingPasteboard.canReadFileURLs ? .move : []
+        updateDragTarget(for: sender)
+    }
+
+    override func draggingExited(_ sender: NSDraggingInfo?) {
+        dragExitHandler?()
+    }
+
+    override func draggingEnded(_ sender: NSDraggingInfo) {
+        dragExitHandler?()
     }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
@@ -262,6 +289,13 @@ final class FileCollectionView: NSCollectionView {
     override func keyDown(with event: NSEvent) {
         if keyHandler?(event) == true { return }
         super.keyDown(with: event)
+    }
+
+    private func updateDragTarget(for sender: NSDraggingInfo) -> NSDragOperation {
+        let point = convert(sender.draggingLocation, from: nil)
+        let index = indexPathForItem(at: point)?.item
+        return dragUpdateHandler?(sender, index)
+            ?? (sender.draggingPasteboard.canReadFileURLs ? .move : [])
     }
 }
 
