@@ -19,10 +19,7 @@ final class LocalFileProvider: FileProvider {
     }
 
     func listDirectory(at url: URL) async throws -> [FileItem] {
-        let securityScopeURL = securityScopeURL(for: url)
-        return try await Task.detached(priority: .userInitiated) {
-            let scopedAccess = SecurityScopedAccess(securityScopeURL)
-            defer { scopedAccess.stop() }
+        try await runScopedFileOperation(scopes: [url], errorURL: url) {
             let fileManager = FileManager.default
             var isDirectory: ObjCBool = false
             guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue else {
@@ -94,193 +91,136 @@ final class LocalFileProvider: FileProvider {
                     )
                 }
             }
-        }.value
+        }
     }
 
     func createFolder(at parentURL: URL, name: String) async throws -> URL {
-        let securityScopeURL = securityScopeURL(for: parentURL)
-        return try await Task.detached(priority: .userInitiated) {
-            let scopedAccess = SecurityScopedAccess(securityScopeURL)
-            defer { scopedAccess.stop() }
+        try await runScopedFileOperation(scopes: [parentURL], errorURL: parentURL) {
             let fileManager = FileManager.default
             let url = parentURL.appendingPathComponent(name, isDirectory: true)
-            do {
-                try fileManager.createDirectory(at: url, withIntermediateDirectories: false)
-            } catch {
-                throw self.normalized(error, for: parentURL)
-            }
+            try fileManager.createDirectory(at: url, withIntermediateDirectories: false)
             return url
-        }.value
+        }
     }
 
     func createFile(at parentURL: URL, name: String, contents: Data) async throws -> URL {
-        let securityScopeURL = securityScopeURL(for: parentURL)
-        return try await Task.detached(priority: .userInitiated) {
-            let scopedAccess = SecurityScopedAccess(securityScopeURL)
-            defer { scopedAccess.stop() }
+        try await runScopedFileOperation(scopes: [parentURL], errorURL: parentURL) {
             let fileManager = FileManager.default
             let url = parentURL.appendingPathComponent(name, isDirectory: false)
             if fileManager.fileExists(atPath: url.path) {
                 throw CloverError.fileAlreadyExists(url)
             }
-            do {
-                try contents.write(to: url, options: .withoutOverwriting)
-            } catch {
-                throw self.normalized(error, for: parentURL)
-            }
+            try contents.write(to: url, options: .withoutOverwriting)
             return url
-        }.value
+        }
     }
 
     func renameItem(at url: URL, to newName: String) async throws -> URL {
         let parentURL = url.deletingLastPathComponent()
-        let securityScopeURL = securityScopeURL(for: parentURL)
-        return try await Task.detached(priority: .userInitiated) {
-            let scopedAccess = SecurityScopedAccess(securityScopeURL)
-            defer { scopedAccess.stop() }
+        return try await runScopedFileOperation(scopes: [parentURL], errorURL: parentURL) {
             let fileManager = FileManager.default
             let destination = parentURL.appendingPathComponent(newName)
             if fileManager.fileExists(atPath: destination.path) {
                 throw CloverError.fileAlreadyExists(destination)
             }
-            do {
-                try fileManager.moveItem(at: url, to: destination)
-            } catch {
-                throw self.normalized(error, for: parentURL)
-            }
+            try fileManager.moveItem(at: url, to: destination)
             return destination
-        }.value
+        }
     }
 
     func moveItem(at url: URL, to destinationURL: URL) async throws {
         let sourceParentURL = url.deletingLastPathComponent()
         let destinationParentURL = destinationURL.deletingLastPathComponent()
-        let sourceScopeURL = securityScopeURL(for: sourceParentURL)
-        let destinationScopeURL = securityScopeURL(for: destinationParentURL)
-        try await Task.detached(priority: .userInitiated) {
-            let sourceAccess = SecurityScopedAccess(sourceScopeURL)
-            let destinationAccess = SecurityScopedAccess(destinationScopeURL)
-            defer {
-                destinationAccess.stop()
-                sourceAccess.stop()
-            }
+        try await runScopedFileOperation(scopes: [sourceParentURL, destinationParentURL], errorURL: destinationParentURL) {
             let fileManager = FileManager.default
             if fileManager.fileExists(atPath: destinationURL.path) {
                 throw CloverError.fileAlreadyExists(destinationURL)
             }
-            do {
-                try fileManager.moveItem(at: url, to: destinationURL)
-            } catch {
-                throw self.normalized(error, for: destinationParentURL)
-            }
-        }.value
+            try fileManager.moveItem(at: url, to: destinationURL)
+        }
     }
 
     func copyItem(at url: URL, to destinationURL: URL) async throws {
         let sourceParentURL = url.deletingLastPathComponent()
         let destinationParentURL = destinationURL.deletingLastPathComponent()
-        let sourceScopeURL = securityScopeURL(for: sourceParentURL)
-        let destinationScopeURL = securityScopeURL(for: destinationParentURL)
-        try await Task.detached(priority: .userInitiated) {
-            let sourceAccess = SecurityScopedAccess(sourceScopeURL)
-            let destinationAccess = SecurityScopedAccess(destinationScopeURL)
-            defer {
-                destinationAccess.stop()
-                sourceAccess.stop()
-            }
+        try await runScopedFileOperation(scopes: [sourceParentURL, destinationParentURL], errorURL: destinationParentURL) {
             let fileManager = FileManager.default
             if fileManager.fileExists(atPath: destinationURL.path) {
                 throw CloverError.fileAlreadyExists(destinationURL)
             }
-            do {
-                try fileManager.copyItem(at: url, to: destinationURL)
-            } catch {
-                throw self.normalized(error, for: destinationParentURL)
-            }
-        }.value
+            try fileManager.copyItem(at: url, to: destinationURL)
+        }
     }
 
     func moveItems(_ urls: [URL], to destinationURL: URL) async throws {
-        for url in urls {
-            try Task.checkCancellation()
-            let destination = destinationURL.appendingPathComponent(url.lastPathComponent)
-            try await moveItem(at: url, to: destination)
+        try await runScopedFileOperation(
+            scopes: urls.map { $0.deletingLastPathComponent() } + [destinationURL],
+            errorURL: destinationURL
+        ) {
+            let fileManager = FileManager.default
+            for url in urls {
+                try Task.checkCancellation()
+                let destination = destinationURL.appendingPathComponent(url.lastPathComponent)
+                if fileManager.fileExists(atPath: destination.path) {
+                    throw CloverError.fileAlreadyExists(destination)
+                }
+                try fileManager.moveItem(at: url, to: destination)
+            }
         }
     }
 
     func copyItems(_ urls: [URL], to destinationURL: URL) async throws {
-        for url in urls {
-            try Task.checkCancellation()
-            let destination = destinationURL.appendingPathComponent(url.lastPathComponent)
-            try await copyItem(at: url, to: destination)
+        try await runScopedFileOperation(
+            scopes: urls.map { $0.deletingLastPathComponent() } + [destinationURL],
+            errorURL: destinationURL
+        ) {
+            let fileManager = FileManager.default
+            for url in urls {
+                try Task.checkCancellation()
+                let destination = destinationURL.appendingPathComponent(url.lastPathComponent)
+                if fileManager.fileExists(atPath: destination.path) {
+                    throw CloverError.fileAlreadyExists(destination)
+                }
+                try fileManager.copyItem(at: url, to: destination)
+            }
         }
     }
 
     func trashItems(_ urls: [URL]) async throws {
-        let accessURLs = urls.map { securityScopeURL(for: $0.deletingLastPathComponent()) }
-        try await Task.detached(priority: .userInitiated) {
+        try await runScopedFileOperation(groups: groupedURLsByParent(urls)) { group in
             let fileManager = FileManager.default
-            for (url, accessURL) in zip(urls, accessURLs) {
+            for url in group.urls {
                 try Task.checkCancellation()
-                let scopedAccess = SecurityScopedAccess(accessURL)
-                defer { scopedAccess.stop() }
                 var resultingURL: NSURL?
-                do {
-                    try fileManager.trashItem(at: url, resultingItemURL: &resultingURL)
-                } catch {
-                    throw self.normalized(error, for: url.deletingLastPathComponent())
-                }
+                try fileManager.trashItem(at: url, resultingItemURL: &resultingURL)
             }
-        }.value
+        }
     }
 
     func deleteItemsPermanently(_ urls: [URL]) async throws {
-        let accessURLs = urls.map { securityScopeURL(for: $0.deletingLastPathComponent()) }
-        try await Task.detached(priority: .userInitiated) {
+        try await runScopedFileOperation(groups: groupedURLsByParent(urls)) { group in
             let fileManager = FileManager.default
-            for (url, accessURL) in zip(urls, accessURLs) {
+            for url in group.urls {
                 try Task.checkCancellation()
-                let scopedAccess = SecurityScopedAccess(accessURL)
-                defer { scopedAccess.stop() }
-                do {
-                    try fileManager.removeItem(at: url)
-                } catch {
-                    throw self.normalized(error, for: url.deletingLastPathComponent())
-                }
+                try fileManager.removeItem(at: url)
             }
-        }.value
+        }
     }
 
     func setLabelNumber(_ labelNumber: Int?, for urls: [URL]) async throws {
-        let accessURLs = urls.map { securityScopeURL(for: $0.deletingLastPathComponent()) }
-        try await Task.detached(priority: .userInitiated) {
-            for (url, accessURL) in zip(urls, accessURLs) {
+        try await runScopedFileOperation(groups: groupedURLsByParent(urls)) { group in
+            for url in group.urls {
                 try Task.checkCancellation()
-                let scopedAccess = SecurityScopedAccess(accessURL)
-                defer { scopedAccess.stop() }
                 var values = URLResourceValues()
                 values.labelNumber = labelNumber
                 var mutableURL = url
-                do {
-                    try mutableURL.setResourceValues(values)
-                } catch {
-                    throw self.normalized(error, for: url.deletingLastPathComponent())
-                }
+                try mutableURL.setResourceValues(values)
             }
-        }.value
+        }
     }
 
     func extractArchive(at url: URL, to destinationDirectoryURL: URL) async throws -> URL {
-        let sourceScopeURL = securityScopeURL(for: url)
-        let destinationScopeURL = securityScopeURL(for: destinationDirectoryURL)
-        return try await Task.detached(priority: .userInitiated) {
-            let sourceAccess = SecurityScopedAccess(sourceScopeURL)
-            let destinationAccess = SecurityScopedAccess(destinationScopeURL)
-            defer {
-                destinationAccess.stop()
-                sourceAccess.stop()
-            }
-
+        return try await runScopedFileOperation(scopes: [url, destinationDirectoryURL], errorURL: destinationDirectoryURL) {
             let fileManager = FileManager.default
             let destinationURL = self.uniqueExtractionDirectory(for: url, in: destinationDirectoryURL, fileManager: fileManager)
             do {
@@ -291,44 +231,35 @@ final class LocalFileProvider: FileProvider {
                 throw self.normalized(error, for: destinationDirectoryURL)
             }
             return destinationURL
-        }.value
+        }
     }
 
     func createArchive(from urls: [URL], in destinationDirectoryURL: URL, suggestedName: String) async throws -> URL {
-        let sourceScopeURLs = urls.map { securityScopeURL(for: $0.deletingLastPathComponent()) }
-        let destinationScopeURL = securityScopeURL(for: destinationDirectoryURL)
-        return try await Task.detached(priority: .userInitiated) {
-            let sourceAccesses = sourceScopeURLs.map(SecurityScopedAccess.init)
-            let destinationAccess = SecurityScopedAccess(destinationScopeURL)
-            defer {
-                destinationAccess.stop()
-                sourceAccesses.forEach { $0.stop() }
-            }
-
+        return try await runScopedFileOperation(scopes: urls.map { $0.deletingLastPathComponent() } + [destinationDirectoryURL], errorURL: destinationDirectoryURL) {
             let fileManager = FileManager.default
             let archiveURL = self.uniqueArchiveURL(named: suggestedName, in: destinationDirectoryURL, fileManager: fileManager)
-            let relativePaths = urls.map { self.archiveRelativePath(for: $0, relativeTo: destinationDirectoryURL) }
+            let archiveBaseDirectoryURL = self.commonArchiveBaseDirectory(for: urls) ?? destinationDirectoryURL
+            let relativePaths = urls.map { self.archiveRelativePath(for: $0, relativeTo: archiveBaseDirectoryURL) }
             do {
                 try self.runArchiveTool(
                     executablePath: "/usr/bin/zip",
                     arguments: ["-qry", archiveURL.path] + relativePaths,
                     failurePrefix: "zip",
-                    currentDirectoryURL: destinationDirectoryURL
+                    currentDirectoryURL: archiveBaseDirectoryURL
                 )
             } catch {
                 try? fileManager.removeItem(at: archiveURL)
                 throw self.normalized(error, for: destinationDirectoryURL)
             }
             return archiveURL
-        }.value
+        }
     }
 
     func openItem(_ url: URL) async throws {
-        let securityScopeURL = securityScopeURL(for: url)
-        let scopedAccess = SecurityScopedAccess(securityScopeURL)
-        defer { scopedAccess.stop() }
-        let didOpen = await MainActor.run {
-            openURLHandler(url)
+        let didOpen = try await runScopedFileOperation(scopes: [url], errorURL: url) {
+            await MainActor.run {
+                self.openURLHandler(url)
+            }
         }
         if !didOpen {
             throw CloverError.unsupportedOperation
@@ -343,6 +274,79 @@ final class LocalFileProvider: FileProvider {
 
     private func securityScopeURL(for url: URL) -> URL {
         securityScopeURLProvider(url.standardizedFileURL) ?? url
+    }
+
+    private func runScopedFileOperation<T: Sendable>(
+        scopes: [URL],
+        errorURL: URL,
+        priority: TaskPriority = .userInitiated,
+        _ operation: @escaping @Sendable () async throws -> T
+    ) async throws -> T {
+        let scopeURLs = uniqueScopeURLs(for: scopes)
+        return try await Task.detached(priority: priority) {
+            let accesses = scopeURLs.map(SecurityScopedAccess.init)
+            defer {
+                for access in accesses.reversed() {
+                    access.stop()
+                }
+            }
+
+            do {
+                return try await operation()
+            } catch {
+                throw self.normalized(error, for: errorURL)
+            }
+        }.value
+    }
+
+    private func runScopedFileOperation(
+        groups: [ScopedURLGroup],
+        priority: TaskPriority = .userInitiated,
+        _ operation: @escaping @Sendable (ScopedURLGroup) throws -> Void
+    ) async throws {
+        try await Task.detached(priority: priority) {
+            for group in groups {
+                let scopedAccess = SecurityScopedAccess(group.accessURL)
+                defer { scopedAccess.stop() }
+
+                do {
+                    try operation(group)
+                } catch {
+                    throw self.normalized(error, for: group.parentURL)
+                }
+            }
+        }.value
+    }
+
+    private func uniqueScopeURLs(for urls: [URL]) -> [URL] {
+        var seenPaths: Set<String> = []
+        var scopeURLs: [URL] = []
+        for url in urls {
+            let scopeURL = securityScopeURL(for: url)
+            let path = scopeURL.standardizedFileURL.path
+            guard seenPaths.insert(path).inserted else { continue }
+            scopeURLs.append(scopeURL)
+        }
+        return scopeURLs
+    }
+
+    private func groupedURLsByParent(_ urls: [URL]) -> [ScopedURLGroup] {
+        var groups: [String: ScopedURLGroup] = [:]
+        for url in urls {
+            let parentURL = url.deletingLastPathComponent().standardizedFileURL
+            let key = parentURL.path
+            if var group = groups[key] {
+                group.urls.append(url)
+                groups[key] = group
+            } else {
+                groups[key] = ScopedURLGroup(
+                    parentURL: parentURL,
+                    accessURL: securityScopeURL(for: parentURL),
+                    urls: [url]
+                )
+            }
+        }
+        return groups.values.sorted { $0.parentURL.path < $1.parentURL.path }
     }
 
     private func uniqueExtractionDirectory(for archiveURL: URL, in parentURL: URL, fileManager: FileManager) -> URL {
@@ -371,6 +375,21 @@ final class LocalFileProvider: FileProvider {
             attempt += 1
         }
         return candidate
+    }
+
+    private func commonArchiveBaseDirectory(for urls: [URL]) -> URL? {
+        let parentPaths = urls
+            .map { $0.deletingLastPathComponent().standardizedFileURL.pathComponents }
+            .filter { !$0.isEmpty }
+        guard var commonComponents = parentPaths.first else { return nil }
+
+        for components in parentPaths.dropFirst() {
+            commonComponents = Array(zip(commonComponents, components).prefix { $0 == $1 }.map(\.0))
+            if commonComponents.isEmpty { return nil }
+        }
+
+        let path = NSString.path(withComponents: commonComponents)
+        return URL(fileURLWithPath: path, isDirectory: true)
     }
 
     private func archiveRelativePath(for url: URL, relativeTo parentURL: URL) -> String {
@@ -471,6 +490,12 @@ private struct ArchiveExtractionError: LocalizedError {
     var errorDescription: String? {
         message
     }
+}
+
+private struct ScopedURLGroup: Sendable {
+    let parentURL: URL
+    let accessURL: URL
+    var urls: [URL]
 }
 
 private final class SecurityScopedAccess: @unchecked Sendable {

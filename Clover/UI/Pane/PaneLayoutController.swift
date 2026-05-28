@@ -264,6 +264,18 @@ final class PaneLayoutController: NSViewController {
         pane.openDirectoryInPaneHandler = { [weak self] paneIndex, url in
             self?.open(url, inPaneAt: paneIndex)
         }
+        pane.extractArchiveInPaneHandler = { [weak self] item, paneIndex in
+            self?.extractArchive(item, inPaneAt: paneIndex)
+        }
+        pane.compressItemsInPaneHandler = { [weak self] items, paneIndex in
+            self?.compressItems(items, inPaneAt: paneIndex)
+        }
+        pane.copyItemsInPaneHandler = { [weak self] items, paneIndex in
+            self?.copyItems(items, inPaneAt: paneIndex)
+        }
+        pane.moveItemsInPaneHandler = { [weak self] items, paneIndex in
+            self?.moveItems(items, inPaneAt: paneIndex)
+        }
         return pane
     }
 
@@ -408,6 +420,42 @@ final class PaneLayoutController: NSViewController {
         guard panes.indices.contains(paneIndex) else { return }
         let targetPane = panes[paneIndex]
         targetPane.open(url)
+        setActivePane(targetPane)
+        targetPane.focusBrowser()
+        hidePaneSelectionOverlays()
+    }
+
+    private func extractArchive(_ item: FileItem, inPaneAt paneIndex: Int) {
+        guard panes.indices.contains(paneIndex) else { return }
+        let targetPane = panes[paneIndex]
+        targetPane.extractArchiveAndSelectResult(item, to: targetPane.viewModel.currentURL)
+        setActivePane(targetPane)
+        targetPane.focusBrowser()
+        hidePaneSelectionOverlays()
+    }
+
+    private func compressItems(_ items: [FileItem], inPaneAt paneIndex: Int) {
+        guard panes.indices.contains(paneIndex) else { return }
+        let targetPane = panes[paneIndex]
+        targetPane.compressItems(items, in: targetPane.viewModel.currentURL)
+        setActivePane(targetPane)
+        targetPane.focusBrowser()
+        hidePaneSelectionOverlays()
+    }
+
+    private func copyItems(_ items: [FileItem], inPaneAt paneIndex: Int) {
+        guard panes.indices.contains(paneIndex) else { return }
+        let targetPane = panes[paneIndex]
+        targetPane.copyItems(items, to: targetPane.viewModel.currentURL)
+        setActivePane(targetPane)
+        targetPane.focusBrowser()
+        hidePaneSelectionOverlays()
+    }
+
+    private func moveItems(_ items: [FileItem], inPaneAt paneIndex: Int) {
+        guard panes.indices.contains(paneIndex) else { return }
+        let targetPane = panes[paneIndex]
+        targetPane.moveItems(items, to: targetPane.viewModel.currentURL)
         setActivePane(targetPane)
         targetPane.focusBrowser()
         hidePaneSelectionOverlays()

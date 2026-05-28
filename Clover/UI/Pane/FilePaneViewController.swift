@@ -14,6 +14,10 @@ final class FilePaneViewController: NSViewController {
     var paneOpenTargetsProvider: ((FilePaneViewController) -> [(paneIndex: Int, displayNumber: Int)])?
     var paneSelectionOverlayHandler: ((Bool, FilePaneViewController, Int?) -> Void)?
     var openDirectoryInPaneHandler: ((Int, URL) -> Void)?
+    var extractArchiveInPaneHandler: ((FileItem, Int) -> Void)?
+    var compressItemsInPaneHandler: (([FileItem], Int) -> Void)?
+    var copyItemsInPaneHandler: (([FileItem], Int) -> Void)?
+    var moveItemsInPaneHandler: (([FileItem], Int) -> Void)?
 
     private let pathBarView = PathBarView()
     private let backButton = NSButton()
@@ -25,6 +29,7 @@ final class FilePaneViewController: NSViewController {
     private let searchField = NSSearchField()
     private let loadingIndicator = NSProgressIndicator()
     private let contextMenu = NSMenu(title: "File Actions")
+    let dragSourceIdentifier = UUID().uuidString
     var previewItems: [URL] = []
     private(set) var currentPreviewIndex: Int = 0
     var detailCache: [URL: String] = [:]
@@ -39,6 +44,7 @@ final class FilePaneViewController: NSViewController {
     private var pendingRenameStartDate: Date?
     var pendingDropExpansionURL: URL?
     var dropExpansionTask: Task<Void, Never>?
+    var dropTargetSelectionIndex: Int?
     private var pendingCreationKinds: [URL: NewItemKind] = [:]
     private var isPresentingDirectoryAccessPanel = false
     private var didPerformInitialOpen = false
@@ -241,17 +247,54 @@ final class FilePaneViewController: NSViewController {
         }
     }
 
+    @objc func copySelectedItemsToOtherPane(_ sender: NSMenuItem) {
+        activationHandler?(self)
+        let items = selectedItems()
+        guard !items.isEmpty else { return }
+        copyItemsInPaneHandler?(items, sender.tag)
+    }
+
+    @objc func moveSelectedItemsToOtherPane(_ sender: NSMenuItem) {
+        activationHandler?(self)
+        let items = selectedItems()
+        guard !items.isEmpty else { return }
+        moveItemsInPaneHandler?(items, sender.tag)
+    }
+
     @objc func compressSelectedItems(_ sender: Any?) {
         activationHandler?(self)
         let items = selectedItems()
         guard !items.isEmpty else { return }
+        compressItems(items, in: viewModel.currentURL)
+    }
+
+    @objc func compressSelectedItemsInOtherPane(_ sender: NSMenuItem) {
+        activationHandler?(self)
+        let items = selectedItems()
+        guard !items.isEmpty else { return }
+        compressItemsInPaneHandler?(items, sender.tag)
+    }
+
+    func compressItems(_ items: [FileItem], in destinationDirectoryURL: URL) {
         runOperation {
-            let archiveURL = try await self.viewModel.createArchive(from: items, in: self.viewModel.currentURL)
+            let archiveURL = try await self.viewModel.createArchive(from: items, in: destinationDirectoryURL)
             await MainActor.run {
                 self.rememberSelection(urls: [archiveURL])
                 self.refresh()
             }
         }
+    }
+
+    @objc func extractSelectedArchiveInCurrentPane(_ sender: Any?) {
+        activationHandler?(self)
+        guard let item = selectedItems().singleExtractableArchive else { return }
+        extractArchiveAndSelectResult(item)
+    }
+
+    @objc func extractSelectedArchiveInOtherPane(_ sender: NSMenuItem) {
+        activationHandler?(self)
+        guard let item = selectedItems().singleExtractableArchive else { return }
+        extractArchiveInPaneHandler?(item, sender.tag)
     }
 
     @objc func trashSelectedItems(_ sender: Any?) {
@@ -270,6 +313,22 @@ final class FilePaneViewController: NSViewController {
 
     func setCurrentPreviewIndex(_ index: Int) {
         currentPreviewIndex = index
+    }
+
+    func copyItems(_ items: [FileItem], to destinationURL: URL) {
+        runOperation {
+            try await self.viewModel.copyItems(items, to: destinationURL) { [weak self] conflict in
+                await self?.resolveConflict(conflict) ?? .cancel
+            }
+        }
+    }
+
+    func moveItems(_ items: [FileItem], to destinationURL: URL) {
+        runOperation {
+            try await self.viewModel.moveItems(items, to: destinationURL) { [weak self] conflict in
+                await self?.resolveConflict(conflict) ?? .cancel
+            }
+        }
     }
 
     private func configurePathBar() {
@@ -355,7 +414,7 @@ final class FilePaneViewController: NSViewController {
         }
         tableView.registerForDraggedTypes([.fileURL])
         tableView.setDraggingSourceOperationMask(.move, forLocal: true)
-        tableView.setDraggingSourceOperationMask(.move, forLocal: false)
+        tableView.setDraggingSourceOperationMask(.copy, forLocal: false)
         contextMenu.delegate = self
         tableView.menu = contextMenu
 
@@ -365,6 +424,12 @@ final class FilePaneViewController: NSViewController {
         scrollView.activationHandler = { [weak self] in
             guard let self else { return }
             self.activationHandler?(self)
+        }
+        scrollView.dragUpdateHandler = { [weak self] draggingInfo in
+            self?.updateDropHover(draggingInfo, itemIndex: nil) ?? []
+        }
+        scrollView.dragExitHandler = { [weak self] in
+            self?.clearDropHover()
         }
         scrollView.rightClickHandler = { [weak self] in self?.prepareContextSelection(for: nil) }
         scrollView.dropHandler = { [weak self] draggingInfo in
@@ -461,7 +526,7 @@ final class FilePaneViewController: NSViewController {
         }
         collectionView.registerForDraggedTypes([.fileURL])
         collectionView.setDraggingSourceOperationMask(.move, forLocal: true)
-        collectionView.setDraggingSourceOperationMask(.move, forLocal: false)
+        collectionView.setDraggingSourceOperationMask(.copy, forLocal: false)
         collectionView.menu = contextMenu
 
         collectionScrollView.documentView = collectionView
@@ -470,6 +535,12 @@ final class FilePaneViewController: NSViewController {
         collectionScrollView.activationHandler = { [weak self] in
             guard let self else { return }
             self.activationHandler?(self)
+        }
+        collectionScrollView.dragUpdateHandler = { [weak self] draggingInfo in
+            self?.updateDropHover(draggingInfo, itemIndex: nil) ?? []
+        }
+        collectionScrollView.dragExitHandler = { [weak self] in
+            self?.clearDropHover()
         }
         collectionScrollView.rightClickHandler = { [weak self] in self?.prepareContextSelection(for: nil) }
         collectionScrollView.dropHandler = { [weak self] draggingInfo in
@@ -671,7 +742,7 @@ final class FilePaneViewController: NSViewController {
     }
 
     private func shouldRequestDirectoryAccess(for url: URL) -> Bool {
-        shouldRequireUserSelectedAccess(for: url)
+        shouldRequireUserSelectedAccess(for: url) && !directoryAccessStore.hasSavedAccess(to: url)
     }
 
     private func shouldProactivelyRequestDirectoryAccess(for url: URL) -> Bool {
@@ -727,7 +798,10 @@ final class FilePaneViewController: NSViewController {
         let urls = indexes.compactMap { viewModel.item(at: $0)?.url }
         guard !urls.isEmpty else { return false }
         pasteboard.clearContents()
-        return pasteboard.writeObjects(urls.map { $0 as NSURL })
+        let didWrite = pasteboard.writeObjects(urls.map { $0 as NSURL })
+        pasteboard.setPropertyList(urls.map(\.path), forType: .cloverFilenames)
+        pasteboard.setString(dragSourceIdentifier, forType: .cloverPaneDragSourceIdentifier)
+        return didWrite
     }
 
     private func handlePaneKeyDown(_ event: NSEvent) -> Bool {
@@ -1268,8 +1342,12 @@ final class FilePaneViewController: NSViewController {
     }
 
     private func extractArchiveAndSelectResult(_ item: FileItem) {
+        extractArchiveAndSelectResult(item, to: viewModel.currentURL)
+    }
+
+    func extractArchiveAndSelectResult(_ item: FileItem, to destinationDirectoryURL: URL) {
         runOperation {
-            let extractedURL = try await self.viewModel.extractArchive(item)
+            let extractedURL = try await self.viewModel.extractArchive(item, to: destinationDirectoryURL)
             await MainActor.run {
                 self.rememberSelection(urls: [extractedURL])
                 self.refresh()

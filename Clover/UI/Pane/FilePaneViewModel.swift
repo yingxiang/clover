@@ -341,8 +341,8 @@ final class FilePaneViewModel {
         )
     }
 
-    func extractArchive(_ item: FileItem) async throws -> URL {
-        let destinationDirectoryURL = item.url.deletingLastPathComponent()
+    func extractArchive(_ item: FileItem, to destinationDirectoryURL: URL? = nil) async throws -> URL {
+        let destinationDirectoryURL = destinationDirectoryURL ?? item.url.deletingLastPathComponent()
         onStatusChange?(L10n.extractingItem(item.name))
         let extractedURL = try await fileOperationService.extractArchive(at: item.url, to: destinationDirectoryURL)
         onStatusChange?(L10n.extractedItem(item.name))

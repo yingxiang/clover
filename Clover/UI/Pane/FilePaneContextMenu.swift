@@ -30,6 +30,9 @@ private enum ApplicationMenuIconLoader {
 
 extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServicePickerDelegate {
     private static var otherPaneMenuTitle: String { L10n.openInOtherPane }
+    private static var paneOverlayMenuTitles: Set<String> {
+        [L10n.openInOtherPane, L10n.copyTo, L10n.moveTo, L10n.compressTo, L10n.extractTo]
+    }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         guard menu.title == "File Actions" else { return }
@@ -73,9 +76,10 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
         if let pasteTitle {
             addMenuItem(pasteTitle, action: #selector(pasteFromPasteboard(_:)), to: menu, symbol: .paste)
         }
-        addMenuItem(L10n.copyTo, action: #selector(copySelectedItems(_:)), to: menu, symbol: .copy)
-        addMenuItem(L10n.moveTo, action: #selector(moveSelectedItems(_:)), to: menu, symbol: .move)
-        addMenuItem(L10n.compress, action: #selector(compressSelectedItems(_:)), to: menu, symbol: .archive)
+        addPaneTransferItem(title: L10n.copyTo, paneAction: #selector(copySelectedItemsToOtherPane(_:)), to: menu, symbol: .copy)
+        addPaneTransferItem(title: L10n.moveTo, paneAction: #selector(moveSelectedItemsToOtherPane(_:)), to: menu, symbol: .move)
+        addCompressItem(to: menu)
+        addExtractArchiveItem(to: menu)
         addMenuItem(L10n.copyPath, action: #selector(copySelectedItemPaths(_:)), to: menu, symbol: .file)
         menu.addItem(.separator())
         addSubmenuItem(L10n.tags, submenu: tagsMenu(), to: menu, symbol: .tag)
@@ -85,17 +89,17 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
     }
 
     func menuWillOpen(_ menu: NSMenu) {
-        guard menu.title == Self.otherPaneMenuTitle else { return }
+        guard Self.paneOverlayMenuTitles.contains(menu.title) else { return }
         paneSelectionOverlayHandler?(true, self, nil)
     }
 
     func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
-        guard menu.title == Self.otherPaneMenuTitle else { return }
+        guard Self.paneOverlayMenuTitles.contains(menu.title) else { return }
         paneSelectionOverlayHandler?(true, self, item?.tag)
     }
 
     func menuDidClose(_ menu: NSMenu) {
-        guard menu.title == Self.otherPaneMenuTitle else { return }
+        guard Self.paneOverlayMenuTitles.contains(menu.title) else { return }
         paneSelectionOverlayHandler?(false, self, nil)
     }
 
@@ -117,7 +121,10 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
         case #selector(copySelectionToPasteboard(_:)),
              #selector(copySelectedItems(_:)),
              #selector(moveSelectedItems(_:)),
+             #selector(copySelectedItemsToOtherPane(_:)),
+             #selector(moveSelectedItemsToOtherPane(_:)),
              #selector(compressSelectedItems(_:)),
+             #selector(compressSelectedItemsInOtherPane(_:)),
              #selector(trashSelectedItems(_:)),
              #selector(deleteSelectedItemsPermanently(_:)),
              #selector(revealSelectedItemsInFinder(_:)),
@@ -134,6 +141,9 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
             return airDropSharingService() != nil && !selectedFileURLs().isEmpty
         case #selector(openSelectedItem):
             return selectedItems().count == 1
+        case #selector(extractSelectedArchiveInCurrentPane(_:)),
+             #selector(extractSelectedArchiveInOtherPane(_:)):
+            return selectedItems().singleExtractableArchive != nil
         default:
             return true
         }
@@ -449,6 +459,71 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
             submenu.addItem(item)
         }
         addSubmenuItem(Self.otherPaneMenuTitle, submenu: submenu, to: menu, symbol: .open)
+    }
+
+    private func addExtractArchiveItem(to menu: NSMenu) {
+        guard selectedItems().singleExtractableArchive != nil else { return }
+        let targets = paneOpenTargetsProvider?(self) ?? []
+        guard !targets.isEmpty else {
+            addMenuItem(L10n.extractToCurrentPane, action: #selector(extractSelectedArchiveInCurrentPane(_:)), to: menu, symbol: .archive)
+            return
+        }
+
+        let submenu = NSMenu(title: L10n.extractTo)
+        submenu.delegate = self
+
+        let currentWindowItem = NSMenuItem(title: L10n.currentPane, action: #selector(extractSelectedArchiveInCurrentPane(_:)), keyEquivalent: "")
+        currentWindowItem.target = self
+        submenu.addItem(currentWindowItem)
+        submenu.addItem(.separator())
+
+        for target in targets {
+            let item = NSMenuItem(title: L10n.paneNumber(target.displayNumber), action: #selector(extractSelectedArchiveInOtherPane(_:)), keyEquivalent: "")
+            item.target = self
+            item.tag = target.paneIndex
+            submenu.addItem(item)
+        }
+        addSubmenuItem(L10n.extractTo, submenu: submenu, to: menu, symbol: .archive)
+    }
+
+    private func addCompressItem(to menu: NSMenu) {
+        let targets = paneOpenTargetsProvider?(self) ?? []
+        guard !targets.isEmpty else {
+            addMenuItem(L10n.compress, action: #selector(compressSelectedItems(_:)), to: menu, symbol: .archive)
+            return
+        }
+
+        let submenu = NSMenu(title: L10n.compressTo)
+        submenu.delegate = self
+
+        let currentPaneItem = NSMenuItem(title: L10n.currentPane, action: #selector(compressSelectedItems(_:)), keyEquivalent: "")
+        currentPaneItem.target = self
+        submenu.addItem(currentPaneItem)
+        submenu.addItem(.separator())
+
+        for target in targets {
+            let item = NSMenuItem(title: L10n.paneNumber(target.displayNumber), action: #selector(compressSelectedItemsInOtherPane(_:)), keyEquivalent: "")
+            item.target = self
+            item.tag = target.paneIndex
+            submenu.addItem(item)
+        }
+        addSubmenuItem(L10n.compressTo, submenu: submenu, to: menu, symbol: .archive)
+    }
+
+    private func addPaneTransferItem(title: String, paneAction: Selector, to menu: NSMenu, symbol: AppSymbol) {
+        let targets = paneOpenTargetsProvider?(self) ?? []
+        guard !targets.isEmpty else { return }
+
+        let submenu = NSMenu(title: title)
+        submenu.delegate = self
+
+        for target in targets {
+            let item = NSMenuItem(title: L10n.paneNumber(target.displayNumber), action: paneAction, keyEquivalent: "")
+            item.target = self
+            item.tag = target.paneIndex
+            submenu.addItem(item)
+        }
+        addSubmenuItem(title, submenu: submenu, to: menu, symbol: symbol)
     }
 
     private func addSubmenuItem(_ title: String, submenu: NSMenu, to menu: NSMenu, symbol: AppSymbol? = nil) {
@@ -803,5 +878,12 @@ private enum FileTagLabel: CaseIterable {
         case .orange:
             return AppIconProvider.tagColorImage(.systemOrange, accessibilityDescription: title)
         }
+    }
+}
+
+extension Array where Element == FileItem {
+    var singleExtractableArchive: FileItem? {
+        guard count == 1, let item = first, item.isExtractableArchive else { return nil }
+        return item
     }
 }

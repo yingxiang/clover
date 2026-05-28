@@ -275,6 +275,8 @@ extension FilePaneViewController {
             clearDropHover()
             return []
         }
+        activationHandler?(self)
+
         guard let itemIndex,
               let item = viewModel.item(at: itemIndex),
               item.isBrowsableDirectory else {
@@ -282,19 +284,51 @@ extension FilePaneViewController {
             return .move
         }
 
-        activationHandler?(self)
         selectDropTarget(at: itemIndex)
-        scheduleDropExpansionIfNeeded(for: item.url)
+        if !isDragFromThisPane(draggingInfo) {
+            scheduleDropExpansionIfNeeded(for: item.url)
+        } else {
+            cancelDropExpansion()
+        }
         return .move
     }
 
     func clearDropHover() {
+        clearDropTargetSelection()
+        cancelDropExpansion()
+    }
+
+    private func cancelDropExpansion() {
         pendingDropExpansionURL = nil
         dropExpansionTask?.cancel()
         dropExpansionTask = nil
     }
 
+    private func isDragFromThisPane(_ draggingInfo: NSDraggingInfo) -> Bool {
+        if draggingInfo.draggingSource as AnyObject? === tableView ||
+            draggingInfo.draggingSource as AnyObject? === collectionView {
+            return true
+        }
+        return draggingInfo.draggingPasteboard.string(forType: .cloverPaneDragSourceIdentifier) == dragSourceIdentifier
+    }
+
+    private func clearDropTargetSelection() {
+        guard let itemIndex = dropTargetSelectionIndex else { return }
+        switch viewModel.viewMode {
+        case .list:
+            tableView.deselectRow(itemIndex)
+        case .grid:
+            collectionView.deselectItems(at: [IndexPath(item: itemIndex, section: 0)])
+        }
+        dropTargetSelectionIndex = nil
+        updateCommandAvailability()
+    }
+
     private func selectDropTarget(at itemIndex: Int) {
+        if dropTargetSelectionIndex != itemIndex {
+            clearDropTargetSelection()
+        }
+        dropTargetSelectionIndex = itemIndex
         switch viewModel.viewMode {
         case .list:
             tableView.selectRowIndexes(IndexSet(integer: itemIndex), byExtendingSelection: false)

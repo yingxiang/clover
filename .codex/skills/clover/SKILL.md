@@ -35,10 +35,13 @@ Use this skill for development inside the Clover repository.
 - Use `UserDirectories.homeURL` for the real user's home directory. In the sandbox, `FileManager.default.homeDirectoryForCurrentUser` can point at the container home and break sidebar folders such as Downloads.
 - Directory permission checks must test current access each time: first resolve matching security-scoped bookmarks, then try direct directory readability. Do not rely on an "already authorized" flag.
 - When using restored bookmarks for user-selected folders such as Downloads, call `startAccessingSecurityScopedResource()` around provider, Quick Look thumbnail/preview, and sharing operations, then balance it with `stopAccessingSecurityScopedResource()`.
+- In `LocalFileProvider`, all filesystem operations that need security-scoped access must go through the shared scoped-operation helpers (`runScopedFileOperation(...)` and parent-grouped variants). Do not open/close `SecurityScopedAccess` ad hoc inside individual file operations; this has caused repeated permission regressions, especially for multi-select operations.
+- Batch file operations should group or deduplicate security scopes before starting work. Open each needed scope once for the whole operation, then close scopes in reverse order after all files in that scope are processed. Do not repeatedly start/stop the same bookmarked parent for each selected file.
+- Normalize permission errors at the provider boundary with the operation's relevant parent/destination URL so the UI can decide whether to prompt. The UI must not infer missing permission without consulting `DirectoryAccessStore` for an existing bookmark.
 - Treat list/grid filtering as an in-memory view-model operation. Type-filter changes should use the loaded `allItems` and update visible rows/items without triggering a full pane reload or directory listing.
 - Keep existing pane layouts free: single, two vertical, two horizontal, and four-grid. Advanced three-pane layouts such as left-one-right-two, left-two-right-one, top-one-bottom-two, and top-two-bottom-one are Pro-only and should trigger the upgrade window when selected without an active Pro entitlement.
 - Keep Release monetization UI purchase-focused: show Upgrade/Purchase entry points before purchase, hide Upgrade to Clover Pro once the lifetime product is active, and keep Restore Purchases / Manage Subscription menu and dialog buttons behind Debug-only controls unless the user explicitly asks to ship them.
-- Until the next Pro iteration, expose only the stash shelf in Pro menus, upgrade-page feature lists, and visible paid feature entry points. Keep other Pro v1 feature code available for later development, but do not advertise those entries.
+- Until the next Pro iteration, expose only the stash shelf and advanced pane layouts in Pro menus, upgrade-page feature lists, and visible paid feature entry points. Keep other Pro v1 feature code available for later development, but do not advertise those entries.
 - For the Pro stash shelf glass background, use `NSGlassEffectView` on macOS 26+ and keep an `NSVisualEffectView` fallback for earlier macOS versions.
 - Avoid synchronous app bundle icon/display-name lookup on the menu-building path. For Open With menus, show a generic icon immediately, then load and cache app icons asynchronously.
 - Keep project-owned Swift files under 1000 lines. When any module file grows beyond 1000 lines, consider splitting it by responsibility before adding more behavior.
@@ -48,6 +51,24 @@ Use this skill for development inside the Clover repository.
 - After feature work changes architecture, workflow, UI conventions, or implementation patterns, update this skill or the relevant reference file before finishing.
 - Any user-visible copy added in code must go through localization (`L10n` / string catalog). Do not hard-code display text in Swift, menus, alerts, buttons, tooltips, labels, or status messages.
 - Do not copy QSpace, Path Finder, Finder, or other products' branding, icons, copy, or proprietary layout details.
+
+## Pane Context Menus
+
+- Keep cross-pane context-menu operations consistent. Copy To, Move To, Compress To, Extract To, Open in Other Pane, and future pane-targeted actions should use the same target model, naming, highlighting, and command routing.
+- Target submenus should refer to panes, not windows. Use `Current Pane` for the source pane and `Pane 1`, `Pane 2`, etc. for other panes. Do not mix terms such as Window and Pane in the same target menu family.
+- When there is only one pane, hide cross-pane-only actions such as Copy To and Move To. Actions that still make sense in the current pane, such as Compress and Extract To, should remain as direct current-pane commands.
+- When multiple panes exist, pane-targeted actions should use a submenu. Compress To and Extract To include `Current Pane`, then a separator, then other pane targets. Copy To and Move To list only other pane targets because current-pane copy/move is not useful.
+- Hovering a non-current pane target in any pane-targeted submenu must show the same pane selection overlay and highlight behavior used by Open in Other Pane. Closing the submenu must hide the overlays.
+- Executing a target-pane action should route through `PaneLayoutController` to the destination `FilePaneViewController`, use that pane's `viewModel.currentURL` as the destination directory, refresh/select results in the destination pane when applicable, focus the destination pane, and hide pane overlays.
+- Keep file operations behind `FilePaneViewModel` and `FileOperationService`/`FileProvider`; context-menu code should build commands and route targets, not perform direct filesystem work.
+
+## Pane Drag And Drop
+
+- Keep file drag/drop behavior consistent across panes and windows in list and grid modes. Resolve drops through pane state: dropping onto a browsable directory targets that directory; dropping onto blank/non-folder space targets the pane's current folder.
+- During a local drag within the same pane, hovering a directory should show it as the drop target but must not auto-expand it. During cross-pane or cross-window drag, hovering a directory should show the same drop target state and auto-expand it after the normal delay.
+- When the drag moves away from a directory target, exits the pane, or moves over blank/non-folder space, clear the temporary folder drop-target selection and cancel pending folder expansion. The destination pane itself should still activate/highlight as the current drop target.
+- Drag sources should write selected file URLs plus pane-source identity metadata to the pasteboard so same-pane and cross-pane hover behavior can be distinguished reliably.
+- Execute moves through `FilePaneViewModel` and `FileOperationService`, not direct UI-layer `FileManager` calls.
 
 ## Pro Stash Shelf
 

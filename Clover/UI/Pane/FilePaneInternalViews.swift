@@ -303,6 +303,8 @@ final class FileDropScrollView: NSScrollView {
     var activationHandler: (() -> Void)?
     var rightClickHandler: (() -> Void)?
     var dropHandler: ((NSDraggingInfo) -> Bool)?
+    var dragUpdateHandler: ((NSDraggingInfo) -> NSDragOperation)?
+    var dragExitHandler: (() -> Void)?
 
     override var acceptsFirstResponder: Bool { true }
 
@@ -319,11 +321,19 @@ final class FileDropScrollView: NSScrollView {
     }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        sender.draggingPasteboard.canReadFileURLs ? .move : []
+        dragUpdateHandler?(sender) ?? (sender.draggingPasteboard.canReadFileURLs ? .move : [])
     }
 
     override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
-        sender.draggingPasteboard.canReadFileURLs ? .move : []
+        dragUpdateHandler?(sender) ?? (sender.draggingPasteboard.canReadFileURLs ? .move : [])
+    }
+
+    override func draggingExited(_ sender: NSDraggingInfo?) {
+        dragExitHandler?()
+    }
+
+    override func draggingEnded(_ sender: NSDraggingInfo) {
+        dragExitHandler?()
     }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
@@ -342,6 +352,11 @@ final class EventMonitorToken: @unchecked Sendable {
     func remove() {
         NSEvent.removeMonitor(monitor)
     }
+}
+
+extension NSPasteboard.PasteboardType {
+    static let cloverPaneDragSourceIdentifier = NSPasteboard.PasteboardType("com.lingchen.clover.drag-source-pane")
+    static let cloverFilenames = NSPasteboard.PasteboardType("NSFilenamesPboardType")
 }
 
 extension NSPasteboard {

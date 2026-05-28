@@ -483,6 +483,17 @@
         }
       }
     },
+    "compress_to" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Compress To..."
+          }
+        }
+      }
+    },
     "compressed_items_format" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -1234,6 +1245,17 @@
         }
       }
     },
+    "current_pane" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Current Pane"
+          }
+        }
+      }
+    },
     "default_application" : {
       "localizations" : {
         "de" : {
@@ -1553,6 +1575,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在刪除 %lld 個項目..."
+          }
+        }
+      }
+    },
+    "extract_to" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Extract To"
+          }
+        }
+      }
+    },
+    "extract_to_current_pane" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Extract to Current Pane"
           }
         }
       }
@@ -4508,7 +4552,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Advanced three-pane layouts"
+            "value" : "Unlock all pane layouts"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "解锁所有窗口布局"
           }
         }
       }
@@ -8235,7 +8285,7 @@
           }
         }
       }
-    }
+    },
   },
   "version" : "1.0"
 }
