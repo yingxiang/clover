@@ -417,6 +417,29 @@ final class FilePaneViewModel {
         expandListDirectory(listRows[row].item.url)
     }
 
+    func collapseExpandedSiblingDirectories(around row: Int) {
+        guard viewMode == .list,
+              listRows.indices.contains(row) else { return }
+        let targetDepth = listRows[row].depth
+        let siblingRange = siblingRowRange(containing: row, depth: targetDepth)
+        let targetURL = listRows[row].item.url.standardizedFileURL
+        let siblingExpandedURLs = listRows[siblingRange].compactMap { row -> URL? in
+            let url = row.item.url.standardizedFileURL
+            guard url != targetURL,
+                  row.depth == targetDepth,
+                  row.item.isBrowsableDirectory,
+                  expandedDirectoryURLs.contains(url) else { return nil }
+            return url
+        }
+        guard !siblingExpandedURLs.isEmpty else { return }
+        emitListMutation(beforeRows: listRows, afterMutationFor: targetURL) {
+            for url in siblingExpandedURLs {
+                self.collapseListDirectorySilently(url)
+            }
+            self.rebuildListRows()
+        }
+    }
+
     private func expandListDirectory(_ url: URL) {
         guard !expandedDirectoryURLs.contains(url) else { return }
         if let children = directoryChildren[url] {
@@ -547,6 +570,20 @@ final class FilePaneViewModel {
             filteredItems = filteredItems.filter { FileSearchMatcher.matches($0, query: searchQuery, caseSensitive: searchCaseSensitive) }
         }
         return FileSortService.sort(filteredItems, by: sortOption)
+    }
+
+    private func siblingRowRange(containing row: Int, depth: Int) -> Range<Int> {
+        var start = row
+        while start > 0, listRows[start - 1].depth >= depth {
+            start -= 1
+        }
+
+        var end = row + 1
+        while end < listRows.count, listRows[end].depth >= depth {
+            end += 1
+        }
+
+        return start..<end
     }
 
     private func collapseListDirectory(_ url: URL) {

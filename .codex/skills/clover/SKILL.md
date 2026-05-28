@@ -65,7 +65,8 @@ Use this skill for development inside the Clover repository.
 ## Pane Drag And Drop
 
 - Keep file drag/drop behavior consistent across panes and windows in list and grid modes. Resolve drops through pane state: dropping onto a browsable directory targets that directory; dropping onto blank/non-folder space targets the pane's current folder.
-- During a local drag within the same pane, hovering a directory should show it as the drop target but must not auto-expand it. During cross-pane or cross-window drag, hovering a directory should show the same drop target state and auto-expand it after the normal delay.
+- During file drags, hovering a browsable directory should show it as the drop target and auto-expand it after the normal delay, whether the drag started in the same pane, another pane, another Clover window, or another app.
+- When dragging over any visible target row, collapse expanded sibling directories at the same list depth so only the target's sibling group stays focused. Moving from one folder/file to another should not leave unrelated same-level folders expanded behind the drag.
 - When the drag moves away from a directory target, exits the pane, or moves over blank/non-folder space, clear the temporary folder drop-target selection and cancel pending folder expansion. The destination pane itself should still activate/highlight as the current drop target.
 - Drag sources should write selected file URLs plus pane-source identity metadata to the pasteboard so same-pane and cross-pane hover behavior can be distinguished reliably.
 - Execute moves through `FilePaneViewModel` and `FileOperationService`, not direct UI-layer `FileManager` calls.

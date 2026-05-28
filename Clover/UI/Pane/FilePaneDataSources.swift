@@ -278,18 +278,19 @@ extension FilePaneViewController {
         activationHandler?(self)
 
         guard let itemIndex,
-              let item = viewModel.item(at: itemIndex),
-              item.isBrowsableDirectory else {
+              let item = viewModel.item(at: itemIndex) else {
+            clearDropHover()
+            return .move
+        }
+        viewModel.collapseExpandedSiblingDirectories(around: itemIndex)
+
+        guard item.isBrowsableDirectory else {
             clearDropHover()
             return .move
         }
 
         selectDropTarget(at: itemIndex)
-        if !isDragFromThisPane(draggingInfo) {
-            scheduleDropExpansionIfNeeded(for: item.url)
-        } else {
-            cancelDropExpansion()
-        }
+        scheduleDropExpansionIfNeeded(for: item.url)
         return .move
     }
 
@@ -302,14 +303,6 @@ extension FilePaneViewController {
         pendingDropExpansionURL = nil
         dropExpansionTask?.cancel()
         dropExpansionTask = nil
-    }
-
-    private func isDragFromThisPane(_ draggingInfo: NSDraggingInfo) -> Bool {
-        if draggingInfo.draggingSource as AnyObject? === tableView ||
-            draggingInfo.draggingSource as AnyObject? === collectionView {
-            return true
-        }
-        return draggingInfo.draggingPasteboard.string(forType: .cloverPaneDragSourceIdentifier) == dragSourceIdentifier
     }
 
     private func clearDropTargetSelection() {
