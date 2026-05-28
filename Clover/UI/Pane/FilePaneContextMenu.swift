@@ -269,11 +269,13 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
         guard let appURL = sender.representedObject as? URL else { return }
         let urls = selectedFileURLs()
         guard !urls.isEmpty else { return }
+        let scopes = startSecurityScopes(for: urls)
         NSWorkspace.shared.open(
             urls,
             withApplicationAt: appURL,
             configuration: NSWorkspace.OpenConfiguration()
         ) { _, error in
+            self.stopSecurityScopes(scopes)
             if let error {
                 Task { @MainActor in
                     self.showError(error)
