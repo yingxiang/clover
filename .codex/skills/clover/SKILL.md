@@ -82,6 +82,8 @@ Use this skill for development inside the Clover repository.
 - Stashed file thumbnails use a white background at about 30% opacity, corner radius 5, no extra border.
 - Keep moving the shelf distinct from dragging files out: the move button appears at the top-left only when files exist; dragging/clicking the stack should operate on stashed files.
 - External file drops must be accepted reliably across the whole shelf surface, including the center over thumbnails or the plus icon. Deduplicate stashed files by canonical path.
+- Dragging stashed files out of the shelf must use the same Finder-like external drag contract as pane drags: write file URLs plus filename/path compatibility data for external inputs and file-accepting controls, and advertise copy-only semantics to non-local targets.
+- Stash shelf drag visuals must preserve the thumbnail snapshot aspect ratio. Do not stretch the stack snapshot into the full shelf hit area; center the drag frame using the snapshot's own size.
 - Clicking the stack opens a centered popover below the shelf; clicking again closes it. Popover items use the same thumbnail background/radius as shelf items.
 - Popover content should stay centered, keep its arrow anchored to the shelf center, and update its content size when files are removed so narrow lists can shrink without visible jitter.
 - Each popover file item has a small remove button. Right-click shelf menu includes clearing the stash and closing the window.

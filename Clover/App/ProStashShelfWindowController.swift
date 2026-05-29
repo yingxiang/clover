@@ -148,7 +148,12 @@ final class ProStashShelfWindowController: NSWindowController {
     private func stashedPasteboardItems() -> [any NSPasteboardWriting] {
         items.compactMap { item in
             guard let url = item.url else { return nil }
-            return url as NSURL
+            let pasteboardItem = NSPasteboardItem()
+            pasteboardItem.setString(url.absoluteString, forType: .fileURL)
+            pasteboardItem.setString(url.absoluteString, forType: .URL)
+            pasteboardItem.setString(url.path, forType: .string)
+            pasteboardItem.setPropertyList([url.path], forType: .cloverFilenames)
+            return pasteboardItem
         }
     }
 
@@ -559,9 +564,10 @@ private final class StashShelfDropCatcherView: NSView {
         guard !didBeginFileDrag, let items = dragItemsProvider?(), !items.isEmpty else { return }
         didBeginFileDrag = true
         let snapshot = dragImageProvider?() ?? NSImage(size: bounds.size)
+        let draggingFrame = centeredDraggingFrame(for: snapshot, in: bounds)
         let draggingItems = items.map { pasteboardWriter in
             let draggingItem = NSDraggingItem(pasteboardWriter: pasteboardWriter)
-            draggingItem.setDraggingFrame(bounds, contents: snapshot)
+            draggingItem.setDraggingFrame(draggingFrame, contents: snapshot)
             return draggingItem
         }
         beginDraggingSession(with: draggingItems, event: mouseDownEvent ?? event, source: self)
@@ -570,7 +576,7 @@ private final class StashShelfDropCatcherView: NSView {
 
 extension StashShelfDropCatcherView: NSDraggingSource {
     func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
-        [.copy, .move]
+        .copy
     }
 }
 
@@ -664,9 +670,10 @@ private final class StashThumbnailStackView: NSView {
         guard !didBeginFileDrag, let items = dragItemsProvider?(), !items.isEmpty else { return }
         didBeginFileDrag = true
         let snapshot = snapshotImage()
+        let draggingFrame = centeredDraggingFrame(for: snapshot, in: bounds)
         let draggingItems = items.map { pasteboardWriter in
             let draggingItem = NSDraggingItem(pasteboardWriter: pasteboardWriter)
-            draggingItem.setDraggingFrame(bounds, contents: snapshot)
+            draggingItem.setDraggingFrame(draggingFrame, contents: snapshot)
             return draggingItem
         }
         beginDraggingSession(with: draggingItems, event: mouseDownEvent ?? event, source: self)
@@ -719,7 +726,7 @@ private final class StashThumbnailStackView: NSView {
 
 extension StashThumbnailStackView: NSDraggingSource {
     func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
-        [.copy, .move]
+        .copy
     }
 }
 
@@ -1024,6 +1031,18 @@ private final class StashShelfListItemView: NSView {
     @objc private func removeClicked(_ sender: Any?) {
         removeHandler()
     }
+}
+
+private func centeredDraggingFrame(for image: NSImage, in bounds: NSRect) -> NSRect {
+    guard image.size.width > 0, image.size.height > 0 else {
+        return bounds
+    }
+    return NSRect(
+        x: bounds.midX - image.size.width / 2,
+        y: bounds.midY - image.size.height / 2,
+        width: image.size.width,
+        height: image.size.height
+    )
 }
 
 @MainActor
