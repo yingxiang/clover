@@ -4654,6 +4654,59 @@
         }
       }
     },
+    "pro_launching_purchase" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Zahlung wird geöffnet, bitte warten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Starting purchase, please wait..."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ouverture du paiement, veuillez patienter"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Apertura del pagamento, attendi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "購入を開始しています。しばらくお待ちください"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "결제를 시작하는 중입니다. 잠시만 기다려 주세요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "正在拉起支付，请稍等"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "正在喚起付款，請稍候"
+          }
+        }
+      }
+    },
     "pro_named_workspaces" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -4727,6 +4780,59 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Clover Pro is unlocked."
+          }
+        }
+      }
+    },
+    "pro_purchase_failed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Kauf fehlgeschlagen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Purchase failed."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "L’achat a échoué."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Acquisto non riuscito."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "購入に失敗しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "구매에 실패했습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "购买失败。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "購買失敗。"
           }
         }
       }

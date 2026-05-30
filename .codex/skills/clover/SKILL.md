@@ -9,7 +9,7 @@ Use this skill for development inside the Clover repository.
 
 ## Shared AI macOS Rules
 
-This project uses `/Users/xiangying/Documents/Projects/AI/.codex/skills/macos-app-common/SKILL.md` for shared macOS app rules and reusable AppKit/StoreKit components. Read the common skill after this project entry when touching general code constraints, monetization/paywall flow, glass/blur surfaces, color helpers, or reusable utilities.
+This project uses `/Users/xiangying/Documents/Projects/AI/Common/.codex/skills/macos-app-common/SKILL.md` for shared macOS app rules and reusable AppKit/StoreKit components. Read the common skill after this project entry when touching general code constraints, monetization/paywall flow, glass/blur surfaces, color helpers, or reusable utilities.
 
 ## First Steps
 

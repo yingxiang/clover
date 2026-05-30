@@ -27,6 +27,7 @@
 		68D9CB57B46AB4806466759531142DD9 /* Loggers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC26012A6E2DCDFA14200C39D4186267 /* Loggers.swift */; };
 		6B20E00E46915D6487F5CFF3ECA5AE89 /* ProWorkspacesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8883DD765703D17D10D3F24E81DDDFC2 /* ProWorkspacesWindowController.swift */; };
 		6EB09D995A797FF73611CBDB5FCFD121 /* ProProduct.swift in Sources */ = {isa = PBXBuildFile; fileRef = C399AAAD44CDE6C17ADFDB849F56840B /* ProProduct.swift */; };
+		6F74CA43F4204D0C9E7654CE /* MacPaywallPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F74CA42F4204D0C9E7654CE /* MacPaywallPresenter.swift */; };
 		70705C767F8CFBAA67D7E522F26B30AA /* UpgradeProWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B401C77045D63AEE1AD9AC7E810F9E1 /* UpgradeProWindowController.swift */; };
 		75FB404C363FF00BB6612739C3721FD4 /* SidebarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C87543A5E3839AC609A100CF4A02928 /* SidebarItem.swift */; };
 		7EAB3714F5D4D3FFA024B333A5969815 /* PaneState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EA2E3A2DB03E725FF4C374CAE8869B /* PaneState.swift */; };
@@ -114,6 +115,7 @@
 		61E1685EA43EF979D33797EA407433E4 /* DirectoryAccessStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryAccessStoreTests.swift; sourceTree = "<group>"; };
 		65805EE61C4A449A1AE899B87751C8A8 /* MonetizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonetizationTests.swift; sourceTree = "<group>"; };
 		6C26D40858E1FB3DAF6558DA7B15374B /* SidebarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarViewController.swift; sourceTree = "<group>"; };
+		6F74CA42F4204D0C9E7654CE /* MacPaywallPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacPaywallPresenter.swift; sourceTree = "<group>"; };
 		731A911A9436021A67F9CFD4FEDDDFEF /* CloverTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CloverTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7714B83ECFBB8A78FD7BF902226484FB /* WorkspaceStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceStoreTests.swift; sourceTree = "<group>"; };
 		80FB21DAC30ADA7DA73DA8478A9EB233 /* DirectoryAccessStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryAccessStore.swift; sourceTree = "<group>"; };
@@ -271,6 +273,7 @@
 				BFACA9DFBC871F5278FFBFAFB44F9EFD /* AppDelegate.swift */,
 				5DEFF10CDFF338362FD6AD57C74C2497 /* AppEnvironment.swift */,
 				2E77D8718A2B28512F740B6A315B659C /* L10n.swift */,
+				6F74CA42F4204D0C9E7654CE /* MacPaywallPresenter.swift */,
 				BE24ADF9B430F10A1F8C25E46980C4D5 /* main.swift */,
 				D4C51849AFD6E0D4268AF70A1D2BEA65 /* MainWindowController.swift */,
 				288050198C72F558309B6440341A8B41 /* ProBatchRenameWindowController.swift */,
@@ -529,6 +532,7 @@
 				FDDB8A7D6AEA12CEDE417241A85CAEF5 /* L10n.swift in Sources */,
 				2D93B169E6EA80D6D741EA936DCA8E57 /* LocalFileProvider.swift in Sources */,
 				68D9CB57B46AB4806466759531142DD9 /* Loggers.swift in Sources */,
+				6F74CA43F4204D0C9E7654CE /* MacPaywallPresenter.swift in Sources */,
 				13B1AE83407EF32F1EDDFD5AE95E47FA /* MainWindowController.swift in Sources */,
 				9A1037452CEC70B93AEB41FEEB8A8D25 /* PaneLayoutController.swift in Sources */,
 				DA68085117E7A289E794B00596C691EF /* PaneLayoutPresentation.swift in Sources */,
