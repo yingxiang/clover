@@ -25,7 +25,6 @@
 		582E6ECB224A267FB40F5E8A82BD60FA /* ProBatchRenameWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288050198C72F558309B6440341A8B41 /* ProBatchRenameWindowController.swift */; };
 		58ECD88995147D251A11D2D9672AEAF0 /* FileProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29BB0C3BB9CFAE82C1C6D9E7896DC434 /* FileProvider.swift */; };
 		68D9CB57B46AB4806466759531142DD9 /* Loggers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC26012A6E2DCDFA14200C39D4186267 /* Loggers.swift */; };
-		6A1D1651A692A1B7E877F2D6FC6A8945 /* SupportDeveloperWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D73D11857A2AD35B97A052A1C71EEDA /* SupportDeveloperWindowController.swift */; };
 		6B20E00E46915D6487F5CFF3ECA5AE89 /* ProWorkspacesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8883DD765703D17D10D3F24E81DDDFC2 /* ProWorkspacesWindowController.swift */; };
 		6EB09D995A797FF73611CBDB5FCFD121 /* ProProduct.swift in Sources */ = {isa = PBXBuildFile; fileRef = C399AAAD44CDE6C17ADFDB849F56840B /* ProProduct.swift */; };
 		70705C767F8CFBAA67D7E522F26B30AA /* UpgradeProWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B401C77045D63AEE1AD9AC7E810F9E1 /* UpgradeProWindowController.swift */; };
@@ -93,7 +92,6 @@
 		12C52E595F2E188272B6FA731672F6B8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		182C4A8CD037BD81B43F6432EC7FA5D6 /* FileGridDetailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileGridDetailProvider.swift; sourceTree = "<group>"; };
 		1D0D4AE91D19658592830143B13D0A1D /* FileOperationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOperationServiceTests.swift; sourceTree = "<group>"; };
-		1D73D11857A2AD35B97A052A1C71EEDA /* SupportDeveloperWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportDeveloperWindowController.swift; sourceTree = "<group>"; };
 		22C5B4267D233F3000441EEB4C8911B6 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		236747207772FEFB695BD2E22339D4CD /* FileGridItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileGridItem.swift; sourceTree = "<group>"; };
 		288050198C72F558309B6440341A8B41 /* ProBatchRenameWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProBatchRenameWindowController.swift; sourceTree = "<group>"; };
@@ -281,7 +279,6 @@
 				9A58F004D9090F9ECABCDEE99C8E2E4D /* ProStashShelfWindowController.swift */,
 				8883DD765703D17D10D3F24E81DDDFC2 /* ProWorkspacesWindowController.swift */,
 				E75594AF8983889F186AA0422731168C /* RootSplitViewController.swift */,
-				1D73D11857A2AD35B97A052A1C71EEDA /* SupportDeveloperWindowController.swift */,
 				9B401C77045D63AEE1AD9AC7E810F9E1 /* UpgradeProWindowController.swift */,
 			);
 			path = App;
@@ -475,6 +472,9 @@
 				en,
 			);
 			mainGroup = BBC291CF3795F428988A47179356D29D;
+			packageReferences = (
+				AC2F65802FCA9F5100AFCD77 /* XCRemoteSwiftPackageReference "SwiftSDK" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -547,7 +547,6 @@
 				DD93034E7EDBBB49FCC431D2CD94CAB9 /* StashItem.swift in Sources */,
 				C4A967A31D79D2603D29FFBC002301D6 /* StashShelfStore.swift in Sources */,
 				FB85612F61A988E2784B807FCD84DEB5 /* StatusBarView.swift in Sources */,
-				6A1D1651A692A1B7E877F2D6FC6A8945 /* SupportDeveloperWindowController.swift in Sources */,
 				F6A587ACD0F31634B16034C730AAE55E /* ToolbarPreferencesStore.swift in Sources */,
 				70705C767F8CFBAA67D7E522F26B30AA /* UpgradeProWindowController.swift in Sources */,
 				B4E21223B928071A3907A07D62330FB6 /* Workspace.swift in Sources */,
@@ -822,6 +821,17 @@
 			defaultConfigurationName = "";
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AC2F65802FCA9F5100AFCD77 /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.14.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 61CF81BA6AB0806E78D313444D64A538 /* Project object */;
 }

@@ -26,9 +26,9 @@ final class ProStashShelfWindowController: NSWindowController {
         _ = selectedURLsProvider
         _ = destinationURLProvider
 
-        let window = NSWindow(
+        let window = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 132, height: 132),
-            styleMask: [.borderless],
+            styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
@@ -36,6 +36,8 @@ final class ProStashShelfWindowController: NSWindowController {
         window.center()
         window.isReleasedWhenClosed = false
         window.level = .floating
+        window.isFloatingPanel = true
+        window.hidesOnDeactivate = false
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.isMovableByWindowBackground = false
         window.backgroundColor = .clear
@@ -148,12 +150,7 @@ final class ProStashShelfWindowController: NSWindowController {
     private func stashedPasteboardItems() -> [any NSPasteboardWriting] {
         items.compactMap { item in
             guard let url = item.url else { return nil }
-            let pasteboardItem = NSPasteboardItem()
-            pasteboardItem.setString(url.absoluteString, forType: .fileURL)
-            pasteboardItem.setString(url.absoluteString, forType: .URL)
-            pasteboardItem.setString(url.path, forType: .string)
-            pasteboardItem.setPropertyList([url.path], forType: .cloverFilenames)
-            return pasteboardItem
+            return CloverPasteboardFile(url: url, isDirectory: Self.isDirectory(url)).pasteboardItem()
         }
     }
 
@@ -173,6 +170,10 @@ final class ProStashShelfWindowController: NSWindowController {
 
     private static func canonicalPath(for url: URL) -> String {
         url.standardizedFileURL.path
+    }
+
+    private static func isDirectory(_ url: URL) -> Bool {
+        (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? url.hasDirectoryPath
     }
 }
 

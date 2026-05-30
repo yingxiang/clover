@@ -795,13 +795,11 @@ final class FilePaneViewController: NSViewController {
     }
 
     func writeDraggedItems(at indexes: [Int], to pasteboard: NSPasteboard) -> Bool {
-        let urls = indexes.compactMap { viewModel.item(at: $0)?.url }
-        guard !urls.isEmpty else { return false }
-        pasteboard.clearContents()
-        let didWrite = pasteboard.writeObjects(urls.map { $0 as NSURL })
-        pasteboard.setPropertyList(urls.map(\.path), forType: .cloverFilenames)
-        pasteboard.setString(dragSourceIdentifier, forType: .cloverPaneDragSourceIdentifier)
-        return didWrite
+        let files = indexes.compactMap { index -> CloverPasteboardFile? in
+            guard let item = viewModel.item(at: index) else { return nil }
+            return CloverPasteboardFile(url: item.url, isDirectory: item.isDirectory)
+        }
+        return pasteboard.writeCloverFileDragItems(files, sourceIdentifier: dragSourceIdentifier)
     }
 
     private func handlePaneKeyDown(_ event: NSEvent) -> Bool {

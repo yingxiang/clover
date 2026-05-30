@@ -7,6 +7,10 @@ description: Use when working in the Clover macOS file manager project, especial
 
 Use this skill for development inside the Clover repository.
 
+## Shared AI macOS Rules
+
+This project uses `/Users/xiangying/Documents/Projects/AI/.codex/skills/macos-app-common/SKILL.md` for shared macOS app rules and reusable AppKit/StoreKit components. Read the common skill after this project entry when touching general code constraints, monetization/paywall flow, glass/blur surfaces, color helpers, or reusable utilities.
+
 ## First Steps
 
 1. Read `mac_file_manager_ai_execution_plan.md` for product scope and phase requirements.
@@ -40,7 +44,7 @@ Use this skill for development inside the Clover repository.
 - Normalize permission errors at the provider boundary with the operation's relevant parent/destination URL so the UI can decide whether to prompt. The UI must not infer missing permission without consulting `DirectoryAccessStore` for an existing bookmark.
 - Treat list/grid filtering as an in-memory view-model operation. Type-filter changes should use the loaded `allItems` and update visible rows/items without triggering a full pane reload or directory listing.
 - Keep existing pane layouts free: single, two vertical, two horizontal, and four-grid. Advanced three-pane layouts such as left-one-right-two, left-two-right-one, top-one-bottom-two, and top-two-bottom-one are Pro-only and should trigger the upgrade window when selected without an active Pro entitlement.
-- Keep Release monetization UI purchase-focused: show Upgrade/Purchase entry points before purchase, hide Upgrade to Clover Pro once the lifetime product is active, and keep Restore Purchases / Manage Subscription menu and dialog buttons behind Debug-only controls unless the user explicitly asks to ship them.
+- Keep Release monetization UI purchase-focused: show Upgrade/Purchase entry points before purchase, hide Upgrade to Clover Pro once the lifetime product is active, and keep Restore Purchases / Manage Subscription menu and dialog buttons behind Debug-only controls unless the user explicitly asks to ship them. Prefer the shared OmniMAC-derived paywall interaction from `macos-app-common/references/purchases.md` for future purchase UI changes.
 - Until the next Pro iteration, expose only the stash shelf and advanced pane layouts in Pro menus, upgrade-page feature lists, and visible paid feature entry points. Keep other Pro v1 feature code available for later development, but do not advertise those entries.
 - For the Pro stash shelf glass background, use `NSGlassEffectView` on macOS 26+ and keep an `NSVisualEffectView` fallback for earlier macOS versions.
 - Avoid synchronous app bundle icon/display-name lookup on the menu-building path. For Open With menus, show a generic icon immediately, then load and cache app icons asynchronously.

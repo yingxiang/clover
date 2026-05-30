@@ -359,9 +359,40 @@ extension NSPasteboard.PasteboardType {
     static let cloverFilenames = NSPasteboard.PasteboardType("NSFilenamesPboardType")
 }
 
+struct CloverPasteboardFile {
+    let url: URL
+    let isDirectory: Bool
+
+    var dragURL: URL {
+        URL(fileURLWithPath: url.path, isDirectory: isDirectory).standardizedFileURL
+    }
+
+    func pasteboardItem() -> NSPasteboardItem {
+        let item = NSPasteboardItem()
+        let dragURL = dragURL
+        item.setString(dragURL.absoluteString, forType: .fileURL)
+        item.setString(dragURL.absoluteString, forType: .URL)
+        item.setPropertyList([dragURL.path], forType: .cloverFilenames)
+        return item
+    }
+}
+
 extension NSPasteboard {
     var canReadFileURLs: Bool {
         fileURLs?.isEmpty == false
+    }
+
+    @discardableResult
+    func writeCloverFileDragItems(_ files: [CloverPasteboardFile], sourceIdentifier: String? = nil) -> Bool {
+        let urls = files.map(\.dragURL)
+        guard !urls.isEmpty else { return false }
+        clearContents()
+        let didWrite = writeObjects(urls.map { $0 as NSURL })
+        setPropertyList(urls.map(\.path), forType: .cloverFilenames)
+        if let sourceIdentifier {
+            setString(sourceIdentifier, forType: .cloverPaneDragSourceIdentifier)
+        }
+        return didWrite
     }
 
     var fileURLs: [URL]? {
