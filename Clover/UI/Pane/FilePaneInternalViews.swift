@@ -372,6 +372,7 @@ struct CloverPasteboardFile {
         let dragURL = dragURL
         item.setString(dragURL.absoluteString, forType: .fileURL)
         item.setString(dragURL.absoluteString, forType: .URL)
+        item.setString(dragURL.path, forType: .string)
         item.setPropertyList([dragURL.path], forType: .cloverFilenames)
         return item
     }
@@ -388,7 +389,11 @@ extension NSPasteboard {
         guard !urls.isEmpty else { return false }
         clearContents()
         let didWrite = writeObjects(urls.map { $0 as NSURL })
-        setPropertyList(urls.map(\.path), forType: .cloverFilenames)
+        let paths = urls.map(\.path)
+        setPropertyList(paths, forType: .cloverFilenames)
+        setPropertyList(urls.map(\.absoluteString), forType: .fileURL)
+        setPropertyList(urls.map(\.absoluteString), forType: .URL)
+        setString(paths.joined(separator: "\n"), forType: .string)
         if let sourceIdentifier {
             setString(sourceIdentifier, forType: .cloverPaneDragSourceIdentifier)
         }
