@@ -81,6 +81,7 @@ This project uses `/Users/xiangying/Documents/Projects/AI/Common/.codex/skills/m
 ## Pro Stash Shelf
 
 - Current free features must stay free. Gate only new Pro v1 features such as the stash shelf.
+- Free users may open the stash shelf and get 3 successful stash-drop trials. Count one trial per successful drag/drop into the shelf, not per file. After 3 trials, further stash drops should reject and present the Pro upgrade flow; Pro users are unlimited.
 - Keep the stash shelf lightweight and Finder-like: a small floating, borderless AppKit window, draggable but not resizable.
 - Use a glass/liquid-glass background. On macOS 26+, use `NSGlassEffectView`; on earlier macOS, fall back to `NSVisualEffectView`.
 - The shelf glass should have a small radius, a subtle `NSColor.separatorColor` border, and a larger non-clipped drag-over highlight using border/fill rather than a hard clipped shadow.

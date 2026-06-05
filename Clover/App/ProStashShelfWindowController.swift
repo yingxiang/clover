@@ -6,9 +6,14 @@ import UniformTypeIdentifiers
 final class ProStashShelfWindowController: NSWindowController {
     private static let inactiveAlpha: CGFloat = 0.88
     private static let activeAlpha: CGFloat = 1.0
+    private static let freeDragLimit = 3
+    private static let freeDragCountKey = "Clover.ProStashShelf.freeDragCount"
 
     private let stashShelfStore: StashShelfStore
     private let bookmarkStore: BookmarkStore
+    private let entitlementService: EntitlementService
+    private let upgradeHandler: () -> Void
+    private let defaults: UserDefaults
     private let surfaceView = StashShelfSurfaceView()
     private var items: [StashItem] = []
     private var listPopover: NSPopover?
@@ -17,12 +22,18 @@ final class ProStashShelfWindowController: NSWindowController {
     init(
         stashShelfStore: StashShelfStore,
         bookmarkStore: BookmarkStore,
+        entitlementService: EntitlementService,
         fileOperationService: FileOperationService,
         selectedURLsProvider: @escaping () -> [URL],
-        destinationURLProvider: @escaping () -> URL?
+        destinationURLProvider: @escaping () -> URL?,
+        upgradeHandler: @escaping () -> Void,
+        defaults: UserDefaults = .standard
     ) {
         self.stashShelfStore = stashShelfStore
         self.bookmarkStore = bookmarkStore
+        self.entitlementService = entitlementService
+        self.upgradeHandler = upgradeHandler
+        self.defaults = defaults
         _ = fileOperationService
         _ = selectedURLsProvider
         _ = destinationURLProvider
@@ -107,12 +118,37 @@ final class ProStashShelfWindowController: NSWindowController {
             result.append(url)
         }
         if !uniqueURLs.isEmpty {
-            _ = try? stashShelfStore.addItems(uniqueURLs, bookmarkStore: bookmarkStore)
+            guard canUseStashDrag() else {
+                surfaceView.setDropHighlight(false)
+                upgradeHandler()
+                return false
+            }
+
+            do {
+                _ = try stashShelfStore.addItems(uniqueURLs, bookmarkStore: bookmarkStore)
+                recordStashDragUseIfNeeded()
+            } catch {
+                surfaceView.setDropHighlight(false)
+                return false
+            }
         }
 //        window?.alphaValue = Self.inactiveAlpha
         surfaceView.setDropHighlight(false)
         refresh()
         return true
+    }
+
+    private func canUseStashDrag() -> Bool {
+        entitlementService.isProUnlocked || freeStashDragCount < Self.freeDragLimit
+    }
+
+    private func recordStashDragUseIfNeeded() {
+        guard !entitlementService.isProUnlocked else { return }
+        defaults.set(freeStashDragCount + 1, forKey: Self.freeDragCountKey)
+    }
+
+    private var freeStashDragCount: Int {
+        defaults.integer(forKey: Self.freeDragCountKey)
     }
 
     private func toggleListPopover(anchor: NSView) {

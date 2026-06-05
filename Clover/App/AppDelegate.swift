@@ -290,13 +290,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showProStashShelfWindowAfterEntitlementRefresh(_ sender: Any?) {
-        guard ensureProAccess() else { return }
         let controller = proStashShelfWindowController ?? ProStashShelfWindowController(
             stashShelfStore: try! StashShelfStore(),
             bookmarkStore: BookmarkStore(),
+            entitlementService: environment.entitlementService,
             fileOperationService: environment.fileOperationService,
             selectedURLsProvider: { [weak self] in self?.keyWindowController?.activePaneSelectedURLs() ?? [] },
-            destinationURLProvider: { [weak self] in self?.keyWindowController?.activePaneURL }
+            destinationURLProvider: { [weak self] in self?.keyWindowController?.activePaneURL },
+            upgradeHandler: { [weak self] in self?.showUpgradeProWindow(nil) }
         )
         proStashShelfWindowController = controller
         present(controller)
