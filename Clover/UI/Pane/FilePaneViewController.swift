@@ -3,6 +3,11 @@ import OSLog
 import Quartz
 import UniformTypeIdentifiers
 
+struct FileDetailCacheKey: Hashable {
+    let url: URL
+    let displayStyle: FileGridDetailProvider.DisplayStyle
+}
+
 final class FilePaneViewController: NSViewController {
     let viewModel: FilePaneViewModel
     let directoryAccessStore: DirectoryAccessStore
@@ -32,8 +37,8 @@ final class FilePaneViewController: NSViewController {
     let dragSourceIdentifier = UUID().uuidString
     var previewItems: [URL] = []
     private(set) var currentPreviewIndex: Int = 0
-    var detailCache: [URL: String] = [:]
-    private var pendingDetailCallbacks: [URL: [(String) -> Void]] = [:]
+    var detailCache: [FileDetailCacheKey: String] = [:]
+    private var pendingDetailCallbacks: [FileDetailCacheKey: [(String) -> Void]] = [:]
     private var previewKeyMonitor: EventMonitorToken?
     private var previewIndexObservation: NSKeyValueObservation?
     private var previewSecurityScopes: [(url: URL, didStartAccessing: Bool)] = []
@@ -366,7 +371,7 @@ final class FilePaneViewController: NSViewController {
     private func configureTableView() {
         let columns: [(String, String, CGFloat)] = [
             ("name", L10n.name, 280),
-            ("size", L10n.size, 90),
+            ("size", L10n.size, 130),
             ("type", "\(currentTypeColumnTitle()) ▾", 130),
             ("modified", L10n.modified, 180)
         ]
@@ -955,7 +960,7 @@ final class FilePaneViewController: NSViewController {
         }
     }
 
-    private func beginEditingSelectedItemName() {
+    func beginEditingSelectedItemName() {
         guard let index = selectedItemIndexes().first else { return }
         Logger.ui.debug("beginEditingSelectedItemName index=\(index) mode=\(self.viewModel.viewMode.rawValue, privacy: .public)")
         switch viewModel.viewMode {
@@ -1415,13 +1420,13 @@ final class FilePaneViewController: NSViewController {
     }
 
     func detailValue(for item: FileItem, row: Int) -> String {
-        let placeholder = detailPlaceholderValue(for: item)
+        let placeholder = detailPlaceholderValue(for: item, displayStyle: .list)
         loadDetailIfNeeded(for: item, tableRow: row, collectionIndex: nil, completion: nil)
         return placeholder
     }
 
-    func detailPlaceholderValue(for item: FileItem) -> String {
-        if let cachedDetail = detailCache[item.url] {
+    func detailPlaceholderValue(for item: FileItem, displayStyle: FileGridDetailProvider.DisplayStyle) -> String {
+        if let cachedDetail = detailCache[FileDetailCacheKey(url: item.url, displayStyle: displayStyle)] {
             return cachedDetail
         }
         return item.isBrowsableDirectory ? "--" : (item.size.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) } ?? "--")
@@ -1434,27 +1439,29 @@ final class FilePaneViewController: NSViewController {
         completion: ((String) -> Void)?
     ) {
         let url = item.url
-        if let cachedDetail = detailCache[url] {
+        let displayStyle: FileGridDetailProvider.DisplayStyle = collectionIndex == nil ? .list : .grid
+        let cacheKey = FileDetailCacheKey(url: url, displayStyle: displayStyle)
+        if let cachedDetail = detailCache[cacheKey] {
             completion?(cachedDetail)
             return
         }
 
-        if var callbacks = pendingDetailCallbacks[url] {
+        if var callbacks = pendingDetailCallbacks[cacheKey] {
             if let completion {
                 callbacks.append(completion)
             }
-            pendingDetailCallbacks[url] = callbacks
+            pendingDetailCallbacks[cacheKey] = callbacks
             return
         }
 
-        pendingDetailCallbacks[url] = completion.map { [$0] } ?? []
+        pendingDetailCallbacks[cacheKey] = completion.map { [$0] } ?? []
 
         Task(priority: .userInitiated) { [weak self] in
-            let detail = await FileGridDetailProvider.detail(for: item, directoryAccessStore: self?.directoryAccessStore)
+            let detail = await FileGridDetailProvider.detail(for: item, displayStyle: displayStyle, directoryAccessStore: self?.directoryAccessStore)
             await MainActor.run {
                 guard let self else { return }
-                self.detailCache[url] = detail
-                let callbacks = self.pendingDetailCallbacks.removeValue(forKey: url) ?? []
+                self.detailCache[cacheKey] = detail
+                let callbacks = self.pendingDetailCallbacks.removeValue(forKey: cacheKey) ?? []
                 if let tableRow, self.viewModel.item(at: tableRow)?.url == item.url {
                     self.tableView.reloadData(forRowIndexes: IndexSet(integer: tableRow), columnIndexes: IndexSet(integer: 1))
                 }

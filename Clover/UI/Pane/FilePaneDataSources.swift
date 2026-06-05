@@ -16,6 +16,11 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
             cell.textField?.tag = row
             cell.textField?.delegate = self
             cell.textField?.stringValue = item.name
+            cell.nameTextField.clickedWhileSelectedHandler = { [weak self] in
+                guard self?.tableView.selectedRowIndexes.contains(row) == true else { return false }
+                self?.beginEditingSelectedItemName()
+                return true
+            }
             cell.imageView?.image = FileIconProvider.icon(for: item)
             cell.imageView?.toolTip = item.url.absoluteString
             cell.setLabelNumber(item.labelNumber)
@@ -140,7 +145,7 @@ extension FilePaneViewController: NSCollectionViewDataSource, @preconcurrency NS
         if let gridItem = item as? FileGridItem, let fileItem = viewModel.item(at: indexPath.item) {
             gridItem.configure(
                 with: fileItem,
-                detail: detailPlaceholderValue(for: fileItem),
+                detail: detailPlaceholderValue(for: fileItem, displayStyle: .grid),
                 directoryAccessStore: directoryAccessStore,
                 loadDetailIfNeeded: { [weak self, weak collectionView, weak gridItem] completion in
                     self?.loadDetailIfNeeded(for: fileItem, tableRow: nil, collectionIndex: indexPath.item) { detail in

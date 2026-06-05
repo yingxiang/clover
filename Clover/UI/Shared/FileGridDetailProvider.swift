@@ -3,15 +3,25 @@ import ImageIO
 import UniformTypeIdentifiers
 
 enum FileGridDetailProvider {
-    static func detail(for item: FileItem, directoryAccessStore: DirectoryAccessStore? = nil) async -> String {
+    enum DisplayStyle: Hashable {
+        case list
+        case grid
+
+        var separator: String {
+            switch self {
+            case .list:
+                return " "
+            case .grid:
+                return "\n"
+            }
+        }
+    }
+
+    static func detail(for item: FileItem, displayStyle: DisplayStyle, directoryAccessStore: DirectoryAccessStore? = nil) async -> String {
         let securityScopeURL = directoryAccessStore?.securityScopeURL(for: item.url)
         if item.isBrowsableDirectory {
             let count = await directoryItemCount(at: item.url, securityScopeURL: securityScopeURL)
             return L10n.itemCount(count)
-        }
-
-        if let dimensions = imageDimensions(for: item, securityScopeURL: securityScopeURL) {
-            return "\(dimensions.width)x\(dimensions.height)"
         }
 
         let size: Int64?
@@ -23,7 +33,16 @@ enum FileGridDetailProvider {
             size = nil
         }
         guard let size else { return "" }
-        return ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+        let formattedSize = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+
+        if let dimensions = imageDimensions(for: item, securityScopeURL: securityScopeURL) {
+            return [
+                formattedSize,
+                "\(dimensions.width)×\(dimensions.height)"
+            ].joined(separator: displayStyle.separator)
+        }
+
+        return formattedSize
     }
 
     private static func directoryItemCount(at url: URL, securityScopeURL: URL?) async -> Int {

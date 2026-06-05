@@ -33,7 +33,7 @@ final class FileTableHeaderView: NSTableHeaderView {
 final class FileListNameCellView: NSTableCellView {
     let disclosureButton = NSButton()
     let fileIconView = NSImageView()
-    let nameTextField = NSTextField(string: "")
+    let nameTextField = FileListNameTextField(string: "")
     private let tagDotView = FileTagDotView()
     private var disclosureLeadingConstraint: NSLayoutConstraint?
     private var nameTrailingToTagConstraint: NSLayoutConstraint?
@@ -118,6 +118,18 @@ final class FileListNameCellView: NSTableCellView {
 
     var previewTransitionImage: NSImage? {
         fileIconView.image
+    }
+}
+
+final class FileListNameTextField: NSTextField {
+    var clickedWhileSelectedHandler: (() -> Bool)?
+
+    override func mouseDown(with event: NSEvent) {
+        if currentEditor() == nil,
+           clickedWhileSelectedHandler?() == true {
+            return
+        }
+        super.mouseDown(with: event)
     }
 }
 

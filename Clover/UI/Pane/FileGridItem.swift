@@ -57,6 +57,7 @@ final class FileGridItem: NSCollectionViewItem {
 
         detailField.alignment = .center
         detailField.lineBreakMode = .byTruncatingTail
+        detailField.maximumNumberOfLines = 2
         detailField.textColor = .systemBlue
         detailField.font = .systemFont(ofSize: 10)
         detailField.translatesAutoresizingMaskIntoConstraints = false
