@@ -214,7 +214,6 @@ enum AppSymbol: String {
     case archive = "archivebox"
     case selectAll = "checklist"
     case screenshot = "camera.viewfinder"
-    case support = "heart"
     case folderPlus = "folder.badge.plus"
     case open = "arrow.up.right.square"
     case textFile = "doc.plaintext"

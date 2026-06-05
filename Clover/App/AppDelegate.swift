@@ -5,7 +5,6 @@ import OSLog
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var windowControllers: [MainWindowController] = []
-    private var supportDeveloperWindowController: SupportDeveloperWindowController?
     private var upgradeProWindowController: UpgradeProWindowController?
     private var proWorkspacesWindowController: ProWorkspacesWindowController?
     private var proStashShelfWindowController: ProStashShelfWindowController?
@@ -31,10 +30,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if !flag {
-            showMainWindow(reuseExisting: true)
-        }
-        return true
+        showMainWindow(reuseExisting: true)
+        return false
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
@@ -81,10 +78,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         manageSubscriptionItem.image = AppIconProvider.menuImage(.appStore, accessibilityDescription: L10n.manageSubscription)
         appMenu.addItem(manageSubscriptionItem)
 #endif
-        let supportDeveloperItem = NSMenuItem(title: L10n.supportDeveloper, action: #selector(showSupportDeveloperWindow(_:)), keyEquivalent: "")
-        supportDeveloperItem.target = self
-        supportDeveloperItem.image = AppIconProvider.menuImage(.support, accessibilityDescription: L10n.supportDeveloper)
-        appMenu.addItem(supportDeveloperItem)
         appMenu.addItem(.separator())
         let quitItem = NSMenuItem(title: L10n.quitClover, action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appMenu.addItem(quitItem)
@@ -243,15 +236,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func openOmniCaptureInAppStore(_ sender: Any?) {
         NSWorkspace.shared.open(omniCaptureAppStoreURL)
-    }
-
-    @objc private func showSupportDeveloperWindow(_ sender: Any?) {
-        let controller = supportDeveloperWindowController ?? SupportDeveloperWindowController()
-        supportDeveloperWindowController = controller
-        controller.showWindow(self)
-        guard let window = controller.window else { return }
-        window.makeKeyAndOrderFront(self)
-        NSApp.activate(ignoringOtherApps: true)
     }
 
     @objc private func showUpgradeProWindow(_ sender: Any?) {

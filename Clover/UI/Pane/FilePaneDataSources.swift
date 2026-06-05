@@ -102,7 +102,8 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
     }
 
     func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> NSPasteboardWriting? {
-        viewModel.item(at: row)?.url as NSURL?
+        guard let item = viewModel.item(at: row) else { return nil }
+        return CloverPasteboardFile(url: item.url, isDirectory: item.isDirectory).pasteboardItem()
     }
 
     func tableView(_ tableView: NSTableView, writeRowsWith rowIndexes: IndexSet, to pasteboard: NSPasteboard) -> Bool {
@@ -174,7 +175,8 @@ extension FilePaneViewController: NSCollectionViewDataSource, @preconcurrency NS
     }
 
     func collectionView(_ collectionView: NSCollectionView, pasteboardWriterForItemAt indexPath: IndexPath) -> NSPasteboardWriting? {
-        viewModel.item(at: indexPath.item)?.url as NSURL?
+        guard let item = viewModel.item(at: indexPath.item) else { return nil }
+        return CloverPasteboardFile(url: item.url, isDirectory: item.isDirectory).pasteboardItem()
     }
 
     func collectionView(_ collectionView: NSCollectionView, writeItemsAt indexPaths: Set<IndexPath>, to pasteboard: NSPasteboard) -> Bool {

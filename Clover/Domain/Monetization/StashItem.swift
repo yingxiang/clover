@@ -14,8 +14,9 @@ struct StashItem: Codable, Identifiable, Hashable {
                 return resolvedURL
             }
         }
-        let url = URL(fileURLWithPath: path, isDirectory: false)
-        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) else { return nil }
+        return URL(fileURLWithPath: path, isDirectory: isDirectory.boolValue)
     }
 
     init(id: UUID = UUID(), url: URL, bookmarkStore: BookmarkStore? = nil, createdAt: Date = Date()) {

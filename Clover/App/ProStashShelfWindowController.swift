@@ -26,9 +26,9 @@ final class ProStashShelfWindowController: NSWindowController {
         _ = selectedURLsProvider
         _ = destinationURLProvider
 
-        let window = NSWindow(
+        let window = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 132, height: 132),
-            styleMask: [.borderless],
+            styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
@@ -36,6 +36,8 @@ final class ProStashShelfWindowController: NSWindowController {
         window.center()
         window.isReleasedWhenClosed = false
         window.level = .floating
+        window.isFloatingPanel = true
+        window.hidesOnDeactivate = false
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.isMovableByWindowBackground = false
         window.backgroundColor = .clear
@@ -148,7 +150,7 @@ final class ProStashShelfWindowController: NSWindowController {
     private func stashedPasteboardItems() -> [any NSPasteboardWriting] {
         items.compactMap { item in
             guard let url = item.url else { return nil }
-            return url as NSURL
+            return CloverPasteboardFile(url: url, isDirectory: Self.isDirectory(url)).pasteboardItem()
         }
     }
 
@@ -168,6 +170,10 @@ final class ProStashShelfWindowController: NSWindowController {
 
     private static func canonicalPath(for url: URL) -> String {
         url.standardizedFileURL.path
+    }
+
+    private static func isDirectory(_ url: URL) -> Bool {
+        (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? url.hasDirectoryPath
     }
 }
 
@@ -559,9 +565,10 @@ private final class StashShelfDropCatcherView: NSView {
         guard !didBeginFileDrag, let items = dragItemsProvider?(), !items.isEmpty else { return }
         didBeginFileDrag = true
         let snapshot = dragImageProvider?() ?? NSImage(size: bounds.size)
+        let draggingFrame = centeredDraggingFrame(for: snapshot, in: bounds)
         let draggingItems = items.map { pasteboardWriter in
             let draggingItem = NSDraggingItem(pasteboardWriter: pasteboardWriter)
-            draggingItem.setDraggingFrame(bounds, contents: snapshot)
+            draggingItem.setDraggingFrame(draggingFrame, contents: snapshot)
             return draggingItem
         }
         beginDraggingSession(with: draggingItems, event: mouseDownEvent ?? event, source: self)
@@ -570,7 +577,7 @@ private final class StashShelfDropCatcherView: NSView {
 
 extension StashShelfDropCatcherView: NSDraggingSource {
     func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
-        [.copy, .move]
+        .copy
     }
 }
 
@@ -664,9 +671,10 @@ private final class StashThumbnailStackView: NSView {
         guard !didBeginFileDrag, let items = dragItemsProvider?(), !items.isEmpty else { return }
         didBeginFileDrag = true
         let snapshot = snapshotImage()
+        let draggingFrame = centeredDraggingFrame(for: snapshot, in: bounds)
         let draggingItems = items.map { pasteboardWriter in
             let draggingItem = NSDraggingItem(pasteboardWriter: pasteboardWriter)
-            draggingItem.setDraggingFrame(bounds, contents: snapshot)
+            draggingItem.setDraggingFrame(draggingFrame, contents: snapshot)
             return draggingItem
         }
         beginDraggingSession(with: draggingItems, event: mouseDownEvent ?? event, source: self)
@@ -719,7 +727,7 @@ private final class StashThumbnailStackView: NSView {
 
 extension StashThumbnailStackView: NSDraggingSource {
     func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
-        [.copy, .move]
+        .copy
     }
 }
 
@@ -1024,6 +1032,18 @@ private final class StashShelfListItemView: NSView {
     @objc private func removeClicked(_ sender: Any?) {
         removeHandler()
     }
+}
+
+private func centeredDraggingFrame(for image: NSImage, in bounds: NSRect) -> NSRect {
+    guard image.size.width > 0, image.size.height > 0 else {
+        return bounds
+    }
+    return NSRect(
+        x: bounds.midX - image.size.width / 2,
+        y: bounds.midY - image.size.height / 2,
+        width: image.size.width,
+        height: image.size.height
+    )
 }
 
 @MainActor
