@@ -150,8 +150,10 @@ Rules:
 
 - Drag/drop must work between panes/windows in both list and grid modes.
 - Drag sources should explicitly write selected file URLs to the pasteboard; do not rely only on implicit `pasteboardWriterFor...` behavior when cross-window movement is required.
-- Dragging files out to other apps must behave like Finder: local Clover pane drops may advertise `.move`, but non-local/external drags should advertise `.copy` and include file URL plus filename/path pasteboard compatibility data so text fields, upload controls, and file-accepting views can consume the drag.
-- Pro stash shelf drags follow the same external contract: the shelf should write file URL plus filename/path compatibility data and use copy-only semantics when the drag leaves Clover.
+- Dragging files out to other apps must behave like Finder: local Clover pane drops may advertise `.move`, but non-local/external drags should advertise `.copy` and include file-only URL/filename pasteboard data so upload controls and file-accepting views consume the drag as a file.
+- Do not add `.string` or generic `.URL` to external file drag pasteboards as a fallback for text fields. `.string` causes Codex/browser inputs to insert the path as text; `.URL` can be treated as link navigation and produce `about:blank#blocked`.
+- Because Clover is sandboxed, external drags that expose `public.file-url` must start security-scoped access for the dragged files or their bookmarked ancestor before writing the pasteboard item. Hold that access until `NSDraggingSource`/table/collection drag-session ended callbacks, then stop it. Missing this produces logs like `Sandbox extension creation failed`, `Sandbox extension data required immediately for flavor public.file-url`, or `No sandbox extension entry in cache`.
+- Pro stash shelf drags follow the same external contract: the shelf should write file URL plus filename/path compatibility data, use copy-only semantics when the drag leaves Clover, and hold resolved stashed-file bookmark scopes until the drag session ends.
 - Drop targets should accept file URLs on table views, collection views, and the grid scroll view/background so dropping on empty grid space moves into the current folder.
 - Validate drops as `.move` only when file URLs can be read from the pasteboard.
 - Resolve the destination through pane state: dropping onto a directory targets that directory; dropping onto blank space targets the current folder.

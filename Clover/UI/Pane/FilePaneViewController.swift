@@ -42,6 +42,7 @@ final class FilePaneViewController: NSViewController {
     private var previewKeyMonitor: EventMonitorToken?
     private var previewIndexObservation: NSKeyValueObservation?
     private var previewSecurityScopes: [(url: URL, didStartAccessing: Bool)] = []
+    var activeDragSecurityScopes: [(url: URL, didStartAccessing: Bool)] = []
     var isUpdatingSortIndicators = false
     private var searchTask: Task<Void, Never>?
     var pendingSelectionURLs: [URL] = []
@@ -804,7 +805,26 @@ final class FilePaneViewController: NSViewController {
             guard let item = viewModel.item(at: index) else { return nil }
             return CloverPasteboardFile(url: item.url, isDirectory: item.isDirectory)
         }
+        startDragSecurityScopes(for: files.map(\.url))
         return pasteboard.writeCloverFileDragItems(files, sourceIdentifier: dragSourceIdentifier)
+    }
+
+    func startDragSecurityScopes(for urls: [URL]) {
+        stopDragSecurityScopes()
+        var scopedPaths: Set<String> = []
+        activeDragSecurityScopes = urls.compactMap { url in
+            let securityScopeURL = directoryAccessStore.securityScopeURL(for: url) ?? url.standardizedFileURL
+            let path = securityScopeURL.path
+            guard scopedPaths.insert(path).inserted else { return nil }
+            return (url: securityScopeURL, didStartAccessing: securityScopeURL.startAccessingSecurityScopedResource())
+        }
+    }
+
+    func stopDragSecurityScopes() {
+        for scope in activeDragSecurityScopes where scope.didStartAccessing {
+            scope.url.stopAccessingSecurityScopedResource()
+        }
+        activeDragSecurityScopes.removeAll()
     }
 
     private func handlePaneKeyDown(_ event: NSEvent) -> Bool {

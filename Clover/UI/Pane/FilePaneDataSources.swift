@@ -104,11 +104,16 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
 
     func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> NSPasteboardWriting? {
         guard let item = viewModel.item(at: row) else { return nil }
+        startDragSecurityScopes(for: [item.url])
         return CloverPasteboardFile(url: item.url, isDirectory: item.isDirectory).pasteboardItem()
     }
 
     func tableView(_ tableView: NSTableView, writeRowsWith rowIndexes: IndexSet, to pasteboard: NSPasteboard) -> Bool {
         return writeDraggedItems(at: Array(rowIndexes), to: pasteboard)
+    }
+
+    func tableView(_ tableView: NSTableView, draggingSession session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
+        stopDragSecurityScopes()
     }
 
     func tableView(_ tableView: NSTableView, validateDrop info: NSDraggingInfo, proposedRow row: Int, proposedDropOperation dropOperation: NSTableView.DropOperation) -> NSDragOperation {
@@ -177,11 +182,16 @@ extension FilePaneViewController: NSCollectionViewDataSource, @preconcurrency NS
 
     func collectionView(_ collectionView: NSCollectionView, pasteboardWriterForItemAt indexPath: IndexPath) -> NSPasteboardWriting? {
         guard let item = viewModel.item(at: indexPath.item) else { return nil }
+        startDragSecurityScopes(for: [item.url])
         return CloverPasteboardFile(url: item.url, isDirectory: item.isDirectory).pasteboardItem()
     }
 
     func collectionView(_ collectionView: NSCollectionView, writeItemsAt indexPaths: Set<IndexPath>, to pasteboard: NSPasteboard) -> Bool {
         writeDraggedItems(at: indexPaths.map(\.item), to: pasteboard)
+    }
+
+    func collectionView(_ collectionView: NSCollectionView, draggingSession session: NSDraggingSession, endedAt screenPoint: NSPoint, dragOperation: NSDragOperation) {
+        stopDragSecurityScopes()
     }
 
     func collectionView(_ collectionView: NSCollectionView, validateDrop draggingInfo: NSDraggingInfo, proposedIndexPath proposedDropIndexPath: AutoreleasingUnsafeMutablePointer<NSIndexPath>, dropOperation proposedDropOperation: UnsafeMutablePointer<NSCollectionView.DropOperation>) -> NSDragOperation {

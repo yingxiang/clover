@@ -12,6 +12,7 @@ final class ProStashShelfWindowController: NSWindowController {
     private let surfaceView = StashShelfSurfaceView()
     private var items: [StashItem] = []
     private var listPopover: NSPopover?
+    private var activeDragSecurityScopes: [(url: URL, didStartAccessing: Bool)] = []
 
     init(
         stashShelfStore: StashShelfStore,
@@ -62,6 +63,9 @@ final class ProStashShelfWindowController: NSWindowController {
         }
         surfaceView.dragItemsProvider = { [weak self] in
             self?.stashedPasteboardItems() ?? []
+        }
+        surfaceView.dragEndedHandler = { [weak self] in
+            self?.stopDragSecurityScopes()
         }
         refresh()
     }
@@ -148,10 +152,29 @@ final class ProStashShelfWindowController: NSWindowController {
     }
 
     private func stashedPasteboardItems() -> [any NSPasteboardWriting] {
-        items.compactMap { item in
-            guard let url = item.url else { return nil }
-            return CloverPasteboardFile(url: url, isDirectory: Self.isDirectory(url)).pasteboardItem()
+        let urls = items.compactMap(\.url)
+        startDragSecurityScopes(for: urls)
+        return urls.map { url in
+            CloverPasteboardFile(url: url, isDirectory: Self.isDirectory(url)).pasteboardItem()
         }
+    }
+
+    private func startDragSecurityScopes(for urls: [URL]) {
+        stopDragSecurityScopes()
+        var scopedPaths: Set<String> = []
+        activeDragSecurityScopes = urls.compactMap { url in
+            let securityScopeURL = url.standardizedFileURL
+            let path = securityScopeURL.path
+            guard scopedPaths.insert(path).inserted else { return nil }
+            return (url: securityScopeURL, didStartAccessing: securityScopeURL.startAccessingSecurityScopedResource())
+        }
+    }
+
+    private func stopDragSecurityScopes() {
+        for scope in activeDragSecurityScopes where scope.didStartAccessing {
+            scope.url.stopAccessingSecurityScopedResource()
+        }
+        activeDragSecurityScopes.removeAll()
     }
 
     private func deduplicatedItems(_ items: [StashItem]) -> [StashItem] {
@@ -190,6 +213,7 @@ private final class StashShelfSurfaceView: NSView {
     var dragPresenceChanged: ((Bool) -> Void)?
     var thumbnailClicked: ((NSView) -> Void)?
     var dragItemsProvider: (() -> [any NSPasteboardWriting])?
+    var dragEndedHandler: (() -> Void)?
 
     private let glassView = StashShelfSurfaceView.makeGlassBackgroundView()
     private let plusImageView = StashPassthroughImageView()
@@ -274,6 +298,9 @@ private final class StashShelfSurfaceView: NSView {
         thumbnailStackView.dragItemsProvider = { [weak self] in
             self?.dragItemsProvider?() ?? []
         }
+        thumbnailStackView.dragEndedHandler = { [weak self] in
+            self?.dragEndedHandler?()
+        }
         thumbnailStackView.menuProvider = { [weak self] in
             self?.contextMenu()
         }
@@ -295,6 +322,9 @@ private final class StashShelfSurfaceView: NSView {
         }
         dropCatcherView.dragItemsProvider = { [weak self] in
             self?.dragItemsProvider?() ?? []
+        }
+        dropCatcherView.dragEndedHandler = { [weak self] in
+            self?.dragEndedHandler?()
         }
         dropCatcherView.dragImageProvider = { [weak self] in
             self?.thumbnailStackView.snapshotImage() ?? NSImage()
@@ -488,6 +518,7 @@ private final class StashShelfDropCatcherView: NSView {
     var dragItemsProvider: (() -> [any NSPasteboardWriting])?
     var dragImageProvider: (() -> NSImage)?
     var menuProvider: (() -> NSMenu?)?
+    var dragEndedHandler: (() -> Void)?
 
     private var mouseDownEvent: NSEvent?
     private var didBeginFileDrag = false
@@ -579,6 +610,10 @@ extension StashShelfDropCatcherView: NSDraggingSource {
     func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
         .copy
     }
+
+    func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
+        dragEndedHandler?()
+    }
 }
 
 private final class StashThumbnailStackView: NSView {
@@ -587,6 +622,7 @@ private final class StashThumbnailStackView: NSView {
     var dragPresenceChanged: ((Bool) -> Void)?
     var dragItemsProvider: (() -> [any NSPasteboardWriting])?
     var menuProvider: (() -> NSMenu?)?
+    var dragEndedHandler: (() -> Void)?
 
     private var mouseDownEvent: NSEvent?
     private var didBeginFileDrag = false
@@ -728,6 +764,10 @@ private final class StashThumbnailStackView: NSView {
 extension StashThumbnailStackView: NSDraggingSource {
     func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
         .copy
+    }
+
+    func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
+        dragEndedHandler?()
     }
 }
 

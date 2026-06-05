@@ -424,8 +424,6 @@ struct CloverPasteboardFile {
         let item = NSPasteboardItem()
         let dragURL = dragURL
         item.setString(dragURL.absoluteString, forType: .fileURL)
-        item.setString(dragURL.absoluteString, forType: .URL)
-        item.setString(dragURL.path, forType: .string)
         item.setPropertyList([dragURL.path], forType: .cloverFilenames)
         return item
     }
@@ -445,8 +443,6 @@ extension NSPasteboard {
         let paths = urls.map(\.path)
         setPropertyList(paths, forType: .cloverFilenames)
         setPropertyList(urls.map(\.absoluteString), forType: .fileURL)
-        setPropertyList(urls.map(\.absoluteString), forType: .URL)
-        setString(paths.joined(separator: "\n"), forType: .string)
         if let sourceIdentifier {
             setString(sourceIdentifier, forType: .cloverPaneDragSourceIdentifier)
         }
