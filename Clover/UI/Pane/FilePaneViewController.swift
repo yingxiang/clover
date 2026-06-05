@@ -963,6 +963,9 @@ final class FilePaneViewController: NSViewController {
         Logger.ui.debug("beginEditingSelectedItemName index=\(index) mode=\(self.viewModel.viewMode.rawValue, privacy: .public)")
         switch viewModel.viewMode {
         case .list:
+            if let cell = tableView.view(atColumn: 0, row: index, makeIfNecessary: false) as? FileListNameCellView {
+                cell.nameTextField.beginEditingMode()
+            }
             tableView.editColumn(0, row: index, with: nil, select: true)
             DispatchQueue.main.async { [weak self] in
                 self?.selectListEditingNameStem(at: index)
@@ -1200,9 +1203,9 @@ final class FilePaneViewController: NSViewController {
     private func selectListEditingNameStem(at row: Int) {
         guard let item = viewModel.item(at: row),
               let cell = tableView.view(atColumn: 0, row: row, makeIfNecessary: false) as? FileListNameCellView,
-              let textField = cell.textField,
-              let editor = textField.currentEditor() else { return }
-        editor.selectedRange = editableFileNameSelectionRange(for: item.name, isDirectory: item.isDirectory)
+              let textField = cell.textField as? FileListNameTextField else { return }
+        textField.configureEditableNameSelection(name: item.name, isDirectory: item.isDirectory)
+        textField.selectEditableNameStem()
     }
 
     private func removePendingItemFromVisibleView(at url: URL) {

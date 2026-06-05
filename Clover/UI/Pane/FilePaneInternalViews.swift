@@ -112,6 +112,10 @@ final class FileListNameCellView: NSTableCellView {
         nameTrailingWithoutTagConstraint?.isActive = !hasTag
     }
 
+    func configureNameSelection(name: String, isDirectory: Bool) {
+        nameTextField.configureEditableNameSelection(name: name, isDirectory: isDirectory)
+    }
+
     var previewSourceRect: NSRect {
         fileIconView.frame.insetBy(dx: -1, dy: -1)
     }
@@ -124,12 +128,49 @@ final class FileListNameCellView: NSTableCellView {
 final class FileListNameTextField: NSTextField {
     var clickedWhileSelectedHandler: (() -> Bool)?
 
+    private var editableName = ""
+    private var editableNameIsDirectory = false
+
+    override func selectText(_ sender: Any?) {
+        super.selectText(sender)
+        selectEditableNameStem()
+    }
+
     override func mouseDown(with event: NSEvent) {
         if currentEditor() == nil,
            clickedWhileSelectedHandler?() == true {
             return
         }
         super.mouseDown(with: event)
+    }
+
+    func beginEditingMode() {
+        isEditable = true
+        isSelectable = true
+    }
+
+    func endEditingMode() {
+        isEditable = true
+        isSelectable = true
+        drawsBackground = false
+    }
+
+    func configureEditableNameSelection(name: String, isDirectory: Bool) {
+        editableName = name
+        editableNameIsDirectory = isDirectory
+    }
+
+    func selectEditableNameStem() {
+        guard let editor = currentEditor() else {
+            DispatchQueue.main.async { [weak self] in
+                self?.selectEditableNameStem()
+            }
+            return
+        }
+        editor.selectedRange = editableFileNameSelectionRange(
+            for: editableName,
+            isDirectory: editableNameIsDirectory
+        )
     }
 }
 
@@ -437,6 +478,11 @@ extension NSPasteboard {
            let url = URL(string: urlString),
            url.isFileURL {
             return [url]
+        }
+
+        if let paths = propertyList(forType: .cloverFilenames) as? [String] {
+            let urls = paths.map { URL(fileURLWithPath: $0) }
+            if !urls.isEmpty { return urls }
         }
 
         return nil

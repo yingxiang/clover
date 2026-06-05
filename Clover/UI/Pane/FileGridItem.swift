@@ -54,7 +54,6 @@ final class FileGridItem: NSCollectionViewItem {
             self?.beginEditingName()
             return true
         }
-
         detailField.alignment = .center
         detailField.lineBreakMode = .byTruncatingTail
         detailField.maximumNumberOfLines = 2

@@ -16,6 +16,7 @@ extension FilePaneViewController: @preconcurrency NSTableViewDataSource, NSTable
             cell.textField?.tag = row
             cell.textField?.delegate = self
             cell.textField?.stringValue = item.name
+            cell.configureNameSelection(name: item.name, isDirectory: item.isDirectory)
             cell.nameTextField.clickedWhileSelectedHandler = { [weak self] in
                 guard self?.tableView.selectedRowIndexes.contains(row) == true else { return false }
                 self?.beginEditingSelectedItemName()
@@ -364,6 +365,9 @@ extension FilePaneViewController: NSTextFieldDelegate {
         let movement = notification.userInfo?["NSTextMovement"] as? Int
         let didCancel = movement == NSCancelTextMovement
         Logger.ui.debug("list controlTextDidEndEditing row=\(textField.tag) value=\(textField.stringValue, privacy: .public) didCancel=\(didCancel) movement=\(movement ?? -1)")
+        if let listNameTextField = textField as? FileListNameTextField {
+            listNameTextField.endEditingMode()
+        }
         renameItem(
             at: textField.tag,
             to: textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines),
