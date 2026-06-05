@@ -64,8 +64,8 @@ final class ProStashShelfWindowController: NSWindowController {
         surfaceView.dragItemsProvider = { [weak self] in
             self?.stashedPasteboardItems() ?? []
         }
-        surfaceView.dragEndedHandler = { [weak self] in
-            self?.stopDragSecurityScopes()
+        surfaceView.dragEndedHandler = { [weak self] operation, screenPoint in
+            self?.finishStashDrag(operation: operation, screenPoint: screenPoint)
         }
         refresh()
     }
@@ -151,6 +151,14 @@ final class ProStashShelfWindowController: NSWindowController {
         refresh()
     }
 
+    private func finishStashDrag(operation: NSDragOperation, screenPoint: NSPoint) {
+        surfaceView.setStashedFilesDragging(false)
+        stopDragSecurityScopes()
+        guard !operation.isEmpty else { return }
+        guard window?.frame.contains(screenPoint) != true else { return }
+        clearStash()
+    }
+
     private func stashedPasteboardItems() -> [any NSPasteboardWriting] {
         let urls = items.compactMap(\.url)
         startDragSecurityScopes(for: urls)
@@ -213,7 +221,8 @@ private final class StashShelfSurfaceView: NSView {
     var dragPresenceChanged: ((Bool) -> Void)?
     var thumbnailClicked: ((NSView) -> Void)?
     var dragItemsProvider: (() -> [any NSPasteboardWriting])?
-    var dragEndedHandler: (() -> Void)?
+    var dragStartedHandler: (() -> Void)?
+    var dragEndedHandler: ((NSDragOperation, NSPoint) -> Void)?
 
     private let glassView = StashShelfSurfaceView.makeGlassBackgroundView()
     private let plusImageView = StashPassthroughImageView()
@@ -256,8 +265,14 @@ private final class StashShelfSurfaceView: NSView {
         moveButton.isHidden = isEmpty
         countBadgeView.isHidden = isEmpty
         countLabel.stringValue = "\(items.count)"
+        setStashedFilesDragging(false)
         updateBorder(isDropTargeted: false)
         thumbnailStackView.configure(items: items)
+    }
+
+    func setStashedFilesDragging(_ isDragging: Bool) {
+        thumbnailStackView.alphaValue = isDragging ? 0 : 1
+        countBadgeView.alphaValue = isDragging ? 0 : 1
     }
 
     func setDropHighlight(_ isDropTargeted: Bool) {
@@ -298,8 +313,12 @@ private final class StashShelfSurfaceView: NSView {
         thumbnailStackView.dragItemsProvider = { [weak self] in
             self?.dragItemsProvider?() ?? []
         }
-        thumbnailStackView.dragEndedHandler = { [weak self] in
-            self?.dragEndedHandler?()
+        thumbnailStackView.dragStartedHandler = { [weak self] in
+            self?.setStashedFilesDragging(true)
+            self?.dragStartedHandler?()
+        }
+        thumbnailStackView.dragEndedHandler = { [weak self] operation, screenPoint in
+            self?.dragEndedHandler?(operation, screenPoint)
         }
         thumbnailStackView.menuProvider = { [weak self] in
             self?.contextMenu()
@@ -323,8 +342,12 @@ private final class StashShelfSurfaceView: NSView {
         dropCatcherView.dragItemsProvider = { [weak self] in
             self?.dragItemsProvider?() ?? []
         }
-        dropCatcherView.dragEndedHandler = { [weak self] in
-            self?.dragEndedHandler?()
+        dropCatcherView.dragStartedHandler = { [weak self] in
+            self?.setStashedFilesDragging(true)
+            self?.dragStartedHandler?()
+        }
+        dropCatcherView.dragEndedHandler = { [weak self] operation, screenPoint in
+            self?.dragEndedHandler?(operation, screenPoint)
         }
         dropCatcherView.dragImageProvider = { [weak self] in
             self?.thumbnailStackView.snapshotImage() ?? NSImage()
@@ -518,7 +541,8 @@ private final class StashShelfDropCatcherView: NSView {
     var dragItemsProvider: (() -> [any NSPasteboardWriting])?
     var dragImageProvider: (() -> NSImage)?
     var menuProvider: (() -> NSMenu?)?
-    var dragEndedHandler: (() -> Void)?
+    var dragStartedHandler: (() -> Void)?
+    var dragEndedHandler: ((NSDragOperation, NSPoint) -> Void)?
 
     private var mouseDownEvent: NSEvent?
     private var didBeginFileDrag = false
@@ -602,6 +626,7 @@ private final class StashShelfDropCatcherView: NSView {
             draggingItem.setDraggingFrame(draggingFrame, contents: snapshot)
             return draggingItem
         }
+        dragStartedHandler?()
         beginDraggingSession(with: draggingItems, event: mouseDownEvent ?? event, source: self)
     }
 }
@@ -612,7 +637,7 @@ extension StashShelfDropCatcherView: NSDraggingSource {
     }
 
     func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
-        dragEndedHandler?()
+        dragEndedHandler?(operation, screenPoint)
     }
 }
 
@@ -622,7 +647,8 @@ private final class StashThumbnailStackView: NSView {
     var dragPresenceChanged: ((Bool) -> Void)?
     var dragItemsProvider: (() -> [any NSPasteboardWriting])?
     var menuProvider: (() -> NSMenu?)?
-    var dragEndedHandler: (() -> Void)?
+    var dragStartedHandler: (() -> Void)?
+    var dragEndedHandler: ((NSDragOperation, NSPoint) -> Void)?
 
     private var mouseDownEvent: NSEvent?
     private var didBeginFileDrag = false
@@ -713,6 +739,7 @@ private final class StashThumbnailStackView: NSView {
             draggingItem.setDraggingFrame(draggingFrame, contents: snapshot)
             return draggingItem
         }
+        dragStartedHandler?()
         beginDraggingSession(with: draggingItems, event: mouseDownEvent ?? event, source: self)
     }
 
@@ -767,7 +794,7 @@ extension StashThumbnailStackView: NSDraggingSource {
     }
 
     func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
-        dragEndedHandler?()
+        dragEndedHandler?(operation, screenPoint)
     }
 }
 
