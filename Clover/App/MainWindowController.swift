@@ -645,9 +645,6 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         let controller = upgradeProWindowController ?? UpgradeProWindowController(entitlementService: environment.entitlementService)
         upgradeProWindowController = controller
         controller.showWindow(self)
-        guard let upgradeWindow = controller.window else { return }
-        upgradeWindow.makeKeyAndOrderFront(self)
-        NSApp.activate(ignoringOtherApps: true)
     }
 }
 

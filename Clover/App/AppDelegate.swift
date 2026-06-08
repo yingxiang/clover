@@ -242,9 +242,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let controller = upgradeProWindowController ?? UpgradeProWindowController(entitlementService: environment.entitlementService)
         upgradeProWindowController = controller
         controller.showWindow(self)
-        guard let window = controller.window else { return }
-        window.makeKeyAndOrderFront(self)
-        NSApp.activate(ignoringOtherApps: true)
     }
 
     @objc private func restorePurchases(_ sender: Any?) {
