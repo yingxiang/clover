@@ -127,6 +127,10 @@ private final class OperationMockProvider: FileProvider, @unchecked Sendable {
         destinationDirectoryURL.appendingPathComponent(url.deletingPathExtension().lastPathComponent, isDirectory: true)
     }
 
+    func createArchive(from urls: [URL], in destinationDirectoryURL: URL, suggestedName: String) async throws -> URL {
+        destinationDirectoryURL.appendingPathComponent(suggestedName).appendingPathExtension("zip")
+    }
+
     func openItem(_ url: URL) async throws {}
 
     private func recordOperation(source: URL, destination: URL, isCopy: Bool) throws {

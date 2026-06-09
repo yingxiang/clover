@@ -16,6 +16,20 @@ final class MonetizationTests: XCTestCase {
         ])
     }
 
+    func testProProductsUseMapleOriginalPriceMultipliers() {
+        XCTAssertEqual(ProProduct.lifetime.originalPriceMultiplier, 2)
+        XCTAssertEqual(ProProduct.yearly.originalPriceMultiplier, 2)
+        XCTAssertEqual(ProProduct.sixMonths.originalPriceMultiplier, 2)
+        XCTAssertEqual(ProProduct.threeMonths.originalPriceMultiplier, 3)
+    }
+
+    func testProProductsUseMapleBadgeTitles() {
+        XCTAssertEqual(ProProduct.lifetime.badgeTitle, L10n.bestValue)
+        XCTAssertEqual(ProProduct.yearly.badgeTitle, L10n.goodValue)
+        XCTAssertEqual(ProProduct.sixMonths.badgeTitle, L10n.limitedOffer)
+        XCTAssertEqual(ProProduct.threeMonths.badgeTitle, L10n.limitedOffer)
+    }
+
     func testOnlyNewProFeaturesAreRegistered() {
         XCTAssertEqual(Set(ProFeature.allCases), [
             .namedWorkspaces,
@@ -23,6 +37,7 @@ final class MonetizationTests: XCTestCase {
             .batchRename,
             .folderCompare,
             .customToolbar,
+            .advancedPaneLayouts,
             .advancedShortcuts
         ])
     }

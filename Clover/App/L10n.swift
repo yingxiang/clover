@@ -48,6 +48,8 @@ enum L10n {
     static let proUpgradeSubtitle = String(localized: "pro_upgrade_subtitle", defaultValue: "Unlock new professional workflows. Current Clover features stay free.")
     static let proBuySelected = String(localized: "pro_buy_selected", defaultValue: "Buy Selected Plan")
     static let bestValue = String(localized: "best_value", defaultValue: "Best Value")
+    static let goodValue = String(localized: "good_value", defaultValue: "Good Value")
+    static let limitedOffer = String(localized: "limited_offer", defaultValue: "Limited Offer")
     static let proLifetime = String(localized: "pro_lifetime", defaultValue: "Lifetime Pro")
     static let proYearly = String(localized: "pro_yearly", defaultValue: "Yearly Pro")
     static let proSixMonths = String(localized: "pro_six_months", defaultValue: "6 Months Pro")

@@ -36,6 +36,13 @@ final class PaneLayoutControllerTests: XCTestCase {
         XCTAssertEqual(controller.activePaneID, activePaneID)
     }
 
+    func testFourGridIsProOnlyPaneLayout() {
+        XCTAssertFalse(PaneLayout.single.isProOnly)
+        XCTAssertFalse(PaneLayout.twoVertical.isProOnly)
+        XCTAssertFalse(PaneLayout.twoHorizontal.isProOnly)
+        XCTAssertTrue(PaneLayout.fourGrid.isProOnly)
+    }
+
     private func makeController() -> PaneLayoutController {
         let provider = PaneLayoutMockProvider()
         let entitlementService = EntitlementService()
@@ -101,6 +108,10 @@ private final class PaneLayoutMockProvider: FileProvider, @unchecked Sendable {
     }
 
     func extractArchive(at url: URL, to destinationDirectoryURL: URL) async throws -> URL {
+        throw CloverError.unsupportedOperation
+    }
+
+    func createArchive(from urls: [URL], in destinationDirectoryURL: URL, suggestedName: String) async throws -> URL {
         throw CloverError.unsupportedOperation
     }
 

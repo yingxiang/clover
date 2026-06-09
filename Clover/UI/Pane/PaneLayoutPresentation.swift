@@ -49,9 +49,9 @@ extension PaneLayout {
 
     var isProOnly: Bool {
         switch self {
-        case .leftOneRightTwo, .leftTwoRightOne, .topOneBottomTwo, .topTwoBottomOne:
+        case .leftOneRightTwo, .leftTwoRightOne, .topOneBottomTwo, .topTwoBottomOne, .fourGrid:
             return true
-        case .single, .twoVertical, .twoHorizontal, .fourGrid:
+        case .single, .twoVertical, .twoHorizontal:
             return false
         }
     }

@@ -38,4 +38,24 @@ enum ProProduct: String, CaseIterable, Sendable {
             return L10n.proYearlySubtitle
         }
     }
+
+    var originalPriceMultiplier: Decimal {
+        switch self {
+        case .lifetime, .sixMonths, .yearly:
+            return 2
+        case .threeMonths:
+            return 3
+        }
+    }
+
+    var badgeTitle: String {
+        switch self {
+        case .lifetime:
+            return L10n.bestValue
+        case .yearly:
+            return L10n.goodValue
+        case .sixMonths, .threeMonths:
+            return L10n.limitedOffer
+        }
+    }
 }

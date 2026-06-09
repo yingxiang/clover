@@ -1,4 +1,5 @@
 import AppKit
+import StoreKit
 
 @MainActor
 final class UpgradeProWindowController: NSWindowController {
@@ -34,9 +35,9 @@ final class UpgradeProWindowController: NSWindowController {
                         productID: product.id,
                         title: knownProduct?.displayTitle ?? product.displayName,
                         subtitle: knownProduct?.displaySubtitle ?? product.description,
-                        originalPrice: nil,
+                        originalPrice: Self.originalDisplayPrice(for: product, knownProduct: knownProduct),
                         currentPrice: product.displayPrice,
-                        badge: product.id == ProProduct.lifetime.rawValue ? L10n.bestValue : nil
+                        badge: knownProduct?.badgeTitle
                     )
                 }
             },
@@ -50,5 +51,13 @@ final class UpgradeProWindowController: NSWindowController {
         )
         self.presenter = presenter
         presenter.show()
+    }
+
+    private static func originalDisplayPrice(for product: Product, knownProduct: ProProduct?) -> String? {
+        guard let knownProduct else { return nil }
+        let originalPrice = (product.price as NSDecimalNumber)
+            .multiplying(by: knownProduct.originalPriceMultiplier as NSDecimalNumber)
+            .decimalValue
+        return product.priceFormatStyle.format(originalPrice)
     }
 }

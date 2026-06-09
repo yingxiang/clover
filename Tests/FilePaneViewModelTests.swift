@@ -311,6 +311,10 @@ private final class MockFileProvider: FileProvider, @unchecked Sendable {
         throw CloverError.unsupportedOperation
     }
 
+    func createArchive(from urls: [URL], in destinationDirectoryURL: URL, suggestedName: String) async throws -> URL {
+        throw CloverError.unsupportedOperation
+    }
+
     func openItem(_ url: URL) async throws {
         lock.withLock {
             storedOpenedURLs.append(url)
