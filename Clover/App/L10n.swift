@@ -45,6 +45,8 @@ enum L10n {
     static let upgradeToPro = String(localized: "upgrade_to_pro", defaultValue: "Upgrade to Clover Pro")
     static let restorePurchases = String(localized: "restore_purchases", defaultValue: "Restore Purchases")
     static let manageSubscription = String(localized: "manage_subscription", defaultValue: "Manage Subscription")
+    static let privacyPolicy = String(localized: "privacy_policy", defaultValue: "Privacy Policy")
+    static let termsOfUse = String(localized: "terms_of_use", defaultValue: "Terms of Use (EULA)")
     static let proUpgradeSubtitle = String(localized: "pro_upgrade_subtitle", defaultValue: "Unlock new professional workflows. Current Clover features stay free.")
     static let proBuySelected = String(localized: "pro_buy_selected", defaultValue: "Buy Selected Plan")
     static let bestValue = String(localized: "best_value", defaultValue: "Best Value")

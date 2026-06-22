@@ -25,6 +25,11 @@ struct MacPaywallProduct {
     }
 }
 
+struct MacPaywallLegalLink {
+    let title: String
+    let url: URL
+}
+
 struct MacPaywallConfiguration {
     let title: String
     let unlockedTitle: String
@@ -35,6 +40,7 @@ struct MacPaywallConfiguration {
     let laterTitle: String
     let okTitle: String
     let launchingPurchaseTitle: String
+    let legalLinks: [MacPaywallLegalLink]
 
     init(
         title: String,
@@ -45,7 +51,8 @@ struct MacPaywallConfiguration {
         benefits: [String],
         laterTitle: String,
         okTitle: String,
-        launchingPurchaseTitle: String
+        launchingPurchaseTitle: String,
+        legalLinks: [MacPaywallLegalLink] = []
     ) {
         self.title = title
         self.unlockedTitle = unlockedTitle
@@ -56,6 +63,7 @@ struct MacPaywallConfiguration {
         self.laterTitle = laterTitle
         self.okTitle = okTitle
         self.launchingPurchaseTitle = launchingPurchaseTitle
+        self.legalLinks = legalLinks
     }
 }
 
@@ -217,7 +225,8 @@ final class MacPaywallPresenter {
             title: title,
             message: message,
             buttons: buttons,
-            launchingPurchaseTitle: configuration.launchingPurchaseTitle
+            launchingPurchaseTitle: configuration.launchingPurchaseTitle,
+            legalLinks: configuration.legalLinks
         )
         let size = page.preferredContentSize()
         let panel = MacPaywallWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
@@ -391,13 +400,21 @@ private final class MacPurchasePaywallView: MacPaywallBlurView {
     var onResponse: ((NSApplication.ModalResponse) -> Void)?
     private var buttons: [NSButton] = []
     private let launchingPurchaseTitle: String
+    private let legalLinks: [MacPaywallLegalLink]
     private let titleLabel = NSTextField(labelWithString: "")
     private let messageLabel = NSTextField(wrappingLabelWithString: "")
     private let buttonRow = NSStackView()
     private let buttonSpacer = NSView()
 
-    init(title: String, message: String, buttons: [MacPaywallButtonContent], launchingPurchaseTitle: String) {
+    init(
+        title: String,
+        message: String,
+        buttons: [MacPaywallButtonContent],
+        launchingPurchaseTitle: String,
+        legalLinks: [MacPaywallLegalLink]
+    ) {
         self.launchingPurchaseTitle = launchingPurchaseTitle
+        self.legalLinks = legalLinks
         super.init(frame: NSRect(x: 0, y: 0, width: Self.preferredWidth, height: 1))
         setupContent(title: title, message: message, buttons: buttons)
         layer?.shadowColor = NSColor.black.cgColor
@@ -506,6 +523,9 @@ private final class MacPurchasePaywallView: MacPaywallBlurView {
 
         root.addArrangedSubview(bodyRow)
         root.addArrangedSubview(buttonRow)
+        if !legalLinks.isEmpty {
+            root.addArrangedSubview(makeLegalLinksView())
+        }
         NSLayoutConstraint.activate([
             root.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
             root.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
@@ -522,6 +542,33 @@ private final class MacPurchasePaywallView: MacPaywallBlurView {
         ])
     }
 
+    private func makeLegalLinksView() -> NSView {
+        let stack = NSStackView()
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.orientation = .horizontal
+        stack.alignment = .centerY
+        stack.spacing = 6
+
+        for (index, link) in legalLinks.enumerated() {
+            if index > 0 {
+                let separator = NSTextField(labelWithString: "•")
+                separator.font = .systemFont(ofSize: 11)
+                separator.textColor = .secondaryLabelColor
+                stack.addArrangedSubview(separator)
+            }
+
+            let button = NSButton(title: link.title, target: self, action: #selector(legalLinkClicked(_:)))
+            button.tag = index
+            button.isBordered = false
+            button.font = .systemFont(ofSize: 11)
+            button.contentTintColor = .linkColor
+            button.setAccessibilityLabel(link.title)
+            stack.addArrangedSubview(button)
+        }
+
+        return stack
+    }
+
     @objc private func buttonClicked(_ sender: NSButton) {
         if let purchaseButton = sender as? MacPurchaseOptionButton {
             showPurchaseLaunchingState(selectedButton: purchaseButton)
@@ -535,6 +582,11 @@ private final class MacPurchasePaywallView: MacPaywallBlurView {
             button.keyEquivalent = ""
         }
         selectedButton.showLoading(title: launchingPurchaseTitle)
+    }
+
+    @objc private func legalLinkClicked(_ sender: NSButton) {
+        guard legalLinks.indices.contains(sender.tag) else { return }
+        NSWorkspace.shared.open(legalLinks[sender.tag].url)
     }
 }
 

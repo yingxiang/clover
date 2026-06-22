@@ -36,6 +36,10 @@
 	<false/>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Clover uses access to your Apple Music library only when you choose to browse or manage files in your Music folder, for example to display and organize audio files you selected in Clover.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Clover uses access to your photo library only when you choose to browse or manage files in your Pictures or Photos Library folders, for example to display and organize image files you selected in Clover.</string>
 	<key>NSQuitAlwaysKeepsWindows</key>
 	<false/>
 </dict>

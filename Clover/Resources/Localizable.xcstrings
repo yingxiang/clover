@@ -231,52 +231,6 @@
         }
       }
     },
-    "good_value" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Good Value"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "经济实惠"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "經濟實惠"
-          }
-        }
-      }
-    },
-    "limited_offer" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Limited Offer"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "限时折扣"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "限時折扣"
-          }
-        }
-      }
-    },
     "cancel" : {
       "localizations" : {
         "de" : {
@@ -2047,6 +2001,29 @@
         }
       }
     },
+    "good_value" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Good Value"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "经济实惠"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "經濟實惠"
+          }
+        }
+      }
+    },
     "grant_access" : {
       "localizations" : {
         "de" : {
@@ -2598,6 +2575,29 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Left 2, Right 1"
+          }
+        }
+      }
+    },
+    "limited_offer" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Limited Offer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "限时折扣"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "限時折扣"
           }
         }
       }
@@ -4441,6 +4441,17 @@
         }
       }
     },
+    "privacy_policy" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Privacy Policy"
+          }
+        }
+      }
+    },
     "pro" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -4667,39 +4678,6 @@
         }
       }
     },
-    "pro_lifetime" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Lifetime Pro"
-          }
-        }
-      }
-    },
-    "pro_lifetime_subtitle" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "One purchase, permanent access"
-          }
-        }
-      }
-    },
-    "pro_loading_products" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Loading purchase options..."
-          }
-        }
-      }
-    },
     "pro_launching_purchase" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -4749,6 +4727,39 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "正在喚起付款，請稍候"
+          }
+        }
+      }
+    },
+    "pro_lifetime" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Lifetime Pro"
+          }
+        }
+      }
+    },
+    "pro_lifetime_subtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "One purchase, permanent access"
+          }
+        }
+      }
+    },
+    "pro_loading_products" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Loading purchase options..."
           }
         }
       }
@@ -7145,6 +7156,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "標籤"
+          }
+        }
+      }
+    },
+    "terms_of_use" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Terms of Use (EULA)"
           }
         }
       }

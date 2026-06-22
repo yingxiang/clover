@@ -25,7 +25,8 @@ final class UpgradeProWindowController: NSWindowController {
                 benefits: ProFeature.visibleFeatures.map(\.title),
                 laterTitle: L10n.cancel,
                 okTitle: L10n.ok,
-                launchingPurchaseTitle: L10n.proLaunchingPurchase
+                launchingPurchaseTitle: L10n.proLaunchingPurchase,
+                legalLinks: Self.legalLinks
             ),
             productsProvider: { [entitlementService] in
                 await entitlementService.loadProducts()
@@ -59,5 +60,18 @@ final class UpgradeProWindowController: NSWindowController {
             .multiplying(by: knownProduct.originalPriceMultiplier as NSDecimalNumber)
             .decimalValue
         return product.priceFormatStyle.format(originalPrice)
+    }
+
+    private static var legalLinks: [MacPaywallLegalLink] {
+        [
+            MacPaywallLegalLink(
+                title: L10n.privacyPolicy,
+                url: URL(string: "https://yingxiang.github.io/clover/privacy.html")!
+            ),
+            MacPaywallLegalLink(
+                title: L10n.termsOfUse,
+                url: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
+            )
+        ]
     }
 }
