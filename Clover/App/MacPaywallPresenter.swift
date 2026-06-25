@@ -357,16 +357,11 @@ private final class MacPaywallWindow: NSPanel {
 
 private class MacPaywallBlurView: NSView {
     private lazy var effectView: NSView = {
-        let view: NSView
-        if #available(macOS 26.0, *) {
-            view = NSGlassEffectView()
-        } else {
-            let visualEffectView = NSVisualEffectView()
-            visualEffectView.material = .hudWindow
-            visualEffectView.state = .active
-            visualEffectView.blendingMode = .withinWindow
-            view = visualEffectView
-        }
+        let visualEffectView = NSVisualEffectView()
+        visualEffectView.material = .popover
+        visualEffectView.state = .active
+        visualEffectView.blendingMode = .behindWindow
+        let view = visualEffectView
         view.translatesAutoresizingMaskIntoConstraints = false
         addSubview(view, positioned: .below, relativeTo: nil)
         let minimumHeight = view.heightAnchor.constraint(greaterThanOrEqualToConstant: 65)
@@ -386,6 +381,11 @@ private class MacPaywallBlurView: NSView {
         super.init(frame: frameRect)
         translatesAutoresizingMaskIntoConstraints = false
         wantsLayer = true
+        layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        layer?.cornerRadius = 14
+        layer?.borderWidth = 1
+        layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.35).cgColor
+        layer?.masksToBounds = true
         _ = effectView
     }
 
@@ -593,9 +593,12 @@ private final class MacPurchasePaywallView: MacPaywallBlurView {
 private final class MacPurchaseOptionButton: NSButton {
     private let cornerRadius: CGFloat = 8
     private let progressIndicator = NSProgressIndicator()
-    private var baseAttributedTitle: NSAttributedString?
+    private let content: MacPaywallButtonContent
+    private var loadingTitle: String?
+    private var isShowingLoading = false
 
     init(content: MacPaywallButtonContent, target: AnyObject?, action: Selector?) {
+        self.content = content
         super.init(frame: .zero)
         self.title = content.title
         self.target = target
@@ -604,7 +607,6 @@ private final class MacPurchaseOptionButton: NSButton {
         wantsLayer = true
         focusRingType = .none
         setAccessibilityLabel(content.title)
-        baseAttributedTitle = attributedTitle(for: content)
         configureProgressIndicator()
     }
 
@@ -621,39 +623,38 @@ private final class MacPurchaseOptionButton: NSButton {
     }
 
     func showLoading(title: String) {
-        baseAttributedTitle = NSAttributedString(
-            string: title,
-            attributes: [
-                .font: NSFont.systemFont(ofSize: 14, weight: .semibold),
-                .foregroundColor: NSColor.white
-            ]
-        )
+        isShowingLoading = true
+        loadingTitle = title
         progressIndicator.isHidden = false
         progressIndicator.startAnimation(nil)
         needsDisplay = true
     }
 
     override func draw(_ dirtyRect: NSRect) {
+        let isPrimary = keyEquivalent == "\r"
         let backgroundColor: NSColor
-        if keyEquivalent == "\r" {
+        if isPrimary {
             backgroundColor = isHighlighted ? NSColor.controlAccentColor.withSystemEffect(.pressed) : NSColor.controlAccentColor
         } else {
             backgroundColor = isHighlighted
-                ? NSColor.controlBackgroundColor.withAlphaComponent(0.34)
-                : NSColor.controlBackgroundColor.withAlphaComponent(0.24)
+                ? NSColor.controlBackgroundColor.withAlphaComponent(0.58)
+                : NSColor.controlBackgroundColor.withAlphaComponent(0.42)
         }
         backgroundColor.setFill()
         let borderBounds = bounds.insetBy(dx: 0.75, dy: 0.75)
         let path = NSBezierPath(roundedRect: borderBounds, xRadius: cornerRadius, yRadius: cornerRadius)
         path.fill()
-        NSColor.white.withAlphaComponent(0.88).setStroke()
+        let strokeColor = isPrimary
+            ? NSColor.white.withAlphaComponent(0.88)
+            : NSColor.separatorColor.withAlphaComponent(0.55)
+        strokeColor.setStroke()
         path.lineWidth = 1.5
         path.stroke()
 
         let contentRect = bounds.insetBy(dx: 12, dy: 6)
         NSGraphicsContext.saveGraphicsState()
         NSBezierPath(rect: contentRect).addClip()
-        let title = fittedTitle(maxWidth: contentRect.width)
+        let title = fittedTitle(maxWidth: contentRect.width, isPrimary: isPrimary)
         let titleSize = title.size()
         let titleRect = NSRect(
             x: floor((bounds.width - min(titleSize.width, contentRect.width)) / 2),
@@ -679,13 +680,22 @@ private final class MacPurchaseOptionButton: NSButton {
         ])
     }
 
-    private func attributedTitle(for content: MacPaywallButtonContent) -> NSAttributedString {
+    private func attributedTitle(for content: MacPaywallButtonContent, isPrimary: Bool) -> NSAttributedString {
         let text = [content.title, content.originalPrice, content.currentPrice, content.badge].compactMap(\.self).joined(separator: " ")
+        let titleColor = isPrimary
+            ? NSColor.white
+            : NSColor.labelColor
+        let secondaryColor = isPrimary
+            ? NSColor.white.withAlphaComponent(0.72)
+            : NSColor.secondaryLabelColor
+        let priceColor = isPrimary
+            ? NSColor.white
+            : NSColor.labelColor
         let attributed = NSMutableAttributedString(
             string: text,
             attributes: [
                 .font: NSFont.systemFont(ofSize: 14, weight: .semibold),
-                .foregroundColor: NSColor.white
+                .foregroundColor: titleColor
             ]
         )
         let nsText = text as NSString
@@ -694,7 +704,7 @@ private final class MacPurchaseOptionButton: NSButton {
                 [
                     .strikethroughStyle: NSUnderlineStyle.single.rawValue,
                     .font: NSFont.systemFont(ofSize: 14, weight: .regular),
-                    .foregroundColor: NSColor.white.withAlphaComponent(0.72)
+                    .foregroundColor: secondaryColor
                 ],
                 range: nsText.range(of: originalPrice)
             )
@@ -703,7 +713,7 @@ private final class MacPurchaseOptionButton: NSButton {
             attributed.addAttributes(
                 [
                     .font: NSFont.systemFont(ofSize: 26, weight: .bold),
-                    .foregroundColor: NSColor.white
+                    .foregroundColor: priceColor
                 ],
                 range: nsText.range(of: currentPrice)
             )
@@ -717,8 +727,10 @@ private final class MacPurchaseOptionButton: NSButton {
         return attributed
     }
 
-    private func fittedTitle(maxWidth availableWidth: CGFloat) -> NSAttributedString {
-        let source = baseAttributedTitle ?? attributedTitle
+    private func fittedTitle(maxWidth availableWidth: CGFloat, isPrimary: Bool) -> NSAttributedString {
+        let source = isShowingLoading
+            ? loadingAttributedTitle(isPrimary: isPrimary)
+            : attributedTitle(for: content, isPrimary: isPrimary)
         let currentWidth = max(1, source.size().width)
         let fitted = NSMutableAttributedString(attributedString: source)
         let paragraphStyle = NSMutableParagraphStyle()
@@ -733,5 +745,15 @@ private final class MacPurchaseOptionButton: NSButton {
             fitted.addAttribute(.font, value: scaledFont, range: range)
         }
         return fitted
+    }
+
+    private func loadingAttributedTitle(isPrimary: Bool) -> NSAttributedString {
+        NSAttributedString(
+            string: loadingTitle ?? title,
+            attributes: [
+                .font: NSFont.systemFont(ofSize: 14, weight: .semibold),
+                .foregroundColor: isPrimary ? NSColor.white : NSColor.labelColor
+            ]
+        )
     }
 }

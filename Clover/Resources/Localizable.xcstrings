@@ -228,6 +228,18 @@
             "state" : "new",
             "value" : "Best Value"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最划算"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最划算"
+          }
         }
       }
     },
@@ -2012,13 +2024,13 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "经济实惠"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "經濟實惠"
           }
         }
@@ -2590,13 +2602,13 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "限时折扣"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "限時折扣"
           }
         }
@@ -4449,6 +4461,18 @@
             "state" : "new",
             "value" : "Privacy Policy"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐私政策"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隱私政策"
+          }
         }
       }
     },
@@ -4471,6 +4495,18 @@
             "state" : "new",
             "value" : "Advanced Shortcuts"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "高级快捷键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "進階快捷鍵"
+          }
         }
       }
     },
@@ -4481,6 +4517,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Customize menu shortcuts with saved equivalents."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用已保存的快捷键自定义菜单快捷键。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用已儲存的快捷鍵自訂選單快捷鍵。"
           }
         }
       }
@@ -4493,6 +4541,18 @@
             "state" : "new",
             "value" : "Clover Pro is already unlocked."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clover Pro 已经解锁。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clover Pro 已經解鎖。"
+          }
         }
       }
     },
@@ -4503,6 +4563,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Batch Rename"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "批量重命名"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "批次重新命名"
           }
         }
       }
@@ -4515,6 +4587,18 @@
             "state" : "new",
             "value" : "Preview and apply bulk filename changes."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预览并应用批量文件名更改。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "預覽並套用批次檔名變更。"
+          }
         }
       }
     },
@@ -4525,6 +4609,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Buy Selected Plan"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "购买所选方案"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "購買所選方案"
           }
         }
       }
@@ -4537,6 +4633,18 @@
             "state" : "new",
             "value" : "Custom Toolbar"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义工具栏"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂工具列"
+          }
         }
       }
     },
@@ -4547,6 +4655,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Choose which toolbar actions stay visible."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择哪些工具栏操作保持可见。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇哪些工具列操作保持可見。"
           }
         }
       }
@@ -4562,8 +4682,14 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "解锁所有窗口布局"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解鎖所有視窗佈局"
           }
         }
       }
@@ -4576,6 +4702,18 @@
             "state" : "new",
             "value" : "Advanced shortcuts for Pro workflows"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro 工作流高级快捷键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro 工作流程進階快捷鍵"
+          }
         }
       }
     },
@@ -4586,6 +4724,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Batch rename with preview"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "带预览的批量重命名"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "具預覽的批次重新命名"
           }
         }
       }
@@ -4598,6 +4748,18 @@
             "state" : "new",
             "value" : "Customizable toolbar"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义工具栏"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂工具列"
+          }
         }
       }
     },
@@ -4608,6 +4770,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Folder comparison between panes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "窗口间文件夹比较"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "視窗間檔案夾比較"
           }
         }
       }
@@ -4620,6 +4794,18 @@
             "state" : "new",
             "value" : "Multiple named workspaces"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多个命名工作区"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多個命名工作區"
+          }
         }
       }
     },
@@ -4630,6 +4816,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Stash shelf for cross-folder collecting"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跨文件夹收集的暂存架"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跨檔案夾收集的暫存架"
           }
         }
       }
@@ -4642,6 +4840,18 @@
             "state" : "new",
             "value" : "Folder Compare"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件夹比较"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檔案夾比較"
+          }
         }
       }
     },
@@ -4652,6 +4862,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Open at least two panes to compare folders."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "至少打开两个窗格才能比较文件夹。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "至少開啟兩個窗格才能比較檔案夾。"
           }
         }
       }
@@ -4664,6 +4886,18 @@
             "state" : "new",
             "value" : "Compare the contents of two panes."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较两个窗格中的内容。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比較兩個窗格中的內容。"
+          }
         }
       }
     },
@@ -4674,6 +4908,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld items on the left, %2$lld items on the right, %3$lld shared, %4$lld only on the left, %5$lld only on the right."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左侧 %1$lld 项，右侧 %2$lld 项，共有 %3$lld 项，仅左侧 %4$lld 项，仅右侧 %5$lld 项。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左側 %1$lld 項，右側 %2$lld 項，共有 %3$lld 項，僅左側 %4$lld 項，僅右側 %5$lld 項。"
           }
         }
       }
@@ -4719,14 +4965,14 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "正在拉起支付，请稍等"
+            "state" : "translated",
+            "value" : "正在拉起购买，请稍候..."
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "正在喚起付款，請稍候"
+            "state" : "translated",
+            "value" : "正在喚起購買，請稍候..."
           }
         }
       }
@@ -4739,6 +4985,18 @@
             "state" : "new",
             "value" : "Lifetime Pro"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "终身 Pro"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "終身 Pro"
+          }
         }
       }
     },
@@ -4749,6 +5007,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "One purchase, permanent access"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一次购买，永久使用"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一次購買，永久使用"
           }
         }
       }
@@ -4761,6 +5031,18 @@
             "state" : "new",
             "value" : "Loading purchase options..."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在加载购买选项..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在載入購買選項..."
+          }
         }
       }
     },
@@ -4771,6 +5053,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Named Workspaces"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "命名工作区"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "命名工作區"
           }
         }
       }
@@ -4783,6 +5077,18 @@
             "state" : "new",
             "value" : "Save the current window as a named workspace."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将当前窗口保存为命名工作区。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將目前視窗儲存為命名工作區。"
+          }
         }
       }
     },
@@ -4793,6 +5099,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Save, load, rename, and remove multiple workspace setups."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存、载入、重命名和移除多个工作区设置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "儲存、載入、重新命名和移除多個工作區設定。"
           }
         }
       }
@@ -4805,6 +5123,18 @@
             "state" : "new",
             "value" : "Purchase options are unavailable right now."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前无法获取购买选项，请稍后再试。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前無法取得購買選項，請稍後再試。"
+          }
         }
       }
     },
@@ -4815,6 +5145,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "This purchase option is unavailable."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此购买选项暂不可用。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此購買選項暫不可用。"
           }
         }
       }
@@ -4827,6 +5169,18 @@
             "state" : "new",
             "value" : "Purchase cancelled."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "购买已取消。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "購買已取消。"
+          }
         }
       }
     },
@@ -4837,6 +5191,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Clover Pro is unlocked."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clover Pro 已解锁。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clover Pro 已解鎖。"
           }
         }
       }
@@ -4882,13 +5248,13 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "购买失败。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "購買失敗。"
           }
         }
@@ -4902,6 +5268,18 @@
             "state" : "new",
             "value" : "Purchase is pending approval."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "购买正在等待批准。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "購買正在等待批准。"
+          }
         }
       }
     },
@@ -4912,6 +5290,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "The purchase could not be verified."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法验证此次购买。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法驗證此次購買。"
           }
         }
       }
@@ -4924,6 +5314,18 @@
             "state" : "new",
             "value" : "Completing purchase..."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在完成购买..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在完成購買..."
+          }
         }
       }
     },
@@ -4934,6 +5336,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Purchases restored. Clover Pro is unlocked."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "购买已恢复。Clover Pro 已解锁。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "購買已恢復。Clover Pro 已解鎖。"
           }
         }
       }
@@ -4946,6 +5360,18 @@
             "state" : "new",
             "value" : "No active Clover Pro purchase was found."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到有效的 Clover Pro 购买记录。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到有效的 Clover Pro 購買記錄。"
+          }
         }
       }
     },
@@ -4956,6 +5382,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Select a plan to continue."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择一个方案继续。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請選擇一個方案繼續。"
           }
         }
       }
@@ -4968,6 +5406,18 @@
             "state" : "new",
             "value" : "6 Months Pro"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "6 个月 Pro"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "6 個月 Pro"
+          }
         }
       }
     },
@@ -4978,6 +5428,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "For focused projects"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "适合阶段性项目"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "適合階段性專案"
           }
         }
       }
@@ -4990,6 +5452,18 @@
             "state" : "new",
             "value" : "Capture Selection"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "捕获所选项"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "擷取所選項目"
+          }
         }
       }
     },
@@ -5000,6 +5474,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Stash Shelf"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂存架"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫存架"
           }
         }
       }
@@ -5012,6 +5498,18 @@
             "state" : "new",
             "value" : "Collect files from different folders and send them back to the current pane."
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收集不同文件夹中的文件，并发送回当前窗格。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收集不同檔案夾中的檔案，並送回目前窗格。"
+          }
         }
       }
     },
@@ -5022,6 +5520,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "3 Months Pro"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 个月 Pro"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 個月 Pro"
           }
         }
       }
@@ -5034,6 +5544,18 @@
             "state" : "new",
             "value" : "Short-term access"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "短期使用"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "短期使用"
+          }
         }
       }
     },
@@ -5044,6 +5566,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Unlock new professional workflows. Current Clover features stay free."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解锁新的专业工作流。当前 Clover 功能保持免费。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解鎖新的專業工作流程。現有 Clover 功能保持免費。"
           }
         }
       }
@@ -5056,6 +5590,18 @@
             "state" : "new",
             "value" : "Workspace name"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作区名称"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作區名稱"
+          }
         }
       }
     },
@@ -5067,6 +5613,18 @@
             "state" : "new",
             "value" : "Yearly Pro"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "年度 Pro"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "年度 Pro"
+          }
         }
       }
     },
@@ -5077,6 +5635,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Best subscription value"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最具性价比的订阅"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最具性價比的訂閱"
           }
         }
       }
@@ -7168,6 +7738,18 @@
             "state" : "new",
             "value" : "Terms of Use (EULA)"
           }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用条款（EULA）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用條款（EULA）"
+          }
         }
       }
     },
@@ -8037,6 +8619,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Upgrade to Clover Pro"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "升级到 Clover Pro"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "升級到 Clover Pro"
           }
         }
       }
