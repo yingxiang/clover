@@ -6,12 +6,12 @@ final class ProPreferencesWindowController: NSWindowController {
     private let onToolbarPreferencesChanged: () -> Void
 
     private let shortcutTitles = [
-        L10n.refresh,
-        L10n.goToFolder,
-        L10n.rename,
-        L10n.copyTo,
-        L10n.moveTo,
-        L10n.moveToTrash
+        String(localized: "refresh", defaultValue: "Refresh"),
+        String(localized: "go_to_folder", defaultValue: "Go to Folder"),
+        String(localized: "rename", defaultValue: "Rename"),
+        String(localized: "copy_to", defaultValue: "Copy To..."),
+        String(localized: "move_to", defaultValue: "Move To..."),
+        String(localized: "move_to_trash", defaultValue: "Move to Trash")
     ]
     private var shortcutFields: [String: NSTextField] = [:]
 
@@ -22,22 +22,22 @@ final class ProPreferencesWindowController: NSWindowController {
         let contentView = NSView()
         contentView.translatesAutoresizingMaskIntoConstraints = false
 
-        let titleLabel = NSTextField(labelWithString: L10n.proCustomToolbar)
+        let titleLabel = NSTextField(labelWithString: String(localized: "pro_custom_toolbar", defaultValue: "Custom Toolbar"))
         titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
 
-        let subtitleLabel = NSTextField(labelWithString: L10n.proCustomToolbarSubtitle)
+        let subtitleLabel = NSTextField(labelWithString: String(localized: "pro_custom_toolbar_subtitle", defaultValue: "Choose which toolbar actions stay visible."))
         subtitleLabel.font = .systemFont(ofSize: 13)
         subtitleLabel.textColor = .secondaryLabelColor
         subtitleLabel.lineBreakMode = .byWordWrapping
         subtitleLabel.maximumNumberOfLines = 0
 
         let shortcutFields: [String: NSTextField] = [
-            L10n.refresh: NSTextField(),
-            L10n.goToFolder: NSTextField(),
-            L10n.rename: NSTextField(),
-            L10n.copyTo: NSTextField(),
-            L10n.moveTo: NSTextField(),
-            L10n.moveToTrash: NSTextField()
+            String(localized: "refresh", defaultValue: "Refresh"): NSTextField(),
+            String(localized: "go_to_folder", defaultValue: "Go to Folder"): NSTextField(),
+            String(localized: "rename", defaultValue: "Rename"): NSTextField(),
+            String(localized: "copy_to", defaultValue: "Copy To..."): NSTextField(),
+            String(localized: "move_to", defaultValue: "Move To..."): NSTextField(),
+            String(localized: "move_to_trash", defaultValue: "Move to Trash"): NSTextField()
         ]
         self.shortcutFields = shortcutFields
 
@@ -54,10 +54,10 @@ final class ProPreferencesWindowController: NSWindowController {
             toolbarButtons.append(box)
         }
 
-        let shortcutTitleLabel = NSTextField(labelWithString: L10n.proAdvancedShortcuts)
+        let shortcutTitleLabel = NSTextField(labelWithString: String(localized: "pro_advanced_shortcuts", defaultValue: "Advanced Shortcuts"))
         shortcutTitleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
 
-        let shortcutSubtitleLabel = NSTextField(labelWithString: L10n.proAdvancedShortcutsSubtitle)
+        let shortcutSubtitleLabel = NSTextField(labelWithString: String(localized: "pro_advanced_shortcuts_subtitle", defaultValue: "Customize menu shortcuts with saved equivalents."))
         shortcutSubtitleLabel.font = .systemFont(ofSize: 13)
         shortcutSubtitleLabel.textColor = .secondaryLabelColor
         shortcutSubtitleLabel.lineBreakMode = .byWordWrapping
@@ -71,7 +71,7 @@ final class ProPreferencesWindowController: NSWindowController {
         shortcutGrid.rowSpacing = 8
         shortcutGrid.columnSpacing = 12
 
-        let saveButton = NSButton(title: L10n.save, target: nil, action: nil)
+        let saveButton = NSButton(title: String(localized: "save", defaultValue: "Save"), target: nil, action: nil)
         let stack = NSStackView(views: [titleLabel, subtitleLabel, toolbarStack, shortcutTitleLabel, shortcutSubtitleLabel, shortcutGrid, saveButton])
         stack.orientation = .vertical
         stack.alignment = .width
@@ -92,7 +92,7 @@ final class ProPreferencesWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = L10n.proCustomToolbar
+        window.title = String(localized: "pro_custom_toolbar", defaultValue: "Custom Toolbar")
         window.contentView = contentView
         window.center()
         window.isReleasedWhenClosed = false

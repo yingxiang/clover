@@ -13,11 +13,11 @@ final class EntitlementService: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .productUnavailable:
-                return L10n.proProductUnavailable
+                return String(localized: "pro_product_unavailable", defaultValue: "This purchase option is unavailable.")
             case .pending:
-                return L10n.proPurchasePending
+                return String(localized: "pro_purchase_pending", defaultValue: "Purchase is pending approval.")
             case .unverified:
-                return L10n.proPurchaseUnverified
+                return String(localized: "pro_purchase_unverified", defaultValue: "The purchase could not be verified.")
             }
         }
     }

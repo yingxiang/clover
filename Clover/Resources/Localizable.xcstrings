@@ -451,17 +451,6 @@
         }
       }
     },
-    "clear" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear"
-          }
-        }
-      }
-    },
     "clear_stash_shelf" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -894,6 +883,7 @@
       }
     },
     "create_folder_message" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -946,6 +936,7 @@
       }
     },
     "create_folder_title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -998,6 +989,7 @@
       }
     },
     "create_markdown_file_title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1050,6 +1042,7 @@
       }
     },
     "create_text_file_message" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1102,6 +1095,7 @@
       }
     },
     "create_text_file_title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2714,17 +2708,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在載入 %@..."
-          }
-        }
-      }
-    },
-    "manage_subscription" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Manage Subscription"
           }
         }
       }
@@ -4453,29 +4436,6 @@
         }
       }
     },
-    "privacy_policy" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Privacy Policy"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "隐私政策"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "隱私政策"
-          }
-        }
-      }
-    },
     "pro" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -4534,7 +4494,7 @@
       }
     },
     "pro_already_unlocked" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4603,7 +4563,7 @@
       }
     },
     "pro_buy_selected" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4924,59 +4884,6 @@
         }
       }
     },
-    "pro_launching_purchase" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Zahlung wird geöffnet, bitte warten"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Starting purchase, please wait..."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Ouverture du paiement, veuillez patienter"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Apertura del pagamento, attendi"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "購入を開始しています。しばらくお待ちください"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "결제를 시작하는 중입니다. 잠시만 기다려 주세요"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在拉起购买，请稍候..."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在喚起購買，請稍候..."
-          }
-        }
-      }
-    },
     "pro_lifetime" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -5024,7 +4931,7 @@
       }
     },
     "pro_loading_products" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5162,7 +5069,7 @@
       }
     },
     "pro_purchase_cancelled" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5307,7 +5214,7 @@
       }
     },
     "pro_purchasing" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5329,54 +5236,8 @@
         }
       }
     },
-    "pro_restore_complete" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Purchases restored. Clover Pro is unlocked."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "购买已恢复。Clover Pro 已解锁。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "購買已恢復。Clover Pro 已解鎖。"
-          }
-        }
-      }
-    },
-    "pro_restore_empty" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "No active Clover Pro purchase was found."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未找到有效的 Clover Pro 购买记录。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "找不到有效的 Clover Pro 購買記錄。"
-          }
-        }
-      }
-    },
     "pro_select_plan" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5445,7 +5306,7 @@
       }
     },
     "pro_stash_capture_selection" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5491,7 +5352,7 @@
       }
     },
     "pro_stash_shelf_subtitle" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5560,7 +5421,7 @@
       }
     },
     "pro_upgrade_subtitle" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5861,17 +5722,6 @@
         }
       }
     },
-    "remove" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Remove"
-          }
-        }
-      }
-    },
     "rename" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6081,17 +5931,6 @@
         }
       }
     },
-    "restore_purchases" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Restore Purchases"
-          }
-        }
-      }
-    },
     "restored_workspace" : {
       "localizations" : {
         "de" : {
@@ -6140,17 +5979,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已還原工作區"
-          }
-        }
-      }
-    },
-    "restoring_purchases" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Restoring purchases..."
           }
         }
       }
@@ -7032,6 +6860,7 @@
       }
     },
     "sidebar_volumes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -7726,29 +7555,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "標籤"
-          }
-        }
-      }
-    },
-    "terms_of_use" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Terms of Use (EULA)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "使用条款（EULA）"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "使用條款（EULA）"
           }
         }
       }

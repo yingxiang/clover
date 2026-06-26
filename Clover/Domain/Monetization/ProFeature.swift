@@ -17,19 +17,19 @@ enum ProFeature: String, CaseIterable, Sendable {
     var title: String {
         switch self {
         case .namedWorkspaces:
-            return L10n.proFeatureNamedWorkspaces
+            return String(localized: "pro_feature_named_workspaces", defaultValue: "Multiple named workspaces")
         case .stashShelf:
-            return L10n.proFeatureStashShelf
+            return String(localized: "pro_feature_stash_shelf", defaultValue: "Stash shelf for cross-folder collecting")
         case .batchRename:
-            return L10n.proFeatureBatchRename
+            return String(localized: "pro_feature_batch_rename", defaultValue: "Batch rename with preview")
         case .folderCompare:
-            return L10n.proFeatureFolderCompare
+            return String(localized: "pro_feature_folder_compare", defaultValue: "Folder comparison between panes")
         case .customToolbar:
-            return L10n.proFeatureCustomToolbar
+            return String(localized: "pro_feature_custom_toolbar", defaultValue: "Customizable toolbar")
         case .advancedPaneLayouts:
-            return L10n.proFeatureAdvancedPaneLayouts
+            return String(localized: "pro_feature_advanced_pane_layouts", defaultValue: "Unlock all pane layouts")
         case .advancedShortcuts:
-            return L10n.proFeatureAdvancedShortcuts
+            return String(localized: "pro_feature_advanced_shortcuts", defaultValue: "Advanced shortcuts for Pro workflows")
         }
     }
 }

@@ -150,7 +150,7 @@ final class PaneLayoutController: NSViewController {
 
     func setFileViewModeInActivePane(_ mode: FileViewMode) {
         activePane?.setViewMode(mode)
-        statusHandler?(L10n.viewStatus(mode == .list ? L10n.viewModeList : L10n.viewModeGrid))
+        statusHandler?(String(format: String(localized: "view_status_format", defaultValue: "View: %@"), locale: .current, mode == .list ? String(localized: "view_mode_list", defaultValue: "List") : String(localized: "view_mode_grid", defaultValue: "Grid")))
     }
 
     func restoreWorkspace(_ workspace: Workspace) {
@@ -193,7 +193,7 @@ final class PaneLayoutController: NSViewController {
         } else {
             setActivePane(panes.first)
         }
-        statusHandler?(L10n.layoutStatus(displayName(for: newLayout)))
+        statusHandler?(String(format: String(localized: "layout_status_format", defaultValue: "Layout: %@"), locale: .current, displayName(for: newLayout)))
     }
 
     func restore(from workspace: Workspace) {
@@ -205,7 +205,7 @@ final class PaneLayoutController: NSViewController {
         }
         rebuildLayout()
         setActivePane(panes.first)
-        statusHandler?(L10n.restoredWorkspace)
+        statusHandler?(String(localized: "restored_workspace", defaultValue: "Restored workspace"))
     }
 
     func workspaceState(using store: WorkspaceStore) -> (layout: PaneLayout, panes: [PaneState]) {

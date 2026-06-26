@@ -11,8 +11,8 @@ final class ProBatchRenameWindowController: NSWindowController {
     private let findField = NSTextField()
     private let replaceField = NSTextField()
     private let startField = NSTextField(string: "1")
-    private let refreshPreviewButton = NSButton(title: L10n.refresh, target: nil, action: nil)
-    private let executeButton = NSButton(title: L10n.batchRenameExecute, target: nil, action: nil)
+    private let refreshPreviewButton = NSButton(title: String(localized: "refresh", defaultValue: "Refresh"), target: nil, action: nil)
+    private let executeButton = NSButton(title: String(localized: "batch_rename_execute", defaultValue: "Execute Renames"), target: nil, action: nil)
 
     private var items: [URL] = []
     private var previewRows: [(original: String, renamed: String)] = []
@@ -27,28 +27,28 @@ final class ProBatchRenameWindowController: NSWindowController {
         let contentView = NSView()
         contentView.translatesAutoresizingMaskIntoConstraints = false
 
-        let titleLabel = NSTextField(labelWithString: L10n.proBatchRename)
+        let titleLabel = NSTextField(labelWithString: String(localized: "pro_batch_rename", defaultValue: "Batch Rename"))
         titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
 
-        let subtitleLabel = NSTextField(labelWithString: L10n.proBatchRenameSubtitle)
+        let subtitleLabel = NSTextField(labelWithString: String(localized: "pro_batch_rename_subtitle", defaultValue: "Preview and apply bulk filename changes."))
         subtitleLabel.font = .systemFont(ofSize: 13)
         subtitleLabel.textColor = .secondaryLabelColor
         subtitleLabel.lineBreakMode = .byWordWrapping
         subtitleLabel.maximumNumberOfLines = 0
 
         let form = NSGridView(views: [
-            [Self.label(L10n.prefix), prefixField],
-            [Self.label(L10n.suffix), suffixField],
-            [Self.label(L10n.find), findField],
-            [Self.label(L10n.replace), replaceField],
-            [Self.label(L10n.start), startField]
+            [Self.label(String(localized: "prefix", defaultValue: "Prefix")), prefixField],
+            [Self.label(String(localized: "suffix", defaultValue: "Suffix")), suffixField],
+            [Self.label(String(localized: "find", defaultValue: "Find")), findField],
+            [Self.label(String(localized: "replace", defaultValue: "Replace")), replaceField],
+            [Self.label(String(localized: "start", defaultValue: "Start")), startField]
         ])
         form.rowSpacing = 8
         form.columnSpacing = 12
-        prefixField.placeholderString = L10n.prefix
-        suffixField.placeholderString = L10n.suffix
-        findField.placeholderString = L10n.find
-        replaceField.placeholderString = L10n.replace
+        prefixField.placeholderString = String(localized: "prefix", defaultValue: "Prefix")
+        suffixField.placeholderString = String(localized: "suffix", defaultValue: "Suffix")
+        findField.placeholderString = String(localized: "find", defaultValue: "Find")
+        replaceField.placeholderString = String(localized: "replace", defaultValue: "Replace")
         startField.placeholderString = "1"
         startField.alignment = .right
 
@@ -63,10 +63,10 @@ final class ProBatchRenameWindowController: NSWindowController {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
 
         let originalColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("original"))
-        originalColumn.title = L10n.name
+        originalColumn.title = String(localized: "name", defaultValue: "Name")
         originalColumn.width = 240
         let renamedColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("renamed"))
-        renamedColumn.title = L10n.rename
+        renamedColumn.title = String(localized: "rename", defaultValue: "Rename")
         renamedColumn.width = 260
         tableView.addTableColumn(originalColumn)
         tableView.addTableColumn(renamedColumn)
@@ -94,7 +94,7 @@ final class ProBatchRenameWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = L10n.proBatchRename
+        window.title = String(localized: "pro_batch_rename", defaultValue: "Batch Rename")
         window.contentView = contentView
         window.center()
         window.isReleasedWhenClosed = false

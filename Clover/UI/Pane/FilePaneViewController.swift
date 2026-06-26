@@ -338,8 +338,8 @@ final class FilePaneViewController: NSViewController {
     }
 
     private func configurePathBar() {
-        configureNavigationButton(backButton, symbol: .back, action: #selector(goBack(_:)), toolTip: L10n.back)
-        configureNavigationButton(forwardButton, symbol: .forward, action: #selector(goForward(_:)), toolTip: L10n.forward)
+        configureNavigationButton(backButton, symbol: .back, action: #selector(goBack(_:)), toolTip: String(localized: "back", defaultValue: "Back"))
+        configureNavigationButton(forwardButton, symbol: .forward, action: #selector(goForward(_:)), toolTip: String(localized: "forward", defaultValue: "Forward"))
         view.addSubview(backButton)
         view.addSubview(forwardButton)
 
@@ -371,10 +371,10 @@ final class FilePaneViewController: NSViewController {
 
     private func configureTableView() {
         let columns: [(String, String, CGFloat)] = [
-            ("name", L10n.name, 280),
-            ("size", L10n.size, 130),
+            ("name", String(localized: "name", defaultValue: "Name"), 280),
+            ("size", String(localized: "size", defaultValue: "Size"), 130),
             ("type", "\(currentTypeColumnTitle()) ▾", 130),
-            ("modified", L10n.modified, 180)
+            ("modified", String(localized: "modified", defaultValue: "Modified"), 180)
         ]
 
         for (identifier, title, width) in columns {
@@ -473,7 +473,7 @@ final class FilePaneViewController: NSViewController {
 
     private func configureSearchField() {
         searchField.translatesAutoresizingMaskIntoConstraints = false
-        searchField.placeholderString = L10n.search
+        searchField.placeholderString = String(localized: "search", defaultValue: "Search")
         searchField.controlSize = .small
         searchField.target = self
         searchField.action = #selector(searchTextChanged(_:))
@@ -670,9 +670,9 @@ final class FilePaneViewController: NSViewController {
 
         Logger.ui.debug("Directory access panel after error url=\(requestedURL.standardizedFileURL.path, privacy: .public)")
         let panel = NSOpenPanel()
-        panel.title = L10n.grantFolderAccess
-        panel.message = L10n.grantFolderAccessMessage(requestedURL.lastPathComponent.isEmpty ? requestedURL.path : requestedURL.lastPathComponent)
-        panel.prompt = L10n.grantAccess
+        panel.title = String(localized: "grant_folder_access", defaultValue: "Grant Folder Access")
+        panel.message = String(format: String(localized: "grant_folder_access_message_format", defaultValue: "Choose %@ to let Clover access this folder while running in the sandbox."), locale: .current, requestedURL.lastPathComponent.isEmpty ? requestedURL.path : requestedURL.lastPathComponent)
+        panel.prompt = String(localized: "grant_access", defaultValue: "Grant Access")
         panel.directoryURL = panelDirectoryURL(for: requestedURL)
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -712,9 +712,9 @@ final class FilePaneViewController: NSViewController {
         let requestedURL = standardizedURL
         Logger.ui.debug("Directory access panel proactive url=\(requestedURL.path, privacy: .public)")
         let panel = NSOpenPanel()
-        panel.title = L10n.grantFolderAccess
-        panel.message = L10n.grantFolderAccessMessage(requestedURL.lastPathComponent)
-        panel.prompt = L10n.grantAccess
+        panel.title = String(localized: "grant_folder_access", defaultValue: "Grant Folder Access")
+        panel.message = String(format: String(localized: "grant_folder_access_message_format", defaultValue: "Choose %@ to let Clover access this folder while running in the sandbox."), locale: .current, requestedURL.lastPathComponent)
+        panel.prompt = String(localized: "grant_access", defaultValue: "Grant Access")
         panel.directoryURL = requestedURL
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -1284,8 +1284,8 @@ final class FilePaneViewController: NSViewController {
                 try await operation()
             } catch CloverError.operationCancelled {
                 await MainActor.run {
-                    statusChanged(L10n.operationCancelled)
-                    statusHandler?(L10n.operationCancelled)
+                    statusChanged(String(localized: "operation_cancelled", defaultValue: "Operation cancelled"))
+                    statusHandler?(String(localized: "operation_cancelled", defaultValue: "Operation cancelled"))
                 }
             } catch {
                 await MainActor.run { showError(error) }
@@ -1296,7 +1296,7 @@ final class FilePaneViewController: NSViewController {
     func chooseDestination(title: String) -> URL? {
         let panel = NSOpenPanel()
         panel.title = title
-        panel.prompt = L10n.choose
+        panel.prompt = String(localized: "choose", defaultValue: "Choose")
         panel.directoryURL = viewModel.currentURL
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -1308,10 +1308,10 @@ final class FilePaneViewController: NSViewController {
     private func confirmTrash(count: Int) -> Bool {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = L10n.moveToTrashPrompt
-        alert.informativeText = L10n.moveItemsToTrashMessage(count)
-        alert.addButton(withTitle: L10n.moveToTrashAction)
-        alert.addButton(withTitle: L10n.cancel)
+        alert.messageText = String(localized: "move_to_trash_prompt", defaultValue: "Move to Trash?")
+        alert.informativeText = String(format: String(localized: "move_items_to_trash_message_format", defaultValue: "Move %lld selected items to the Trash."), locale: .current, count)
+        alert.addButton(withTitle: String(localized: "move_to_trash_action", defaultValue: "Move to Trash"))
+        alert.addButton(withTitle: String(localized: "cancel", defaultValue: "Cancel"))
         return alert.runModal() == .alertFirstButtonReturn
     }
 
@@ -1319,12 +1319,12 @@ final class FilePaneViewController: NSViewController {
     func resolveConflict(_ conflict: FileConflict) async -> FileConflictResolution {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = L10n.conflictExists(conflict.destinationURL.lastPathComponent)
-        alert.informativeText = L10n.conflictChoice
-        alert.addButton(withTitle: L10n.replace)
-        alert.addButton(withTitle: L10n.skip)
-        alert.addButton(withTitle: L10n.keepBoth)
-        alert.addButton(withTitle: L10n.cancel)
+        alert.messageText = String(format: String(localized: "conflict_exists_format", defaultValue: "An item named \"%@\" already exists."), locale: .current, conflict.destinationURL.lastPathComponent)
+        alert.informativeText = String(localized: "conflict_choice", defaultValue: "Choose how Clover should handle the conflict.")
+        alert.addButton(withTitle: String(localized: "replace", defaultValue: "Replace"))
+        alert.addButton(withTitle: String(localized: "skip", defaultValue: "Skip"))
+        alert.addButton(withTitle: String(localized: "keep_both", defaultValue: "Keep Both"))
+        alert.addButton(withTitle: String(localized: "cancel", defaultValue: "Cancel"))
 
         switch alert.runModal() {
         case .alertFirstButtonReturn:

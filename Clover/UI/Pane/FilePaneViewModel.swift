@@ -69,7 +69,7 @@ final class FilePaneViewModel {
         let previousURL = currentURL
         let includeHidden = showHiddenFiles
         let sort = sortOption
-        onStatusChange?(L10n.loadingFolder(targetURL.lastPathComponent.isEmpty ? targetURL.path : targetURL.lastPathComponent))
+        onStatusChange?(String(format: String(localized: "loading_folder_format", defaultValue: "Loading %@..."), locale: .current, targetURL.lastPathComponent.isEmpty ? targetURL.path : targetURL.lastPathComponent))
 
         loadTask = Task { [weak self, provider] in
             do {
@@ -96,14 +96,14 @@ final class FilePaneViewModel {
                 }
             } catch is CancellationError {
                 await MainActor.run { [weak self] in
-                    self?.onStatusChange?(L10n.cancelled)
+                    self?.onStatusChange?(String(localized: "cancelled", defaultValue: "Cancelled"))
                 }
             } catch {
                 await MainActor.run { [weak self] in
                     self?.allItems = []
                     self?.items = []
                     self?.onChange?()
-                    self?.onStatusChange?(L10n.unableToLoadFolder)
+                    self?.onStatusChange?(String(localized: "unable_to_load_folder", defaultValue: "Unable to load folder"))
                     self?.onError?(error)
                 }
             }
@@ -190,16 +190,16 @@ final class FilePaneViewModel {
     }
 
     func createFolder(named name: String) async throws -> URL {
-        onStatusChange?(L10n.creatingFolder)
+        onStatusChange?(String(localized: "creating_folder", defaultValue: "Creating folder..."))
         let createdURL = try await fileOperationService.createFolder(at: currentURL, name: name)
-        onStatusChange?(L10n.folderCreated)
+        onStatusChange?(String(localized: "folder_created", defaultValue: "Folder created"))
         return createdURL
     }
 
     func createTextFile(named name: String) async throws -> URL {
-        onStatusChange?(L10n.creatingFile)
+        onStatusChange?(String(localized: "creating_file", defaultValue: "Creating file..."))
         let createdURL = try await fileOperationService.createFile(at: currentURL, name: name, contents: Data())
-        onStatusChange?(L10n.fileCreated)
+        onStatusChange?(String(localized: "file_created", defaultValue: "File created"))
         return createdURL
     }
 
@@ -256,9 +256,9 @@ final class FilePaneViewModel {
     }
 
     func renameItem(_ item: FileItem, to newName: String) async throws {
-        onStatusChange?(L10n.renamingItem(item.name))
+        onStatusChange?(String(format: String(localized: "renaming_item_format", defaultValue: "Renaming %@..."), locale: .current, item.name))
         let renamedURL = try await fileOperationService.renameItem(at: item.url, to: newName)
-        onStatusChange?(L10n.renamedItem(item.name))
+        onStatusChange?(String(format: String(localized: "renamed_item_format", defaultValue: "Renamed %@"), locale: .current, item.name))
         NotificationCenter.default.postCloverFileOperationCompleted(
             affectedDirectories: [item.url.deletingLastPathComponent(), renamedURL.deletingLastPathComponent()]
         )
@@ -266,10 +266,10 @@ final class FilePaneViewModel {
 
     func copyItems(_ items: [FileItem], to destinationURL: URL, conflictResolver: FileConflictResolver? = nil) async throws {
         guard !items.isEmpty else { return }
-        onStatusChange?(L10n.copyingItems(items.count))
+        onStatusChange?(String(format: String(localized: "copying_items_format", defaultValue: "Copying %lld items..."), locale: .current, items.count))
         let sourceDirectories = items.map { $0.url.deletingLastPathComponent() }
         try await fileOperationService.copyItems(items.map(\.url), to: destinationURL, conflictResolver: conflictResolver)
-        onStatusChange?(L10n.copiedItems(items.count))
+        onStatusChange?(String(format: String(localized: "copied_items_format", defaultValue: "Copied %lld items"), locale: .current, items.count))
         NotificationCenter.default.postCloverFileOperationCompleted(
             affectedDirectories: sourceDirectories + [destinationURL]
         )
@@ -277,10 +277,10 @@ final class FilePaneViewModel {
 
     func copyFileURLs(_ urls: [URL], to destinationURL: URL, conflictResolver: FileConflictResolver? = nil) async throws {
         guard !urls.isEmpty else { return }
-        onStatusChange?(L10n.copyingItems(urls.count))
+        onStatusChange?(String(format: String(localized: "copying_items_format", defaultValue: "Copying %lld items..."), locale: .current, urls.count))
         let sourceDirectories = urls.map { $0.deletingLastPathComponent() }
         try await fileOperationService.copyItems(urls, to: destinationURL, conflictResolver: conflictResolver)
-        onStatusChange?(L10n.copiedItems(urls.count))
+        onStatusChange?(String(format: String(localized: "copied_items_format", defaultValue: "Copied %lld items"), locale: .current, urls.count))
         NotificationCenter.default.postCloverFileOperationCompleted(
             affectedDirectories: sourceDirectories + [destinationURL]
         )
@@ -288,10 +288,10 @@ final class FilePaneViewModel {
 
     func moveItems(_ items: [FileItem], to destinationURL: URL, conflictResolver: FileConflictResolver? = nil) async throws {
         guard !items.isEmpty else { return }
-        onStatusChange?(L10n.movingItems(items.count))
+        onStatusChange?(String(format: String(localized: "moving_items_format", defaultValue: "Moving %lld items..."), locale: .current, items.count))
         let sourceDirectories = items.map { $0.url.deletingLastPathComponent() }
         try await fileOperationService.moveItems(items.map(\.url), to: destinationURL, conflictResolver: conflictResolver)
-        onStatusChange?(L10n.movedItems(items.count))
+        onStatusChange?(String(format: String(localized: "moved_items_format", defaultValue: "Moved %lld items"), locale: .current, items.count))
         NotificationCenter.default.postCloverFileOperationCompleted(
             affectedDirectories: sourceDirectories + [destinationURL],
             movedItemURLs: items.map(\.url)
@@ -300,10 +300,10 @@ final class FilePaneViewModel {
 
     func moveFileURLs(_ urls: [URL], to destinationURL: URL, conflictResolver: FileConflictResolver? = nil) async throws {
         guard !urls.isEmpty else { return }
-        onStatusChange?(L10n.movingItems(urls.count))
+        onStatusChange?(String(format: String(localized: "moving_items_format", defaultValue: "Moving %lld items..."), locale: .current, urls.count))
         let sourceDirectories = urls.map { $0.deletingLastPathComponent() }
         try await fileOperationService.moveItems(urls, to: destinationURL, conflictResolver: conflictResolver)
-        onStatusChange?(L10n.movedItems(urls.count))
+        onStatusChange?(String(format: String(localized: "moved_items_format", defaultValue: "Moved %lld items"), locale: .current, urls.count))
         NotificationCenter.default.postCloverFileOperationCompleted(
             affectedDirectories: sourceDirectories + [destinationURL],
             movedItemURLs: urls
@@ -312,10 +312,10 @@ final class FilePaneViewModel {
 
     func trashItems(_ items: [FileItem]) async throws {
         guard !items.isEmpty else { return }
-        onStatusChange?(L10n.movingItemsToTrash(items.count))
+        onStatusChange?(String(format: String(localized: "moving_items_to_trash_format", defaultValue: "Moving %lld items to Trash..."), locale: .current, items.count))
         let affectedDirectories = items.map { $0.url.deletingLastPathComponent() }
         try await fileOperationService.trashItems(items.map(\.url))
-        onStatusChange?(L10n.movedToTrashStatus)
+        onStatusChange?(String(localized: "moved_to_trash_status", defaultValue: "Moved to Trash"))
         NotificationCenter.default.postCloverFileOperationCompleted(
             affectedDirectories: affectedDirectories
         )
@@ -323,10 +323,10 @@ final class FilePaneViewModel {
 
     func deleteItemsPermanently(_ items: [FileItem]) async throws {
         guard !items.isEmpty else { return }
-        onStatusChange?(L10n.deletingItems(items.count))
+        onStatusChange?(String(format: String(localized: "deleting_items_format", defaultValue: "Deleting %lld items..."), locale: .current, items.count))
         let affectedDirectories = items.map { $0.url.deletingLastPathComponent() }
         try await fileOperationService.deleteItemsPermanently(items.map(\.url))
-        onStatusChange?(L10n.deletedItems(items.count))
+        onStatusChange?(String(format: String(localized: "deleted_items_format", defaultValue: "Deleted %lld items"), locale: .current, items.count))
         NotificationCenter.default.postCloverFileOperationCompleted(
             affectedDirectories: affectedDirectories
         )
@@ -335,7 +335,7 @@ final class FilePaneViewModel {
     func setLabelNumber(_ labelNumber: Int?, for items: [FileItem]) async throws {
         guard !items.isEmpty else { return }
         try await fileOperationService.setLabelNumber(labelNumber, for: items.map(\.url))
-        onStatusChange?(L10n.updatedLabels)
+        onStatusChange?(String(localized: "updated_labels", defaultValue: "Updated labels"))
         NotificationCenter.default.postCloverFileOperationCompleted(
             affectedDirectories: items.map { $0.url.deletingLastPathComponent() }
         )
@@ -343,9 +343,9 @@ final class FilePaneViewModel {
 
     func extractArchive(_ item: FileItem, to destinationDirectoryURL: URL? = nil) async throws -> URL {
         let destinationDirectoryURL = destinationDirectoryURL ?? item.url.deletingLastPathComponent()
-        onStatusChange?(L10n.extractingItem(item.name))
+        onStatusChange?(String(format: String(localized: "extracting_item_format", defaultValue: "Extracting %@..."), locale: .current, item.name))
         let extractedURL = try await fileOperationService.extractArchive(at: item.url, to: destinationDirectoryURL)
-        onStatusChange?(L10n.extractedItem(item.name))
+        onStatusChange?(String(format: String(localized: "extracted_item_format", defaultValue: "Extracted %@"), locale: .current, item.name))
         NotificationCenter.default.postCloverFileOperationCompleted(
             affectedDirectories: [destinationDirectoryURL]
         )
@@ -354,13 +354,13 @@ final class FilePaneViewModel {
 
     func createArchive(from items: [FileItem], in destinationDirectoryURL: URL) async throws -> URL {
         guard !items.isEmpty else { throw CloverError.unsupportedOperation }
-        onStatusChange?(L10n.compressingItems(items.count))
+        onStatusChange?(String(format: String(localized: "compressing_items_format", defaultValue: "Compressing %lld items..."), locale: .current, items.count))
         let archiveURL = try await fileOperationService.createArchive(
             from: items.map(\.url),
             in: destinationDirectoryURL,
             suggestedName: suggestedArchiveName(for: items)
         )
-        onStatusChange?(L10n.compressedItems(items.count))
+        onStatusChange?(String(format: String(localized: "compressed_items_format", defaultValue: "Compressed %lld items"), locale: .current, items.count))
         NotificationCenter.default.postCloverFileOperationCompleted(
             affectedDirectories: [destinationDirectoryURL]
         )
@@ -369,7 +369,7 @@ final class FilePaneViewModel {
 
     private func suggestedArchiveName(for items: [FileItem]) -> String {
         guard items.count == 1, let item = items.first else {
-            return L10n.defaultArchiveFileName
+            return String(localized: "default_archive_file_name", defaultValue: "Archive.zip")
         }
         return "\(item.name).zip"
     }
@@ -476,7 +476,7 @@ final class FilePaneViewModel {
         let expandedURLs = expandedDirectoryURLs
         let includeHidden = showHiddenFiles
         let sort = sortOption
-        onStatusChange?(L10n.loadingFolder(targetURL.lastPathComponent.isEmpty ? targetURL.path : targetURL.lastPathComponent))
+        onStatusChange?(String(format: String(localized: "loading_folder_format", defaultValue: "Loading %@..."), locale: .current, targetURL.lastPathComponent.isEmpty ? targetURL.path : targetURL.lastPathComponent))
 
         loadTask = Task { [weak self, provider] in
             do {
@@ -503,14 +503,14 @@ final class FilePaneViewModel {
                 }
             } catch is CancellationError {
                 await MainActor.run { [weak self] in
-                    self?.onStatusChange?(L10n.cancelled)
+                    self?.onStatusChange?(String(localized: "cancelled", defaultValue: "Cancelled"))
                 }
             } catch {
                 await MainActor.run { [weak self] in
                     self?.allItems = []
                     self?.items = []
                     self?.onChange?()
-                    self?.onStatusChange?(L10n.unableToLoadFolder)
+                    self?.onStatusChange?(String(localized: "unable_to_load_folder", defaultValue: "Unable to load folder"))
                     self?.onError?(error)
                 }
             }
@@ -659,7 +659,7 @@ final class FilePaneViewModel {
         loadTask?.cancel()
         let includeHidden = showHiddenFiles
         let sort = sortOption
-        onStatusChange?(L10n.loadingFolder(url.lastPathComponent.isEmpty ? url.path : url.lastPathComponent))
+        onStatusChange?(String(format: String(localized: "loading_folder_format", defaultValue: "Loading %@..."), locale: .current, url.lastPathComponent.isEmpty ? url.path : url.lastPathComponent))
 
         loadTask = Task { [weak self, provider] in
             do {
@@ -682,14 +682,14 @@ final class FilePaneViewModel {
                 }
             } catch is CancellationError {
                 await MainActor.run { [weak self] in
-                    self?.onStatusChange?(L10n.cancelled)
+                    self?.onStatusChange?(String(localized: "cancelled", defaultValue: "Cancelled"))
                 }
             } catch {
                 await MainActor.run { [weak self] in
                     self?.allItems = []
                     self?.items = []
                     self?.onChange?()
-                    self?.onStatusChange?(L10n.unableToLoadFolder)
+                    self?.onStatusChange?(String(localized: "unable_to_load_folder", defaultValue: "Unable to load folder"))
                     self?.onError?(error)
                 }
             }

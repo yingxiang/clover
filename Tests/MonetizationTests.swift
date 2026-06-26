@@ -24,10 +24,10 @@ final class MonetizationTests: XCTestCase {
     }
 
     func testProProductsUseMapleBadgeTitles() {
-        XCTAssertEqual(ProProduct.lifetime.badgeTitle, L10n.bestValue)
-        XCTAssertEqual(ProProduct.yearly.badgeTitle, L10n.goodValue)
-        XCTAssertEqual(ProProduct.sixMonths.badgeTitle, L10n.limitedOffer)
-        XCTAssertEqual(ProProduct.threeMonths.badgeTitle, L10n.limitedOffer)
+        XCTAssertEqual(ProProduct.lifetime.badgeTitle, String(localized: "best_value", defaultValue: "Best Value"))
+        XCTAssertEqual(ProProduct.yearly.badgeTitle, String(localized: "good_value", defaultValue: "Good Value"))
+        XCTAssertEqual(ProProduct.sixMonths.badgeTitle, String(localized: "limited_offer", defaultValue: "Limited Offer"))
+        XCTAssertEqual(ProProduct.threeMonths.badgeTitle, String(localized: "limited_offer", defaultValue: "Limited Offer"))
     }
 
     func testOnlyNewProFeaturesAreRegistered() {

@@ -30,7 +30,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
             backing: .buffered,
             defer: false
         )
-        window.title = L10n.appName
+        window.title = String(localized: "app_name", defaultValue: "Clover")
         window.center()
         window.minSize = NSSize(width: 760, height: 480)
         window.isReleasedWhenClosed = false
@@ -282,40 +282,40 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
         if itemIdentifier == .airDrop {
             return makeActionToolbarItem(
                 identifier: itemIdentifier,
-                label: L10n.airDrop,
-                image: AppIconProvider.image(.airDrop, accessibilityDescription: L10n.airDrop),
+                label: String(localized: "airdrop", defaultValue: "AirDrop"),
+                image: AppIconProvider.image(.airDrop, accessibilityDescription: String(localized: "airdrop", defaultValue: "AirDrop")),
                 action: #selector(sendSelectedItemsViaAirDropInActivePane(_:))
             )
         }
         if itemIdentifier == .terminal {
             return makeActionToolbarItem(
                 identifier: itemIdentifier,
-                label: L10n.openInTerminal,
-                image: AppIconProvider.image(.terminal, accessibilityDescription: L10n.openInTerminal),
+                label: String(localized: "open_in_terminal", defaultValue: "Open in Terminal"),
+                image: AppIconProvider.image(.terminal, accessibilityDescription: String(localized: "open_in_terminal", defaultValue: "Open in Terminal")),
                 action: #selector(openSelectedItemsInTerminalInActivePane(_:))
             )
         }
         if itemIdentifier == .share {
             return makeActionToolbarItem(
                 identifier: itemIdentifier,
-                label: L10n.share,
-                image: AppIconProvider.image(.share, accessibilityDescription: L10n.share),
+                label: String(localized: "share", defaultValue: "Share"),
+                image: AppIconProvider.image(.share, accessibilityDescription: String(localized: "share", defaultValue: "Share")),
                 action: #selector(showShareMenuInActivePane(_:))
             )
         }
         if itemIdentifier == .info {
             return makeActionToolbarItem(
                 identifier: itemIdentifier,
-                label: L10n.showInfo,
-                image: AppIconProvider.image(.info, accessibilityDescription: L10n.showInfo),
+                label: String(localized: "show_info", defaultValue: "Get Info"),
+                image: AppIconProvider.image(.info, accessibilityDescription: String(localized: "show_info", defaultValue: "Get Info")),
                 action: #selector(showSelectedItemsInfoInActivePane(_:))
             )
         }
         guard itemIdentifier == .refresh else { return nil }
         return makeActionToolbarItem(
             identifier: itemIdentifier,
-            label: L10n.refresh,
-            image: AppIconProvider.image(.refresh, accessibilityDescription: L10n.refresh),
+            label: String(localized: "refresh", defaultValue: "Refresh"),
+            image: AppIconProvider.image(.refresh, accessibilityDescription: String(localized: "refresh", defaultValue: "Refresh")),
             action: #selector(refreshActivePane(_:))
         )
     }
@@ -366,8 +366,8 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
 
     private func makeLayoutToolbarItem(identifier: NSToolbarItem.Identifier) -> NSToolbarItem {
         let item = NSToolbarItem(itemIdentifier: identifier)
-        item.label = L10n.layout
-        item.paletteLabel = L10n.layout
+        item.label = String(localized: "layout", defaultValue: "Layout")
+        item.paletteLabel = String(localized: "layout", defaultValue: "Layout")
         let button = makeToolbarIconButton(action: #selector(showLayoutPicker(_:)))
         item.view = button
         layoutToolbarItem = item
@@ -378,8 +378,8 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
 
     private func makeViewModeToolbarItem(identifier: NSToolbarItem.Identifier) -> NSToolbarItem {
         let item = NSToolbarItem(itemIdentifier: identifier)
-        item.label = L10n.view
-        item.paletteLabel = L10n.view
+        item.label = String(localized: "view", defaultValue: "View")
+        item.paletteLabel = String(localized: "view", defaultValue: "View")
         let button = makeToolbarIconButton(action: #selector(toggleViewMode(_:)))
         item.view = button
         viewModeToolbarItem = item
@@ -419,22 +419,22 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     private func updateLayoutButton() {
         let layout = rootViewController.currentPaneLayout
         layoutToolbarItem?.image = layout.toolbarImage
-        layoutToolbarItem?.label = L10n.layout
-        layoutToolbarItem?.paletteLabel = L10n.layout
-        layoutToolbarItem?.toolTip = L10n.layout
+        layoutToolbarItem?.label = String(localized: "layout", defaultValue: "Layout")
+        layoutToolbarItem?.paletteLabel = String(localized: "layout", defaultValue: "Layout")
+        layoutToolbarItem?.toolTip = String(localized: "layout", defaultValue: "Layout")
         layoutToolbarButton?.image = layout.toolbarImage
-        layoutToolbarButton?.toolTip = L10n.layout
-        layoutToolbarButton?.setAccessibilityLabel(L10n.layout)
+        layoutToolbarButton?.toolTip = String(localized: "layout", defaultValue: "Layout")
+        layoutToolbarButton?.setAccessibilityLabel(String(localized: "layout", defaultValue: "Layout"))
     }
 
     private func updateViewModeButton() {
         viewModeToolbarItem?.image = viewModeImage
-        viewModeToolbarItem?.label = L10n.view
-        viewModeToolbarItem?.paletteLabel = L10n.view
-        viewModeToolbarItem?.toolTip = L10n.view
+        viewModeToolbarItem?.label = String(localized: "view", defaultValue: "View")
+        viewModeToolbarItem?.paletteLabel = String(localized: "view", defaultValue: "View")
+        viewModeToolbarItem?.toolTip = String(localized: "view", defaultValue: "View")
         viewModeToolbarButton?.image = viewModeImage
-        viewModeToolbarButton?.toolTip = L10n.view
-        viewModeToolbarButton?.setAccessibilityLabel(L10n.view)
+        viewModeToolbarButton?.toolTip = String(localized: "view", defaultValue: "View")
+        viewModeToolbarButton?.setAccessibilityLabel(String(localized: "view", defaultValue: "View"))
     }
 
     private func updateToolbarButtonAvailability() {
@@ -453,7 +453,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
 
     private func updateSidebarTitlebarButton() {
         let isCollapsed = rootViewController.isSidebarCollapsed
-        let title = isCollapsed ? L10n.showSidebar : L10n.hideSidebar
+        let title = isCollapsed ? String(localized: "show_sidebar", defaultValue: "Show Sidebar") : String(localized: "hide_sidebar", defaultValue: "Hide Sidebar")
         sidebarTitlebarButton?.toolTip = title
         sidebarTitlebarButton?.setAccessibilityLabel(title)
     }
@@ -461,7 +461,7 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSUserI
     private func updateWindowTitle() {
         guard let window else { return }
         guard let url = rootViewController.activePaneURL else {
-            window.title = L10n.appName
+            window.title = String(localized: "app_name", defaultValue: "Clover")
             return
         }
         let name = FileManager.default.displayName(atPath: url.path)

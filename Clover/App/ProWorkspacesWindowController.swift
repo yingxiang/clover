@@ -28,10 +28,10 @@ final class ProWorkspacesWindowController: NSWindowController {
         let contentView = NSView()
         contentView.translatesAutoresizingMaskIntoConstraints = false
 
-        let titleLabel = NSTextField(labelWithString: L10n.proNamedWorkspaces)
+        let titleLabel = NSTextField(labelWithString: String(localized: "pro_named_workspaces", defaultValue: "Named Workspaces"))
         titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
 
-        let subtitleLabel = NSTextField(labelWithString: L10n.proNamedWorkspacesSubtitle)
+        let subtitleLabel = NSTextField(labelWithString: String(localized: "pro_named_workspaces_subtitle", defaultValue: "Save, load, rename, and remove multiple workspace setups."))
         subtitleLabel.font = .systemFont(ofSize: 13)
         subtitleLabel.textColor = .secondaryLabelColor
         subtitleLabel.lineBreakMode = .byWordWrapping
@@ -43,13 +43,13 @@ final class ProWorkspacesWindowController: NSWindowController {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
 
         let nameColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("name"))
-        nameColumn.title = L10n.name
+        nameColumn.title = String(localized: "name", defaultValue: "Name")
         nameColumn.width = 220
         let layoutColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("layout"))
-        layoutColumn.title = L10n.layout
+        layoutColumn.title = String(localized: "layout", defaultValue: "Layout")
         layoutColumn.width = 120
         let updatedColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("updated"))
-        updatedColumn.title = L10n.modified
+        updatedColumn.title = String(localized: "modified", defaultValue: "Modified")
         updatedColumn.width = 160
         tableView.addTableColumn(nameColumn)
         tableView.addTableColumn(layoutColumn)
@@ -57,11 +57,11 @@ final class ProWorkspacesWindowController: NSWindowController {
         tableView.headerView = NSTableHeaderView()
         tableView.usesAlternatingRowBackgroundColors = true
 
-        let saveButton = NSButton(title: L10n.saveCurrentWorkspace, target: nil, action: nil)
-        let openButton = NSButton(title: L10n.open, target: nil, action: nil)
-        let renameButton = NSButton(title: L10n.rename, target: nil, action: nil)
-        let deleteButton = NSButton(title: L10n.deleteImmediately, target: nil, action: nil)
-        let refreshButton = NSButton(title: L10n.refresh, target: nil, action: nil)
+        let saveButton = NSButton(title: String(localized: "save_current_workspace", defaultValue: "Save Current Workspace"), target: nil, action: nil)
+        let openButton = NSButton(title: String(localized: "open", defaultValue: "Open"), target: nil, action: nil)
+        let renameButton = NSButton(title: String(localized: "rename", defaultValue: "Rename"), target: nil, action: nil)
+        let deleteButton = NSButton(title: String(localized: "delete_immediately", defaultValue: "Delete Immediately"), target: nil, action: nil)
+        let refreshButton = NSButton(title: String(localized: "refresh", defaultValue: "Refresh"), target: nil, action: nil)
         actionButtons = [saveButton, openButton, renameButton, deleteButton, refreshButton]
 
         let buttonRow = NSStackView(views: [saveButton, openButton, renameButton, deleteButton, refreshButton])
@@ -90,7 +90,7 @@ final class ProWorkspacesWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = L10n.proNamedWorkspaces
+        window.title = String(localized: "pro_named_workspaces", defaultValue: "Named Workspaces")
         window.contentView = contentView
         window.center()
         window.isReleasedWhenClosed = false
@@ -127,12 +127,12 @@ final class ProWorkspacesWindowController: NSWindowController {
 
     @objc private func saveCurrentWorkspaceAction(_ sender: Any?) {
         let alert = NSAlert()
-        alert.messageText = L10n.saveCurrentWorkspace
-        alert.informativeText = L10n.proNamedWorkspacesSavePrompt
-        alert.addButton(withTitle: L10n.save)
-        alert.addButton(withTitle: L10n.cancel)
+        alert.messageText = String(localized: "save_current_workspace", defaultValue: "Save Current Workspace")
+        alert.informativeText = String(localized: "pro_named_workspaces_save_prompt", defaultValue: "Save the current window as a named workspace.")
+        alert.addButton(withTitle: String(localized: "save", defaultValue: "Save"))
+        alert.addButton(withTitle: String(localized: "cancel", defaultValue: "Cancel"))
         let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
-        input.placeholderString = L10n.proWorkspaceNamePlaceholder
+        input.placeholderString = String(localized: "pro_workspace_name_placeholder", defaultValue: "Workspace name")
         alert.accessoryView = input
         if alert.runModal() != .alertFirstButtonReturn { return }
         let name = input.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -149,10 +149,10 @@ final class ProWorkspacesWindowController: NSWindowController {
     @objc private func renameSelectedWorkspace(_ sender: Any?) {
         guard let workspace = selectedWorkspace() else { return }
         let alert = NSAlert()
-        alert.messageText = L10n.rename
+        alert.messageText = String(localized: "rename", defaultValue: "Rename")
         alert.informativeText = workspace.name
-        alert.addButton(withTitle: L10n.ok)
-        alert.addButton(withTitle: L10n.cancel)
+        alert.addButton(withTitle: String(localized: "ok", defaultValue: "OK"))
+        alert.addButton(withTitle: String(localized: "cancel", defaultValue: "Cancel"))
         let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
         input.stringValue = workspace.name
         alert.accessoryView = input
@@ -166,10 +166,10 @@ final class ProWorkspacesWindowController: NSWindowController {
     @objc private func deleteSelectedWorkspace(_ sender: Any?) {
         guard let workspace = selectedWorkspace() else { return }
         let alert = NSAlert()
-        alert.messageText = L10n.deleteImmediatelyPrompt
+        alert.messageText = String(localized: "delete_immediately_prompt", defaultValue: "Delete Immediately?")
         alert.informativeText = workspace.name
-        alert.addButton(withTitle: L10n.deleteImmediately)
-        alert.addButton(withTitle: L10n.cancel)
+        alert.addButton(withTitle: String(localized: "delete_immediately", defaultValue: "Delete Immediately"))
+        alert.addButton(withTitle: String(localized: "cancel", defaultValue: "Cancel"))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         try? deleteWorkspace(workspace.id)
         refresh(nil)

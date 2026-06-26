@@ -11,7 +11,7 @@ final class SidebarViewController: NSViewController {
 
     private let outlineView = NSOutlineView()
     private let scrollView = NSScrollView()
-    private let upgradeButton = NSButton(title: L10n.upgradeToPro, target: nil, action: nil)
+    private let upgradeButton = NSButton(title: String(localized: "upgrade_to_pro", defaultValue: "Upgrade to Clover Pro"), target: nil, action: nil)
     private let entitlementService: EntitlementService
     private var upgradeProWindowController: UpgradeProWindowController?
     private var entitlementCancellable: AnyCancellable?
@@ -43,7 +43,7 @@ final class SidebarViewController: NSViewController {
 
     private func configureOutlineView() {
         let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("SidebarColumn"))
-        column.title = L10n.sidebarLocations
+        column.title = String(localized: "sidebar_locations", defaultValue: "Locations")
         outlineView.addTableColumn(column)
         outlineView.outlineTableColumn = column
         outlineView.headerView = nil
@@ -81,14 +81,14 @@ final class SidebarViewController: NSViewController {
     private func configureUpgradeButton() {
         upgradeButton.translatesAutoresizingMaskIntoConstraints = false
         upgradeButton.bezelStyle = .rounded
-        upgradeButton.image = AppIconProvider.image(.pro, accessibilityDescription: L10n.upgradeToPro)
+        upgradeButton.image = AppIconProvider.image(.pro, accessibilityDescription: String(localized: "upgrade_to_pro", defaultValue: "Upgrade to Clover Pro"))
         upgradeButton.imagePosition = .imageLeading
         upgradeButton.contentTintColor = .controlAccentColor
         upgradeButton.font = .systemFont(ofSize: 13, weight: .semibold)
         upgradeButton.target = self
         upgradeButton.action = #selector(showUpgradeProWindow(_:))
-        upgradeButton.toolTip = L10n.upgradeToPro
-        upgradeButton.setAccessibilityLabel(L10n.upgradeToPro)
+        upgradeButton.toolTip = String(localized: "upgrade_to_pro", defaultValue: "Upgrade to Clover Pro")
+        upgradeButton.setAccessibilityLabel(String(localized: "upgrade_to_pro", defaultValue: "Upgrade to Clover Pro"))
         view.addSubview(upgradeButton)
     }
 
@@ -132,14 +132,14 @@ final class SidebarViewController: NSViewController {
         let home = UserDirectories.homeURL
         let userName = NSUserName()
         return [
-            SidebarItem(title: userName.isEmpty ? L10n.sidebarHome : userName, url: home, systemIconName: AppSymbol.home.rawValue),
-            SidebarItem(title: L10n.sidebarDesktop, url: home.appendingPathComponent("Desktop"), systemIconName: AppSymbol.desktop.rawValue),
-            SidebarItem(title: L10n.sidebarDocuments, url: home.appendingPathComponent("Documents"), systemIconName: AppSymbol.documents.rawValue),
-            SidebarItem(title: L10n.sidebarDownloads, url: home.appendingPathComponent("Downloads"), systemIconName: AppSymbol.downloads.rawValue),
-            SidebarItem(title: L10n.sidebarApplications, url: URL(fileURLWithPath: "/Applications"), systemIconName: AppSymbol.applications.rawValue),
-            SidebarItem(title: L10n.sidebarMovies, url: home.appendingPathComponent("Movies"), systemIconName: "movieclapper"),
-            SidebarItem(title: L10n.sidebarMusic, url: home.appendingPathComponent("Music"), systemIconName: "music.note"),
-            SidebarItem(title: L10n.sidebarPictures, url: home.appendingPathComponent("Pictures"), systemIconName: "photo")
+            SidebarItem(title: userName.isEmpty ? String(localized: "sidebar_home", defaultValue: "Home") : userName, url: home, systemIconName: AppSymbol.home.rawValue),
+            SidebarItem(title: String(localized: "sidebar_desktop", defaultValue: "Desktop"), url: home.appendingPathComponent("Desktop"), systemIconName: AppSymbol.desktop.rawValue),
+            SidebarItem(title: String(localized: "sidebar_documents", defaultValue: "Documents"), url: home.appendingPathComponent("Documents"), systemIconName: AppSymbol.documents.rawValue),
+            SidebarItem(title: String(localized: "sidebar_downloads", defaultValue: "Downloads"), url: home.appendingPathComponent("Downloads"), systemIconName: AppSymbol.downloads.rawValue),
+            SidebarItem(title: String(localized: "sidebar_applications", defaultValue: "Applications"), url: URL(fileURLWithPath: "/Applications"), systemIconName: AppSymbol.applications.rawValue),
+            SidebarItem(title: String(localized: "sidebar_movies", defaultValue: "Movies"), url: home.appendingPathComponent("Movies"), systemIconName: "movieclapper"),
+            SidebarItem(title: String(localized: "sidebar_music", defaultValue: "Music"), url: home.appendingPathComponent("Music"), systemIconName: "music.note"),
+            SidebarItem(title: String(localized: "sidebar_pictures", defaultValue: "Pictures"), url: home.appendingPathComponent("Pictures"), systemIconName: "photo")
         ]
     }
 }

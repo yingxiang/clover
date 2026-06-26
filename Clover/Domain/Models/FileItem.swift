@@ -111,11 +111,11 @@ enum FileItemPresentation {
     static func localizedTypeName(for key: String, fallbackName: String? = nil) -> String {
         switch key {
         case "application":
-            return L10n.typeApplication
+            return String(localized: "type_application", defaultValue: "Application")
         case "folder":
-            return L10n.typeFolder
+            return String(localized: "type_folder", defaultValue: "Folder")
         case "file":
-            return L10n.typeFile
+            return String(localized: "type_file", defaultValue: "File")
         default:
             if let fallbackName, !fallbackName.isEmpty {
                 return fallbackName
@@ -135,15 +135,15 @@ enum FileItemPresentation {
 
     private static func fallbackTypeName(for item: FileItem) -> String {
         if item.isApplication {
-            return L10n.typeApplication
+            return String(localized: "type_application", defaultValue: "Application")
         }
         if item.isBrowsableDirectory {
-            return L10n.typeFolder
+            return String(localized: "type_folder", defaultValue: "Folder")
         }
         if let identifier = item.typeIdentifier,
            let type = UTType(identifier) {
             return type.localizedDescription ?? identifier
         }
-        return item.url.pathExtension.isEmpty ? L10n.typeFile : item.url.pathExtension.uppercased()
+        return item.url.pathExtension.isEmpty ? String(localized: "type_file", defaultValue: "File") : item.url.pathExtension.uppercased()
     }
 }

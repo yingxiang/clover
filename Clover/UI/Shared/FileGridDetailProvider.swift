@@ -21,7 +21,7 @@ enum FileGridDetailProvider {
         let securityScopeURL = directoryAccessStore?.securityScopeURL(for: item.url)
         if item.isBrowsableDirectory {
             let count = await directoryItemCount(at: item.url, securityScopeURL: securityScopeURL)
-            return L10n.itemCount(count)
+            return (count) == 1 ? String(format: String(localized: "item_count_single", defaultValue: "%lld item"), locale: .current, count) : String(format: String(localized: "item_count_plural", defaultValue: "%lld items"), locale: .current, count)
         }
 
         let size: Int64?

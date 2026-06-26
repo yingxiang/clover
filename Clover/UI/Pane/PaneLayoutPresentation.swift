@@ -4,42 +4,42 @@ extension PaneLayout {
     var displayName: String {
         switch self {
         case .single:
-            return L10n.singlePane
+            return String(localized: "single_pane", defaultValue: "Single Pane")
         case .twoVertical:
-            return L10n.twoPanesVertical
+            return String(localized: "two_panes_vertical", defaultValue: "Two Panes Vertical")
         case .twoHorizontal:
-            return L10n.twoPanesHorizontal
+            return String(localized: "two_panes_horizontal", defaultValue: "Two Panes Horizontal")
         case .leftOneRightTwo:
-            return L10n.leftOneRightTwoPane
+            return String(localized: "left_one_right_two_pane", defaultValue: "Left 1, Right 2")
         case .leftTwoRightOne:
-            return L10n.leftTwoRightOnePane
+            return String(localized: "left_two_right_one_pane", defaultValue: "Left 2, Right 1")
         case .topOneBottomTwo:
-            return L10n.topOneBottomTwoPane
+            return String(localized: "top_one_bottom_two_pane", defaultValue: "Top 1, Bottom 2")
         case .topTwoBottomOne:
-            return L10n.topTwoBottomOnePane
+            return String(localized: "top_two_bottom_one_pane", defaultValue: "Top 2, Bottom 1")
         case .fourGrid:
-            return L10n.fourPanes
+            return String(localized: "four_panes", defaultValue: "Four Panes")
         }
     }
 
     var shortStatusName: String {
         switch self {
         case .single:
-            return L10n.single
+            return String(localized: "single", defaultValue: "Single")
         case .twoVertical:
-            return L10n.twoVertical
+            return String(localized: "two_vertical", defaultValue: "Two Vertical")
         case .twoHorizontal:
-            return L10n.twoHorizontal
+            return String(localized: "two_horizontal", defaultValue: "Two Horizontal")
         case .leftOneRightTwo:
-            return L10n.leftOneRightTwoPane
+            return String(localized: "left_one_right_two_pane", defaultValue: "Left 1, Right 2")
         case .leftTwoRightOne:
-            return L10n.leftTwoRightOnePane
+            return String(localized: "left_two_right_one_pane", defaultValue: "Left 2, Right 1")
         case .topOneBottomTwo:
-            return L10n.topOneBottomTwoPane
+            return String(localized: "top_one_bottom_two_pane", defaultValue: "Top 1, Bottom 2")
         case .topTwoBottomOne:
-            return L10n.topTwoBottomOnePane
+            return String(localized: "top_two_bottom_one_pane", defaultValue: "Top 2, Bottom 1")
         case .fourGrid:
-            return L10n.fourGrid
+            return String(localized: "four_grid", defaultValue: "Four Grid")
         }
     }
 

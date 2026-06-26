@@ -17,16 +17,16 @@ final class ProFolderCompareWindowController: NSWindowController {
         let contentView = NSView()
         contentView.translatesAutoresizingMaskIntoConstraints = false
 
-        let titleLabel = NSTextField(labelWithString: L10n.proFolderCompare)
+        let titleLabel = NSTextField(labelWithString: String(localized: "pro_folder_compare", defaultValue: "Folder Compare"))
         titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
 
-        let subtitleLabel = NSTextField(labelWithString: L10n.proFolderCompareSubtitle)
+        let subtitleLabel = NSTextField(labelWithString: String(localized: "pro_folder_compare_subtitle", defaultValue: "Compare the contents of two panes."))
         subtitleLabel.font = .systemFont(ofSize: 13)
         subtitleLabel.textColor = .secondaryLabelColor
         subtitleLabel.lineBreakMode = .byWordWrapping
         subtitleLabel.maximumNumberOfLines = 0
 
-        let refreshButton = NSButton(title: L10n.refresh, target: nil, action: nil)
+        let refreshButton = NSButton(title: String(localized: "refresh", defaultValue: "Refresh"), target: nil, action: nil)
 
         detailTextView.isEditable = false
         detailTextView.isSelectable = true
@@ -58,7 +58,7 @@ final class ProFolderCompareWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = L10n.proFolderCompare
+        window.title = String(localized: "pro_folder_compare", defaultValue: "Folder Compare")
         window.contentView = contentView
         window.center()
         window.isReleasedWhenClosed = false
@@ -76,7 +76,7 @@ final class ProFolderCompareWindowController: NSWindowController {
     @objc private func refreshComparison(_ sender: Any?) {
         let urls = paneURLsProvider()
         guard urls.count >= 2 else {
-            leftLabel.stringValue = L10n.proFolderCompareNeedsTwoPanes
+            leftLabel.stringValue = String(localized: "pro_folder_compare_needs_two_panes", defaultValue: "Open at least two panes to compare folders.")
             rightLabel.stringValue = ""
             summaryLabel.stringValue = ""
             detailTextView.string = ""
@@ -85,9 +85,9 @@ final class ProFolderCompareWindowController: NSWindowController {
 
         let leftURL = urls[0]
         let rightURL = urls[1]
-        leftLabel.stringValue = "\(L10n.left): \(leftURL.path)"
-        rightLabel.stringValue = "\(L10n.right): \(rightURL.path)"
-        detailTextView.string = L10n.loading
+        leftLabel.stringValue = "\(String(localized: "left", defaultValue: "Left")): \(leftURL.path)"
+        rightLabel.stringValue = "\(String(localized: "right", defaultValue: "Right")): \(rightURL.path)"
+        detailTextView.string = String(localized: "loading", defaultValue: "Loading")
 
         Task {
             do {
@@ -100,7 +100,7 @@ final class ProFolderCompareWindowController: NSWindowController {
                 let onlyRight = rightNames.subtracting(leftNames).sorted()
                 await MainActor.run {
                     self.summaryLabel.stringValue = String(
-                        format: L10n.proFolderCompareSummary,
+                        format: String(localized: "pro_folder_compare_summary", defaultValue: "%lld items on the left, %lld items on the right, %lld shared, %lld only on the left, %lld only on the right."),
                         leftNames.count,
                         rightNames.count,
                         shared.count,
@@ -108,13 +108,13 @@ final class ProFolderCompareWindowController: NSWindowController {
                         onlyRight.count
                     )
                     self.detailTextView.string = [
-                        "\(L10n.shared):",
+                        "\(String(localized: "shared", defaultValue: "Shared")):",
                         shared.joined(separator: "\n"),
                         "",
-                        "\(L10n.left) \(L10n.only):",
+                        "\(String(localized: "left", defaultValue: "Left")) \(String(localized: "only", defaultValue: "Only")):",
                         onlyLeft.joined(separator: "\n"),
                         "",
-                        "\(L10n.right) \(L10n.only):",
+                        "\(String(localized: "right", defaultValue: "Right")) \(String(localized: "only", defaultValue: "Only")):",
                         onlyRight.joined(separator: "\n")
                     ].joined(separator: "\n")
                 }

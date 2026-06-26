@@ -29,9 +29,9 @@ private enum ApplicationMenuIconLoader {
 }
 
 extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServicePickerDelegate {
-    private static var otherPaneMenuTitle: String { L10n.openInOtherPane }
+    private static var otherPaneMenuTitle: String { String(localized: "open_in_other_pane", defaultValue: "Open in Other Pane") }
     private static var paneOverlayMenuTitles: Set<String> {
-        [L10n.openInOtherPane, L10n.copyTo, L10n.moveTo, L10n.compressTo, L10n.extractTo]
+        [String(localized: "open_in_other_pane", defaultValue: "Open in Other Pane"), String(localized: "copy_to", defaultValue: "Copy To..."), String(localized: "move_to", defaultValue: "Move To..."), String(localized: "compress_to", defaultValue: "Compress To..."), String(localized: "extract_to", defaultValue: "Extract To")]
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
@@ -50,42 +50,42 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
             if let pasteTitle {
                 addMenuItem(pasteTitle, action: #selector(pasteFromPasteboard(_:)), to: menu, symbol: .paste)
             }
-            addMenuItem(L10n.openInTerminal, action: #selector(openSelectedItemsInTerminal(_:)), to: menu, symbol: .terminal)
-            addMenuItem(L10n.refresh, action: #selector(refreshFromContextMenu(_:)), to: menu, symbol: .refresh)
+            addMenuItem(String(localized: "open_in_terminal", defaultValue: "Open in Terminal"), action: #selector(openSelectedItemsInTerminal(_:)), to: menu, symbol: .terminal)
+            addMenuItem(String(localized: "refresh", defaultValue: "Refresh"), action: #selector(refreshFromContextMenu(_:)), to: menu, symbol: .refresh)
             return
         }
 
         addNewItems(to: menu, nested: true)
         menu.addItem(.separator())
 
-        addMenuItem(L10n.open, action: #selector(openSelectedItem), to: menu, enabled: selectedCount == 1, symbol: .open)
+        addMenuItem(String(localized: "open", defaultValue: "Open"), action: #selector(openSelectedItem), to: menu, enabled: selectedCount == 1, symbol: .open)
         if let openWithMenu = openWithMenu() {
-            addSubmenuItem(L10n.openWith, submenu: openWithMenu, to: menu, symbol: .openWith)
+            addSubmenuItem(String(localized: "open_with", defaultValue: "Open With"), submenu: openWithMenu, to: menu, symbol: .openWith)
         }
-        addMenuItem(L10n.openInTerminal, action: #selector(openSelectedItemsInTerminal(_:)), to: menu, enabled: selectedCount == 1, symbol: .terminal)
+        addMenuItem(String(localized: "open_in_terminal", defaultValue: "Open in Terminal"), action: #selector(openSelectedItemsInTerminal(_:)), to: menu, enabled: selectedCount == 1, symbol: .terminal)
         menu.addItem(.separator())
         if let shareItem = shareMenuItem() {
             menu.addItem(shareItem)
         }
-        addMenuItem(L10n.airDrop, action: #selector(sendSelectedItemsViaAirDrop(_:)), to: menu, enabled: canPerformFileAction(#selector(sendSelectedItemsViaAirDrop(_:))), symbol: .airDrop)
-        addMenuItem(L10n.showInfo, action: #selector(showSelectedItemsInfo(_:)), to: menu, symbol: .info)
-        addMenuItem(L10n.showInFinder, action: #selector(revealSelectedItemsInFinder(_:)), to: menu, symbol: .finder)
+        addMenuItem(String(localized: "airdrop", defaultValue: "AirDrop"), action: #selector(sendSelectedItemsViaAirDrop(_:)), to: menu, enabled: canPerformFileAction(#selector(sendSelectedItemsViaAirDrop(_:))), symbol: .airDrop)
+        addMenuItem(String(localized: "show_info", defaultValue: "Get Info"), action: #selector(showSelectedItemsInfo(_:)), to: menu, symbol: .info)
+        addMenuItem(String(localized: "show_in_finder", defaultValue: "Show in Finder"), action: #selector(revealSelectedItemsInFinder(_:)), to: menu, symbol: .finder)
         menu.addItem(.separator())
-        addMenuItem(L10n.rename, action: #selector(renameSelectedItem(_:)), to: menu, enabled: selectedCount == 1, symbol: .rename)
-        addMenuItem(L10n.copy, action: #selector(copySelectionToPasteboard(_:)), to: menu, symbol: .copy)
+        addMenuItem(String(localized: "rename", defaultValue: "Rename"), action: #selector(renameSelectedItem(_:)), to: menu, enabled: selectedCount == 1, symbol: .rename)
+        addMenuItem(String(localized: "copy", defaultValue: "Copy"), action: #selector(copySelectionToPasteboard(_:)), to: menu, symbol: .copy)
         if let pasteTitle {
             addMenuItem(pasteTitle, action: #selector(pasteFromPasteboard(_:)), to: menu, symbol: .paste)
         }
-        addPaneTransferItem(title: L10n.copyTo, paneAction: #selector(copySelectedItemsToOtherPane(_:)), to: menu, symbol: .copy)
-        addPaneTransferItem(title: L10n.moveTo, paneAction: #selector(moveSelectedItemsToOtherPane(_:)), to: menu, symbol: .move)
+        addPaneTransferItem(title: String(localized: "copy_to", defaultValue: "Copy To..."), paneAction: #selector(copySelectedItemsToOtherPane(_:)), to: menu, symbol: .copy)
+        addPaneTransferItem(title: String(localized: "move_to", defaultValue: "Move To..."), paneAction: #selector(moveSelectedItemsToOtherPane(_:)), to: menu, symbol: .move)
         addCompressItem(to: menu)
         addExtractArchiveItem(to: menu)
-        addMenuItem(L10n.copyPath, action: #selector(copySelectedItemPaths(_:)), to: menu, symbol: .file)
+        addMenuItem(String(localized: "copy_path", defaultValue: "Copy Path"), action: #selector(copySelectedItemPaths(_:)), to: menu, symbol: .file)
         menu.addItem(.separator())
-        addSubmenuItem(L10n.tags, submenu: tagsMenu(), to: menu, symbol: .tag)
+        addSubmenuItem(String(localized: "tags", defaultValue: "Tags"), submenu: tagsMenu(), to: menu, symbol: .tag)
         menu.addItem(.separator())
-        addMenuItem(L10n.moveToTrash, action: #selector(trashSelectedItems(_:)), to: menu, symbol: .trash)
-        addMenuItem(L10n.deleteImmediately, action: #selector(deleteSelectedItemsPermanently(_:)), to: menu, symbol: .deleteImmediately)
+        addMenuItem(String(localized: "move_to_trash", defaultValue: "Move to Trash"), action: #selector(trashSelectedItems(_:)), to: menu, symbol: .trash)
+        addMenuItem(String(localized: "delete_immediately", defaultValue: "Delete Immediately"), action: #selector(deleteSelectedItemsPermanently(_:)), to: menu, symbol: .deleteImmediately)
     }
 
     func menuWillOpen(_ menu: NSMenu) {
@@ -334,8 +334,8 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
     @objc func openSelectedItemsWithOtherApp(_ sender: Any?) {
         activationHandler?(self)
         let panel = NSOpenPanel()
-        panel.title = L10n.chooseApplication
-        panel.prompt = L10n.choose
+        panel.title = String(localized: "choose_application", defaultValue: "Choose Application")
+        panel.prompt = String(localized: "choose", defaultValue: "Choose")
         panel.directoryURL = URL(fileURLWithPath: "/Applications", isDirectory: true)
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
@@ -430,30 +430,30 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
     }
 
     private func addViewModeItems(to menu: NSMenu) {
-        let listItem = NSMenuItem(title: L10n.viewModeList, action: #selector(setListViewModeFromContextMenu(_:)), keyEquivalent: "")
+        let listItem = NSMenuItem(title: String(localized: "view_mode_list", defaultValue: "List"), action: #selector(setListViewModeFromContextMenu(_:)), keyEquivalent: "")
         listItem.target = self
         listItem.state = viewModel.viewMode == .list ? .on : .off
-        listItem.image = AppIconProvider.menuImage(.list, accessibilityDescription: L10n.viewModeList)
+        listItem.image = AppIconProvider.menuImage(.list, accessibilityDescription: String(localized: "view_mode_list", defaultValue: "List"))
         menu.addItem(listItem)
 
-        let gridItem = NSMenuItem(title: L10n.viewModeGrid, action: #selector(setGridViewModeFromContextMenu(_:)), keyEquivalent: "")
+        let gridItem = NSMenuItem(title: String(localized: "view_mode_grid", defaultValue: "Grid"), action: #selector(setGridViewModeFromContextMenu(_:)), keyEquivalent: "")
         gridItem.target = self
         gridItem.state = viewModel.viewMode == .grid ? .on : .off
-        gridItem.image = AppIconProvider.menuImage(.grid, accessibilityDescription: L10n.viewModeGrid)
+        gridItem.image = AppIconProvider.menuImage(.grid, accessibilityDescription: String(localized: "view_mode_grid", defaultValue: "Grid"))
         menu.addItem(gridItem)
     }
 
     private func addOpenDirectoryItem(to menu: NSMenu) {
         let targets = paneOpenTargetsProvider?(self) ?? []
         if targets.isEmpty {
-            addMenuItem(L10n.openInNewWindow, action: #selector(openDirectoryInNewWindowFromContextMenu(_:)), to: menu, symbol: .open)
+            addMenuItem(String(localized: "open_in_new_window", defaultValue: "Open in New Window"), action: #selector(openDirectoryInNewWindowFromContextMenu(_:)), to: menu, symbol: .open)
             return
         }
 
         let submenu = NSMenu(title: Self.otherPaneMenuTitle)
         submenu.delegate = self
         for target in targets {
-            let item = NSMenuItem(title: L10n.paneNumber(target.displayNumber), action: #selector(openDirectoryInOtherPaneFromContextMenu(_:)), keyEquivalent: "")
+            let item = NSMenuItem(title: String(format: String(localized: "pane_number_format", defaultValue: "Pane %lld"), locale: .current, target.displayNumber), action: #selector(openDirectoryInOtherPaneFromContextMenu(_:)), keyEquivalent: "")
             item.target = self
             item.tag = target.paneIndex
             submenu.addItem(item)
@@ -465,49 +465,49 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
         guard selectedItems().singleExtractableArchive != nil else { return }
         let targets = paneOpenTargetsProvider?(self) ?? []
         guard !targets.isEmpty else {
-            addMenuItem(L10n.extractToCurrentPane, action: #selector(extractSelectedArchiveInCurrentPane(_:)), to: menu, symbol: .archive)
+            addMenuItem(String(localized: "extract_to_current_pane", defaultValue: "Extract to Current Pane"), action: #selector(extractSelectedArchiveInCurrentPane(_:)), to: menu, symbol: .archive)
             return
         }
 
-        let submenu = NSMenu(title: L10n.extractTo)
+        let submenu = NSMenu(title: String(localized: "extract_to", defaultValue: "Extract To"))
         submenu.delegate = self
 
-        let currentWindowItem = NSMenuItem(title: L10n.currentPane, action: #selector(extractSelectedArchiveInCurrentPane(_:)), keyEquivalent: "")
+        let currentWindowItem = NSMenuItem(title: String(localized: "current_pane", defaultValue: "Current Pane"), action: #selector(extractSelectedArchiveInCurrentPane(_:)), keyEquivalent: "")
         currentWindowItem.target = self
         submenu.addItem(currentWindowItem)
         submenu.addItem(.separator())
 
         for target in targets {
-            let item = NSMenuItem(title: L10n.paneNumber(target.displayNumber), action: #selector(extractSelectedArchiveInOtherPane(_:)), keyEquivalent: "")
+            let item = NSMenuItem(title: String(format: String(localized: "pane_number_format", defaultValue: "Pane %lld"), locale: .current, target.displayNumber), action: #selector(extractSelectedArchiveInOtherPane(_:)), keyEquivalent: "")
             item.target = self
             item.tag = target.paneIndex
             submenu.addItem(item)
         }
-        addSubmenuItem(L10n.extractTo, submenu: submenu, to: menu, symbol: .archive)
+        addSubmenuItem(String(localized: "extract_to", defaultValue: "Extract To"), submenu: submenu, to: menu, symbol: .archive)
     }
 
     private func addCompressItem(to menu: NSMenu) {
         let targets = paneOpenTargetsProvider?(self) ?? []
         guard !targets.isEmpty else {
-            addMenuItem(L10n.compress, action: #selector(compressSelectedItems(_:)), to: menu, symbol: .archive)
+            addMenuItem(String(localized: "compress", defaultValue: "Compress"), action: #selector(compressSelectedItems(_:)), to: menu, symbol: .archive)
             return
         }
 
-        let submenu = NSMenu(title: L10n.compressTo)
+        let submenu = NSMenu(title: String(localized: "compress_to", defaultValue: "Compress To..."))
         submenu.delegate = self
 
-        let currentPaneItem = NSMenuItem(title: L10n.currentPane, action: #selector(compressSelectedItems(_:)), keyEquivalent: "")
+        let currentPaneItem = NSMenuItem(title: String(localized: "current_pane", defaultValue: "Current Pane"), action: #selector(compressSelectedItems(_:)), keyEquivalent: "")
         currentPaneItem.target = self
         submenu.addItem(currentPaneItem)
         submenu.addItem(.separator())
 
         for target in targets {
-            let item = NSMenuItem(title: L10n.paneNumber(target.displayNumber), action: #selector(compressSelectedItemsInOtherPane(_:)), keyEquivalent: "")
+            let item = NSMenuItem(title: String(format: String(localized: "pane_number_format", defaultValue: "Pane %lld"), locale: .current, target.displayNumber), action: #selector(compressSelectedItemsInOtherPane(_:)), keyEquivalent: "")
             item.target = self
             item.tag = target.paneIndex
             submenu.addItem(item)
         }
-        addSubmenuItem(L10n.compressTo, submenu: submenu, to: menu, symbol: .archive)
+        addSubmenuItem(String(localized: "compress_to", defaultValue: "Compress To..."), submenu: submenu, to: menu, symbol: .archive)
     }
 
     private func addPaneTransferItem(title: String, paneAction: Selector, to menu: NSMenu, symbol: AppSymbol) {
@@ -518,7 +518,7 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
         submenu.delegate = self
 
         for target in targets {
-            let item = NSMenuItem(title: L10n.paneNumber(target.displayNumber), action: paneAction, keyEquivalent: "")
+            let item = NSMenuItem(title: String(format: String(localized: "pane_number_format", defaultValue: "Pane %lld"), locale: .current, target.displayNumber), action: paneAction, keyEquivalent: "")
             item.target = self
             item.tag = target.paneIndex
             submenu.addItem(item)
@@ -536,7 +536,7 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
     }
 
     private func newItemsMenu() -> NSMenu {
-        let menu = NSMenu(title: L10n.new)
+        let menu = NSMenu(title: String(localized: "new", defaultValue: "New"))
         for kind in availableNewItemKinds() {
             let item = NSMenuItem(title: kind.title, action: #selector(performNewItemAction(_:)), keyEquivalent: "")
             item.target = self
@@ -549,7 +549,7 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
 
     private func addNewItems(to menu: NSMenu, nested: Bool) {
         if nested {
-            addSubmenuItem(L10n.new, submenu: newItemsMenu(), to: menu, symbol: .folderPlus)
+            addSubmenuItem(String(localized: "new", defaultValue: "New"), submenu: newItemsMenu(), to: menu, symbol: .folderPlus)
             return
         }
 
@@ -575,9 +575,9 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
         let hasOther = true
         guard defaultApplicationURL != nil || !otherApplications.isEmpty || hasAppStore || hasOther else { return nil }
 
-        let menu = NSMenu(title: L10n.openWith)
+        let menu = NSMenu(title: String(localized: "open_with", defaultValue: "Open With"))
         if let defaultApplicationURL {
-            addMenuSectionHeader(L10n.defaultApplication, to: menu)
+            addMenuSectionHeader(String(localized: "default_application", defaultValue: "Default Application"), to: menu)
             menu.addItem(makeApplicationMenuItem(appURL: defaultApplicationURL))
         }
 
@@ -585,7 +585,7 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
             if !menu.items.isEmpty {
                 menu.addItem(.separator())
             }
-            addMenuSectionHeader(L10n.recommendedApplications, to: menu)
+            addMenuSectionHeader(String(localized: "recommended_applications", defaultValue: "Other Available Applications"), to: menu)
             for appURL in otherApplications {
                 menu.addItem(makeApplicationMenuItem(appURL: appURL))
             }
@@ -597,10 +597,10 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
             }
         }
         if hasAppStore {
-            addMenuItem(L10n.openInAppStore, action: #selector(searchAppsInAppStore(_:)), to: menu, symbol: .appStore)
+            addMenuItem(String(localized: "open_in_app_store", defaultValue: "Search in App Store"), action: #selector(searchAppsInAppStore(_:)), to: menu, symbol: .appStore)
         }
         if hasOther {
-            addMenuItem(L10n.otherApplication, action: #selector(openSelectedItemsWithOtherApp(_:)), to: menu, symbol: .otherApp)
+            addMenuItem(String(localized: "other_application", defaultValue: "Other..."), action: #selector(openSelectedItemsWithOtherApp(_:)), to: menu, symbol: .otherApp)
         }
         return menu
     }
@@ -632,8 +632,8 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
     private func shareMenuItem() -> NSMenuItem? {
         guard let picker = sharePicker() else { return nil }
         let item = picker.standardShareMenuItem
-        item.title = L10n.share
-        item.image = AppIconProvider.menuImage(.share, accessibilityDescription: L10n.share)
+        item.title = String(localized: "share", defaultValue: "Share")
+        item.image = AppIconProvider.menuImage(.share, accessibilityDescription: String(localized: "share", defaultValue: "Share"))
         return item
     }
 
@@ -646,7 +646,7 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
     }
 
     private func tagsMenu() -> NSMenu {
-        let menu = NSMenu(title: L10n.tags)
+        let menu = NSMenu(title: String(localized: "tags", defaultValue: "Tags"))
         let commonLabel = selectedItemsLabelNumber()
         for label in FileTagLabel.allCases {
             let item = NSMenuItem(title: label.title, action: #selector(setSelectedItemsTag(_:)), keyEquivalent: "")
@@ -667,7 +667,7 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
         let urls = pasteboardFileURLs()
         guard let firstURL = urls.first else { return nil }
         let baseTitle = urls.count == 1 ? firstURL.lastPathComponent : "\(firstURL.lastPathComponent)..."
-        return "\(L10n.paste) \"\(truncatedMenuTitle(baseTitle, maxLength: 36))\""
+        return "\(String(localized: "paste", defaultValue: "Paste")) \"\(truncatedMenuTitle(baseTitle, maxLength: 36))\""
     }
 
     private func truncatedMenuTitle(_ title: String, maxLength: Int) -> String {
@@ -757,10 +757,10 @@ extension FilePaneViewController: NSMenuDelegate, @preconcurrency NSSharingServi
     private func confirmPermanentDelete(count: Int) -> Bool {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = L10n.deleteImmediatelyPrompt
-        alert.informativeText = String.localizedStringWithFormat(L10n.deleteImmediatelyMessage, count)
-        alert.addButton(withTitle: L10n.deleteImmediately)
-        alert.addButton(withTitle: L10n.cancel)
+        alert.messageText = String(localized: "delete_immediately_prompt", defaultValue: "Delete Immediately?")
+        alert.informativeText = String.localizedStringWithFormat(String(localized: "delete_immediately_message", defaultValue: "Permanently delete %lld selected items. This action cannot be undone."), count)
+        alert.addButton(withTitle: String(localized: "delete_immediately", defaultValue: "Delete Immediately"))
+        alert.addButton(withTitle: String(localized: "cancel", defaultValue: "Cancel"))
         return alert.runModal() == .alertFirstButtonReturn
     }
 
@@ -841,21 +841,21 @@ private enum FileTagLabel: CaseIterable {
     var title: String {
         switch self {
         case .none:
-            return L10n.none
+            return String(localized: "none", defaultValue: "None")
         case .gray:
-            return L10n.tagGray
+            return String(localized: "tag_gray", defaultValue: "Gray")
         case .green:
-            return L10n.tagGreen
+            return String(localized: "tag_green", defaultValue: "Green")
         case .purple:
-            return L10n.tagPurple
+            return String(localized: "tag_purple", defaultValue: "Purple")
         case .blue:
-            return L10n.tagBlue
+            return String(localized: "tag_blue", defaultValue: "Blue")
         case .yellow:
-            return L10n.tagYellow
+            return String(localized: "tag_yellow", defaultValue: "Yellow")
         case .red:
-            return L10n.tagRed
+            return String(localized: "tag_red", defaultValue: "Red")
         case .orange:
-            return L10n.tagOrange
+            return String(localized: "tag_orange", defaultValue: "Orange")
         }
     }
 

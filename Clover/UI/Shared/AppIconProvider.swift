@@ -15,25 +15,25 @@ enum NewItemKind: Int, CaseIterable {
     var title: String {
         switch self {
         case .folder:
-            return L10n.newFolder
+            return String(localized: "new_folder", defaultValue: "New Folder")
         case .textFile:
-            return L10n.newTextFile
+            return String(localized: "new_text_file", defaultValue: "New Text File")
         case .markdownFile:
-            return L10n.newMarkdownFile
+            return String(localized: "new_markdown_file", defaultValue: "New Markdown File")
         case .word:
-            return L10n.newWordDocument
+            return String(localized: "new_word_document", defaultValue: "New Word Document")
         case .excel:
-            return L10n.newExcelWorkbook
+            return String(localized: "new_excel_workbook", defaultValue: "New Excel Workbook")
         case .powerPoint:
-            return L10n.newPowerPointPresentation
+            return String(localized: "new_powerpoint_presentation", defaultValue: "New PowerPoint Presentation")
         case .keynote:
-            return L10n.newKeynotePresentation
+            return String(localized: "new_keynote_presentation", defaultValue: "New Keynote Presentation")
         case .pages:
-            return L10n.newPagesDocument
+            return String(localized: "new_pages_document", defaultValue: "New Pages Document")
         case .numbers:
-            return L10n.newNumbersSpreadsheet
+            return String(localized: "new_numbers_spreadsheet", defaultValue: "New Numbers Spreadsheet")
         case .wps:
-            return L10n.newWPSDocument
+            return String(localized: "new_wps_document", defaultValue: "New WPS Document")
         }
     }
 
@@ -107,11 +107,11 @@ enum NewItemKind: Int, CaseIterable {
     var defaultName: String {
         switch self {
         case .folder:
-            return L10n.untitledFolder
+            return String(localized: "untitled_folder", defaultValue: "Untitled Folder")
         case .textFile:
-            return L10n.untitledTextFile
+            return String(localized: "untitled_text_file", defaultValue: "Untitled.txt")
         case .markdownFile:
-            return L10n.untitledMarkdownFile
+            return String(localized: "untitled_markdown_file", defaultValue: "Untitled.md")
         case .word:
             return "Word"
         case .excel:

@@ -18,15 +18,13 @@ final class UpgradeProWindowController: NSWindowController {
     override func showWindow(_ sender: Any?) {
         let presenter = MacPaywallPresenter(
             configuration: MacPaywallConfiguration(
-                title: L10n.upgradeToPro,
-                unlockedTitle: L10n.proPurchaseComplete,
-                failureTitle: L10n.proPurchaseFailed,
-                emptyProductsMessage: L10n.proNoProducts,
+                title: String(localized: "upgrade_to_pro", defaultValue: "Upgrade to Clover Pro"),
+                unlockedTitle: String(localized: "pro_purchase_complete", defaultValue: "Clover Pro is unlocked."),
+                failureTitle: String(localized: "pro_purchase_failed", defaultValue: "Purchase failed."),
+                emptyProductsMessage: String(localized: "pro_no_products", defaultValue: "Purchase options are unavailable right now."),
                 benefits: ProFeature.visibleFeatures.map(\.title),
-                laterTitle: L10n.cancel,
-                okTitle: L10n.ok,
-                launchingPurchaseTitle: L10n.proLaunchingPurchase,
-                legalLinks: Self.legalLinks
+                privacyPolicyURL: URL(string: "https://yingxiang.github.io/clover/privacy.html")!,
+                termsURL: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
             ),
             productsProvider: { [entitlementService] in
                 await entitlementService.loadProducts()
@@ -48,6 +46,10 @@ final class UpgradeProWindowController: NSWindowController {
             purchaseHandler: { [entitlementService] productID, window in
                 try await entitlementService.purchase(productID: productID, confirmIn: window)
                 return entitlementService.isProUnlocked
+            },
+            restoreHandler: { [entitlementService] in
+                try await entitlementService.restorePurchases()
+                return entitlementService.isProUnlocked
             }
         )
         self.presenter = presenter
@@ -62,16 +64,4 @@ final class UpgradeProWindowController: NSWindowController {
         return product.priceFormatStyle.format(originalPrice)
     }
 
-    private static var legalLinks: [MacPaywallLegalLink] {
-        [
-            MacPaywallLegalLink(
-                title: L10n.privacyPolicy,
-                url: URL(string: "https://yingxiang.github.io/clover/privacy.html")!
-            ),
-            MacPaywallLegalLink(
-                title: L10n.termsOfUse,
-                url: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
-            )
-        ]
-    }
 }

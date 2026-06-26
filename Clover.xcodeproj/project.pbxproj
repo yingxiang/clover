@@ -71,7 +71,6 @@
 		F325566F33E948576C19979F248D6ECD /* FilePaneViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF037061F931775A0EDC975B818010B /* FilePaneViewModelTests.swift */; };
 		F6A587ACD0F31634B16034C730AAE55E /* ToolbarPreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1252F83975A6A694791A3D84F80726A /* ToolbarPreferencesStore.swift */; };
 		FB85612F61A988E2784B807FCD84DEB5 /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560526E24535B79A4868A1CEA9BB538B /* StatusBarView.swift */; };
-		FDDB8A7D6AEA12CEDE417241A85CAEF5 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E77D8718A2B28512F740B6A315B659C /* L10n.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -100,7 +99,6 @@
 		2BFF4D7788A080F55551F7F62546A68D /* LocalFileProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileProvider.swift; sourceTree = "<group>"; };
 		2C87543A5E3839AC609A100CF4A02928 /* SidebarItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarItem.swift; sourceTree = "<group>"; };
 		2E5A461BEA96D619C7F031AC3CF2136B /* FileSearchMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchMatcher.swift; sourceTree = "<group>"; };
-		2E77D8718A2B28512F740B6A315B659C /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		2EBDDB85517DD250653B040D52BD4FEA /* PaneLayoutPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneLayoutPresentation.swift; sourceTree = "<group>"; };
 		3A3E53CBDDC1B04A25318742F52E380B /* ProPreferencesWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProPreferencesWindowController.swift; sourceTree = "<group>"; };
 		3FB687441E2A36EEF261022701AF865A /* FilePaneContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePaneContextMenu.swift; sourceTree = "<group>"; };
@@ -272,7 +270,6 @@
 			children = (
 				BFACA9DFBC871F5278FFBFAFB44F9EFD /* AppDelegate.swift */,
 				5DEFF10CDFF338362FD6AD57C74C2497 /* AppEnvironment.swift */,
-				2E77D8718A2B28512F740B6A315B659C /* L10n.swift */,
 				6F74CA42F4204D0C9E7654CE /* MacPaywallPresenter.swift */,
 				BE24ADF9B430F10A1F8C25E46980C4D5 /* main.swift */,
 				D4C51849AFD6E0D4268AF70A1D2BEA65 /* MainWindowController.swift */,
@@ -529,7 +526,6 @@
 				57625E5F560CE0F6CB972C4ED4EC018C /* FileSearchMatcher.swift in Sources */,
 				F162A0D8BB2E2AAD8078DA4A8C78EBA1 /* FileSortService.swift in Sources */,
 				DB9E99DD71CB6E6A38A26703BF0DBDA7 /* FileThumbnailProvider.swift in Sources */,
-				FDDB8A7D6AEA12CEDE417241A85CAEF5 /* L10n.swift in Sources */,
 				2D93B169E6EA80D6D741EA936DCA8E57 /* LocalFileProvider.swift in Sources */,
 				68D9CB57B46AB4806466759531142DD9 /* Loggers.swift in Sources */,
 				6F74CA43F4204D0C9E7654CE /* MacPaywallPresenter.swift in Sources */,
@@ -596,7 +592,7 @@
 				CODE_SIGN_ENTITLEMENTS = Clover/Clover.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "3rd Party Mac Developer Application";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 26.6.4;
+				CURRENT_PROJECT_VERSION = 26.6.5;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
@@ -755,7 +751,7 @@
 				CODE_SIGN_ENTITLEMENTS = Clover/Clover.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 26.6.4;
+				CURRENT_PROJECT_VERSION = 26.6.5;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";

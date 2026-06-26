@@ -232,7 +232,7 @@ extension FilePaneViewController {
         if let typeFilter = viewModel.typeFilter {
             return FileItemPresentation.localizedTypeName(for: typeFilter)
         }
-        return L10n.type
+        return String(localized: "type", defaultValue: "Type")
     }
 
     func updateTypeColumnTitle() {
@@ -243,8 +243,8 @@ extension FilePaneViewController {
 
     func showTypeFilterMenu(for tableColumn: NSTableColumn) {
         guard let headerView = tableView.headerView else { return }
-        let menu = NSMenu(title: L10n.type)
-        let allItem = NSMenuItem(title: L10n.all, action: #selector(selectTypeFilter(_:)), keyEquivalent: "")
+        let menu = NSMenu(title: String(localized: "type", defaultValue: "Type"))
+        let allItem = NSMenuItem(title: String(localized: "all", defaultValue: "All"), action: #selector(selectTypeFilter(_:)), keyEquivalent: "")
         allItem.target = self
         allItem.state = viewModel.typeFilter == nil ? .on : .off
         menu.addItem(allItem)

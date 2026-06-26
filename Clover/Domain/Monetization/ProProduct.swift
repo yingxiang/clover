@@ -16,26 +16,26 @@ enum ProProduct: String, CaseIterable, Sendable {
     var displayTitle: String {
         switch self {
         case .lifetime:
-            return L10n.proLifetime
+            return String(localized: "pro_lifetime", defaultValue: "Lifetime Pro")
         case .threeMonths:
-            return L10n.proThreeMonths
+            return String(localized: "pro_three_months", defaultValue: "3 Months Pro")
         case .sixMonths:
-            return L10n.proSixMonths
+            return String(localized: "pro_six_months", defaultValue: "6 Months Pro")
         case .yearly:
-            return L10n.proYearly
+            return String(localized: "pro_yearly", defaultValue: "Yearly Pro")
         }
     }
 
     var displaySubtitle: String {
         switch self {
         case .lifetime:
-            return L10n.proLifetimeSubtitle
+            return String(localized: "pro_lifetime_subtitle", defaultValue: "One purchase, permanent access")
         case .threeMonths:
-            return L10n.proThreeMonthsSubtitle
+            return String(localized: "pro_three_months_subtitle", defaultValue: "Short-term access")
         case .sixMonths:
-            return L10n.proSixMonthsSubtitle
+            return String(localized: "pro_six_months_subtitle", defaultValue: "For focused projects")
         case .yearly:
-            return L10n.proYearlySubtitle
+            return String(localized: "pro_yearly_subtitle", defaultValue: "Best subscription value")
         }
     }
 
@@ -51,11 +51,11 @@ enum ProProduct: String, CaseIterable, Sendable {
     var badgeTitle: String {
         switch self {
         case .lifetime:
-            return L10n.bestValue
+            return String(localized: "best_value", defaultValue: "Best Value")
         case .yearly:
-            return L10n.goodValue
+            return String(localized: "good_value", defaultValue: "Good Value")
         case .sixMonths, .threeMonths:
-            return L10n.limitedOffer
+            return String(localized: "limited_offer", defaultValue: "Limited Offer")
         }
     }
 }
