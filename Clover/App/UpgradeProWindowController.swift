@@ -36,12 +36,13 @@ final class UpgradeProWindowController: NSWindowController {
                         subtitle: knownProduct?.displaySubtitle ?? product.description,
                         originalPrice: Self.originalDisplayPrice(for: product, knownProduct: knownProduct),
                         currentPrice: product.displayPrice,
-                        badge: knownProduct?.badgeTitle
+                        badge: knownProduct?.badgeTitle,
+                        isEnabled: !entitlementService.activeProductIDs.contains(product.id)
                     )
                 }
             },
             isUnlocked: { [entitlementService] in
-                entitlementService.isProUnlocked
+                entitlementService.isLifetimeUnlocked
             },
             purchaseHandler: { [entitlementService] productID, window in
                 try await entitlementService.purchase(productID: productID, confirmIn: window)
